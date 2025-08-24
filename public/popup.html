@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      margin: 0;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .logo {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    .title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+    .status {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .status.active {
+      background: rgba(34, 197, 94, 0.2);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    .status.inactive {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 8px;
+    }
+    .button.primary {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .button.primary:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    .button.secondary {
+      background: transparent;
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .button.secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .timer {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 8px 0;
+    }
+    .progress {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #4ade80;
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">🎯</div>
+    <div class="title">JobQuest Focus</div>
+    <div class="subtitle">Stay focused, achieve more</div>
+  </div>
+  
+  <div id="status" class="status inactive">
+    <div id="status-text">Focus session inactive</div>
+    <div id="timer" class="timer" style="display: none;"></div>
+    <div id="progress" class="progress" style="display: none;">
+      <div id="progress-fill" class="progress-fill"></div>
+    </div>
+  </div>
+  
+  <button id="toggle-btn" class="button primary">Start Focus Session</button>
+  <button id="settings-btn" class="button secondary">Open Dashboard</button>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

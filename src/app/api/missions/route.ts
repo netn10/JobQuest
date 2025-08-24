@@ -1,0 +1,142 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/db'
+import { checkAndUnlockAchievements } from '@/lib/achievements'
+import { updateUserStreak } from '@/lib/utils'
+
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams
+    const userId = searchParams.get('userId')
+
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'User ID required' },
+        { status: 400 }
+      )
+    }
+
+    const missions = await prisma.mission.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    })
+
+    return NextResponse.json({
+      success: true,
+      missions
+    })
+  } catch (error) {
+    console.error('Error fetching missions:', error)
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch missions' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { userId, title, description, type, duration, blockedApps, blockedWebsites, autoStart } = body
+
+    if (!userId || !title || !type || !duration) {
+      return NextResponse.json(
+        { success: false, error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
+
+    const xpReward = Math.max(10, Math.floor(duration / 2))
+
+    const mission = await prisma.mission.create({
+      data: {
+        title,
+        description,
+        type,
+        duration,
+        xpReward,
+        userId,
+        status: autoStart ? 'IN_PROGRESS' : 'PENDING',
+        startedAt: autoStart ? new Date() : null,
+        blockedApps: blockedApps ? JSON.stringify(blockedApps) : null,
+        blockedWebsites: blockedWebsites ? JSON.stringify(blockedWebsites) : null
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      mission
+    })
+  } catch (error) {
+    console.error('Error creating mission:', error)
+    return NextResponse.json(
+      { success: false, error: 'Failed to create mission' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { missionId, status, completedAt, xpReward } = body
+
+    if (!missionId || !status) {
+      return NextResponse.json(
+        { success: false, error: 'Mission ID and status required' },
+        { status: 400 }
+      )
+    }
+
+    const mission = await prisma.mission.update({
+      where: { id: missionId },
+      data: {
+        status,
+        completedAt: status === 'COMPLETED' ? new Date() : null,
+        startedAt: status === 'IN_PROGRESS' ? new Date() : undefined,
+        xpReward: xpReward !== undefined ? xpReward : undefined
+      }
+    })
+
+    let achievementResult = null
+
+    // Award XP and update streak if mission completed
+    if (status === 'COMPLETED') {
+      const xpToAward = xpReward !== undefined ? xpReward : mission.xpReward
+      
+      // Update user XP and streak
+      await Promise.all([
+        prisma.user.update({
+          where: { id: mission.userId },
+          data: {
+            xp: { increment: xpToAward },
+            totalXp: { increment: xpToAward }
+          }
+        }),
+        updateUserStreak(mission.userId, prisma)
+      ])
+
+      // Check for achievement unlocks after mission completion
+      try {
+        achievementResult = await checkAndUnlockAchievements(mission.userId)
+        if (achievementResult.newlyUnlockedAchievements.length > 0) {
+          console.log(`Unlocked ${achievementResult.newlyUnlockedAchievements.length} achievements for user ${mission.userId}`)
+        }
+      } catch (error) {
+        console.error('Error checking achievements after mission completion:', error)
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      mission,
+      newlyUnlockedAchievements: achievementResult?.newlyUnlockedAchievements || []
+    })
+  } catch (error) {
+    console.error('Error updating mission:', error)
+    return NextResponse.json(
+      { success: false, error: 'Failed to update mission' },
+      { status: 500 }
+    )
+  }
+}
