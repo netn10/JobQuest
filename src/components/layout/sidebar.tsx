@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { 
   Target, 
@@ -12,7 +13,9 @@ import {
   Zap,
   X,
   LogOut,
-  Info
+  Info,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/auth-context'
@@ -33,11 +36,13 @@ const navigation = [
 interface SidebarProps {
   onClose?: () => void
   navigate: (route: string) => void
+  collapsed?: boolean
+  onToggleCollapse?: () => void
 }
 
 
 
-export function Sidebar({ onClose, navigate }: SidebarProps) {
+export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse }: SidebarProps) {
   const pathname = usePathname()
   const { user, logout } = useAuth()
   const { stats, loading } = useUserStats()
@@ -57,24 +62,40 @@ export function Sidebar({ onClose, navigate }: SidebarProps) {
   }
 
   return (
-    <div className="flex h-full w-64 flex-col bg-gray-900 dark:bg-gray-950 text-white">
+    <div className={cn(
+      "flex h-full flex-col bg-gray-900 dark:bg-gray-950 text-white transition-all duration-300",
+      collapsed ? "w-16" : "w-64"
+    )}>
       <div className="flex h-16 items-center justify-between px-6">
         <button 
           onClick={() => navigate('dashboard')} 
           className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
         >
           <Zap className="h-8 w-8 text-yellow-400" />
+          {!collapsed && <span className="font-bold text-lg">JobQuest</span>}
         </button>
-        {onClose && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="lg:hidden text-gray-400 hover:text-white"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        )}
+        <div className="flex items-center space-x-2">
+          {onToggleCollapse && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleCollapse}
+              className="hidden lg:flex text-gray-400 hover:text-white"
+            >
+              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </Button>
+          )}
+          {onClose && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="lg:hidden text-gray-400 hover:text-white"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          )}
+        </div>
       </div>
       
       {/* Mobile-only user stats section */}
@@ -124,14 +145,17 @@ export function Sidebar({ onClose, navigate }: SidebarProps) {
                 'group flex items-center px-2 py-2 text-sm font-medium rounded-md cursor-pointer w-full text-left',
                 isActive 
                   ? 'bg-gray-800 text-white' 
-                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                collapsed && 'justify-center'
               )}
+              title={collapsed ? item.name : undefined}
             >
               <Icon className={cn(
-                'mr-3 h-6 w-6',
+                'h-6 w-6',
+                !collapsed && 'mr-3',
                 isActive ? 'text-gray-300' : 'text-gray-400 group-hover:text-gray-300'
               )} />
-              {item.name}
+              {!collapsed && item.name}
             </button>
           )
         })}
@@ -140,22 +164,24 @@ export function Sidebar({ onClose, navigate }: SidebarProps) {
       <div className="flex-shrink-0 px-4 py-4">
         {user ? (
           <div className="space-y-3">
-            <div className="flex items-center">
+            <div className={cn("flex items-center", collapsed && "justify-center")}>
               <div className="h-8 w-8 rounded-full bg-gray-600 flex items-center justify-center">
                 <span className="text-sm font-medium">
                   {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                 </span>
               </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-white">
-                  {user?.name || user?.email || 'User'}
-                </p>
-                <p className="text-xs text-gray-400">Level {user?.level || 1}</p>
-              </div>
+              {!collapsed && (
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-white">
+                    {user?.name || user?.email || 'User'}
+                  </p>
+                  <p className="text-xs text-gray-400">Level {user?.level || 1}</p>
+                </div>
+              )}
             </div>
             
             {/* Mobile-only logout button */}
-            {onClose && (
+            {onClose && !collapsed && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -168,29 +194,31 @@ export function Sidebar({ onClose, navigate }: SidebarProps) {
             )}
           </div>
         ) : (
-          <div className="space-y-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="w-full justify-start text-gray-300 hover:bg-gray-700 hover:text-white"
-              onClick={() => {
-                navigate('login')
-                handleNavigation()
-              }}
-            >
-              Sign In
-            </Button>
-            <Button 
-              size="sm" 
-              className="w-full"
-              onClick={() => {
-                navigate('register')
-                handleNavigation()
-              }}
-            >
-              Sign Up
-            </Button>
-          </div>
+          !collapsed && (
+            <div className="space-y-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="w-full justify-start text-gray-300 hover:bg-gray-700 hover:text-white"
+                onClick={() => {
+                  navigate('login')
+                  handleNavigation()
+                }}
+              >
+                Sign In
+              </Button>
+              <Button 
+                size="sm" 
+                className="w-full"
+                onClick={() => {
+                  navigate('register')
+                  handleNavigation()
+                }}
+              >
+                Sign Up
+              </Button>
+            </div>
+          )
         )}
       </div>
     </div>

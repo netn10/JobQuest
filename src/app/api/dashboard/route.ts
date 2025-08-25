@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const userId = authHeader.replace('Bearer ', '')
     console.log('Looking for user with ID:', userId)
     
-    // Get user data
+    // Get user data with expanded includes
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         },
         jobApplications: {
           orderBy: { appliedDate: 'desc' },
-          take: 5
+          take: 10
         },
         achievements: {
           include: {
@@ -46,6 +46,17 @@ export async function GET(request: NextRequest) {
               }
             }
           }
+        },
+        learningProgress: {
+          include: {
+            resource: true
+          },
+          orderBy: { id: 'desc' },
+          take: 10
+        },
+        notebookEntries: {
+          orderBy: { createdAt: 'desc' },
+          take: 10
         }
       }
     })
@@ -120,21 +131,21 @@ export async function GET(request: NextRequest) {
 
     // Get all activities for calendar and recent activity
     const allActivities = [
-      ...user.missions.map(mission => ({
+      ...user.missions.map((mission: any) => ({
         type: 'mission',
         title: `Completed ${mission.title}`,
         description: `Earned ${mission.xpReward} XP`,
         timestamp: mission.completedAt || mission.createdAt,
         icon: 'target'
       })),
-      ...user.achievements.map(ua => ({
+      ...user.achievements.map((ua: any) => ({
         type: 'achievement',
         title: `Unlocked "${ua.achievement.name}"`,
         description: `Earned ${ua.achievement.xpReward} XP`,
         timestamp: ua.unlockedAt,
         icon: 'trophy'
       })),
-      ...user.jobApplications.map(app => ({
+      ...user.jobApplications.map((app: any) => ({
         type: 'application',
         title: `Applied to ${app.role} at ${app.company}`,
         description: app.status,
@@ -145,6 +156,79 @@ export async function GET(request: NextRequest) {
     
     const recentActivity = allActivities.slice(0, 5)
 
+    // Get recent job applications with enhanced data
+    const recentJobs = user.jobApplications.slice(0, 5).map((app: any) => ({
+      id: app.id,
+      role: app.role,
+      company: app.company,
+      status: app.status,
+      appliedDate: app.appliedDate,
+      location: app.location,
+      salary: app.salary
+    }))
+
+    // Get recent learning activities
+    const recentLearning = user.learningProgress.slice(0, 5).map((progress: any) => ({
+      id: progress.id,
+      title: progress.resource.title,
+      source: progress.resource.source,
+      type: progress.resource.type,
+      status: progress.status,
+      progress: progress.progress,
+      timeSpent: progress.timeSpent
+    }))
+
+    // Get recent notebook entries
+    const recentNotebookEntries = user.notebookEntries.slice(0, 5).map((entry: any) => ({
+      id: entry.id,
+      title: entry.title,
+      content: entry.content,
+      createdAt: entry.createdAt,
+      updatedAt: entry.updatedAt
+    }))
+
+    // Get upcoming interviews (mock data for now)
+    const upcomingInterviews = user.jobApplications
+      .filter((app: any) => app.status === 'INTERVIEW' || app.status === 'SCREENING')
+      .slice(0, 3)
+      .map((app: any) => ({
+        id: app.id,
+        role: app.role,
+        company: app.company,
+        type: app.status === 'INTERVIEW' ? 'Interview' : 'Screening',
+        date: new Date(Date.now() + Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        time: `${Math.floor(Math.random() * 12) + 9}:${Math.random() > 0.5 ? '00' : '30'}`
+      }))
+
+    // Calculate weekly progress (last 7 days)
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    
+    const weeklyMissions = await prisma.mission.count({
+      where: {
+        userId,
+        status: 'COMPLETED',
+        completedAt: { gte: oneWeekAgo }
+      }
+    })
+
+    const weeklyApplications = await prisma.jobApplication.count({
+      where: {
+        userId,
+        appliedDate: { gte: oneWeekAgo }
+      }
+    })
+
+    const weeklyLearningHours = user.learningProgress
+      .filter((progress: any) => new Date(progress.id) >= oneWeekAgo) // Using id as a fallback since there's no updatedAt
+      .reduce((total: number, progress: any) => total + (progress.timeSpent || 0), 0) / 60
+
+    const weeklyNotebookEntries = await prisma.notebookEntry.count({
+      where: {
+        userId,
+        createdAt: { gte: oneWeekAgo }
+      }
+    })
+
     return NextResponse.json({
       stats: {
         totalXp: user.totalXp,
@@ -152,7 +236,7 @@ export async function GET(request: NextRequest) {
         currentStreak: user.currentStreak,
         longestStreak: Number(user.longestStreak),
         applications: user.jobApplications.length,
-        pendingResponses: user.jobApplications.filter(app => app.status === 'APPLIED' || app.status === 'SCREENING').length,
+        pendingResponses: user.jobApplications.filter((app: any) => app.status === 'APPLIED' || app.status === 'SCREENING').length,
         xpForNextLevel,
         xpProgress
       },
@@ -160,7 +244,19 @@ export async function GET(request: NextRequest) {
       dailyChallenge: user.dailyChallenges[0] || null,
       recentActivity,
       allActivities,
-      activeDates: Array.from(activeDates)
+      activeDates: Array.from(activeDates),
+      recentJobs,
+      recentLearning,
+      recentNotebookEntries,
+      upcomingInterviews,
+      learningRecommendations: [], // TODO: Implement learning recommendations
+      jobRecommendations: [], // TODO: Implement job recommendations
+      weeklyProgress: {
+        missionsCompleted: weeklyMissions,
+        applicationsSubmitted: weeklyApplications,
+        learningHours: Math.round(weeklyLearningHours * 10) / 10,
+        notebookEntries: weeklyNotebookEntries
+      }
     })
 
   } catch (error) {
@@ -182,7 +278,19 @@ export async function GET(request: NextRequest) {
       dailyChallenge: null,
       recentActivity: [],
       allActivities: [],
-      activeDates: []
+      activeDates: [],
+      recentJobs: [],
+      recentLearning: [],
+      recentNotebookEntries: [],
+      upcomingInterviews: [],
+      learningRecommendations: [],
+      jobRecommendations: [],
+      weeklyProgress: {
+        missionsCompleted: 0,
+        applicationsSubmitted: 0,
+        learningHours: 0,
+        notebookEntries: 0
+      }
     })
   }
 }

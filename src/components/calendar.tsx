@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ChevronLeft, ChevronRight, X, Target, Trophy, BriefcaseIcon } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, Target, Trophy, BriefcaseIcon, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { generateCalendarData } from '@/lib/utils'
 
 interface Activity {
-  type: 'mission' | 'achievement' | 'application'
+  type: 'mission' | 'achievement' | 'application' | 'notebook'
   title: string
   description: string
   timestamp: string
@@ -18,9 +18,10 @@ interface CalendarProps {
   activeDates: Date[]
   activities: Activity[]
   className?: string
+  onDateSelect?: (date: Date) => void
 }
 
-export function Calendar({ activeDates, activities, className = '' }: CalendarProps) {
+export function Calendar({ activeDates, activities, className = '', onDateSelect }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [showActivities, setShowActivities] = useState(false)
@@ -50,6 +51,11 @@ export function Calendar({ activeDates, activities, className = '' }: CalendarPr
     if (day && day.isActive) {
       setSelectedDate(day.date)
       setShowActivities(true)
+      
+      // Call the onDateSelect callback if provided
+      if (onDateSelect) {
+        onDateSelect(day.date)
+      }
     }
   }
   
@@ -71,6 +77,7 @@ export function Calendar({ activeDates, activities, className = '' }: CalendarPr
       case 'target': return Target
       case 'trophy': return Trophy
       case 'briefcase': return BriefcaseIcon
+      case 'book': return BookOpen
       default: return Target
     }
   }
@@ -79,7 +86,6 @@ export function Calendar({ activeDates, activities, className = '' }: CalendarPr
     <Card className={className}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Activity Calendar</CardTitle>
           <div className="flex items-center space-x-2">
             <Button
               variant="outline"

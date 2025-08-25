@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { CalendarDays, Plus, Save, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Calendar } from '@/components/calendar'
 
 interface NotebookEntry {
   id: string
@@ -24,6 +25,7 @@ export default function NotebookPage() {
   const [entries, setEntries] = useState<NotebookEntry[]>([])
   const [currentEntry, setCurrentEntry] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [activeDates, setActiveDates] = useState<Date[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -46,6 +48,10 @@ export default function NotebookPage() {
       if (response.ok) {
         const data = await response.json()
         setEntries(data)
+        
+        // Extract active dates from entries
+        const dates = data.map((entry: NotebookEntry) => new Date(entry.createdAt))
+        setActiveDates(dates)
       }
     } catch (error) {
       console.error('Failed to load entries:', error)
@@ -156,120 +162,144 @@ export default function NotebookPage() {
           </CardHeader>
         </Card>
 
-        {/* Date Navigation */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigateDate('prev')}
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Previous
-              </Button>
-              
-              <div className="flex items-center gap-2">
-                <CalendarDays className="h-5 w-5 text-blue-600" />
-                <span className="text-lg font-semibold">
-                  {formatDate(selectedDate)}
-                </span>
-              </div>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigateDate('next')}
-                disabled={selectedDate >= new Date().toISOString().split('T')[0]}
-              >
-                Next
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
-              className="w-full"
-            >
-              Jump to Today
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Main Writing Area */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Journal Entry</span>
-              <Button
-                onClick={handleSave}
-                disabled={isSaving}
-                size="sm"
-              >
-                {isSaving ? (
-                  <>Saving...</>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Save
-                  </>
-                )}
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Textarea
-              placeholder="What's on your mind today? Reflect on your job search progress, learnings, challenges, or any thoughts you'd like to capture..."
-              value={currentEntry}
-              onChange={(e) => setCurrentEntry(e.target.value)}
-              className="min-h-[300px] resize-none"
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Calendar */}
+          <div className="lg:col-span-1">
+            <Calendar 
+              activeDates={activeDates}
+              activities={entries.map(entry => ({
+                type: 'notebook' as const,
+                title: 'Journal Entry',
+                description: entry.content.substring(0, 50) + '...',
+                timestamp: entry.createdAt,
+                icon: 'book'
+              }))}
+              className="h-fit"
+              onDateSelect={(date) => {
+                setSelectedDate(date.toISOString().split('T')[0])
+              }}
             />
-            <div className="mt-2 text-sm text-gray-500 flex justify-between">
-              <span>{currentEntry.length} characters</span>
-              <span>Click save to persist changes</span>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Recent Entries Preview */}
-        {entries.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Entries</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {entries
-                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                  .slice(0, 5)
-                  .map((entry) => {
-                    const entryDate = new Date(entry.createdAt).toISOString().split('T')[0]
-                    return (
-                      <div
-                        key={entry.id}
-                        className="p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                        onClick={() => setSelectedDate(entryDate)}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="font-medium text-sm">
-                            {formatDate(entryDate)}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {entry.content.length} chars
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                          {entry.content.substring(0, 150)}...
-                        </p>
-                      </div>
-                    )
-                  })}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+          {/* Right Column - Writing Area */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Date Navigation */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigateDate('prev')}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Previous
+                  </Button>
+                  
+                  <div className="flex items-center gap-2">
+                    <CalendarDays className="h-5 w-5 text-blue-600" />
+                    <span className="text-lg font-semibold">
+                      {formatDate(selectedDate)}
+                    </span>
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigateDate('next')}
+                    disabled={selectedDate >= new Date().toISOString().split('T')[0]}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+                  className="w-full"
+                >
+                  Jump to Today
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Main Writing Area */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Journal Entry</span>
+                  <Button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    size="sm"
+                  >
+                    {isSaving ? (
+                      <>Saving...</>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save
+                      </>
+                    )}
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  placeholder="What's on your mind today? Reflect on your job search progress, learnings, challenges, or any thoughts you'd like to capture..."
+                  value={currentEntry}
+                  onChange={(e) => setCurrentEntry(e.target.value)}
+                  className="min-h-[300px] resize-none"
+                />
+                <div className="mt-2 text-sm text-gray-500 flex justify-between">
+                  <span>{currentEntry.length} characters</span>
+                  <span>Click save to persist changes</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recent Entries Preview */}
+            {entries.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Entries</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {entries
+                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                      .slice(0, 5)
+                      .map((entry) => {
+                        const entryDate = new Date(entry.createdAt).toISOString().split('T')[0]
+                        return (
+                          <div
+                            key={entry.id}
+                            className="p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                            onClick={() => setSelectedDate(entryDate)}
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="font-medium text-sm">
+                                {formatDate(entryDate)}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {entry.content.length} chars
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                              {entry.content.substring(0, 150)}...
+                            </p>
+                          </div>
+                        )
+                      })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   )
