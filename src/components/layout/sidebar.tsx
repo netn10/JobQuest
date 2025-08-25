@@ -70,7 +70,7 @@ export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse
     )}>
       <div className="flex h-16 items-center justify-between px-6">
         <button 
-          onClick={() => navigate('dashboard')} 
+          onClick={() => navigate('/dashboard')} 
           className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
         >
           <Zap className="h-8 w-8 text-yellow-400" />
@@ -123,14 +123,13 @@ export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse
       <nav className="flex-1 space-y-1 px-2 py-4">
         {navigation.map((item) => {
           const Icon = item.icon
-          const route = item.href.slice(1) // Remove leading slash
           const isActive = pathname === item.href
           
           return (
             <button
               key={item.name}
               onClick={() => {
-                navigate(route)
+                navigate(item.href)
                 handleNavigation()
               }}
               className={cn(
@@ -193,7 +192,7 @@ export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse
                 size="sm" 
                 className="w-full justify-start text-gray-300 hover:bg-gray-700 hover:text-white"
                 onClick={() => {
-                  navigate('login')
+                  navigate('/login')
                   handleNavigation()
                 }}
               >
@@ -203,7 +202,7 @@ export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse
                 size="sm" 
                 className="w-full"
                 onClick={() => {
-                  navigate('register')
+                  navigate('/register')
                   handleNavigation()
                 }}
               >

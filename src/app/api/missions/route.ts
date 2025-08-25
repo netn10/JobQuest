@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json()
-    const { missionId, status, completedAt, xpReward } = body
+    const { missionId, status, completedAt, xpReward, elapsedTime } = body
 
     if (!missionId || !status) {
       return NextResponse.json(
@@ -98,14 +98,53 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
+    // Get the current mission to calculate elapsed time if needed
+    const currentMission = await prisma.mission.findUnique({
+      where: { id: missionId }
+    })
+
+    if (!currentMission) {
+      return NextResponse.json(
+        { success: false, error: 'Mission not found' },
+        { status: 404 }
+      )
+    }
+
+    let updateData: any = {
+      status,
+      xpReward: xpReward !== undefined ? xpReward : undefined
+    }
+
+    // Handle status transitions
+    if (status === 'IN_PROGRESS') {
+      // Starting or resuming mission
+      if (!currentMission.startedAt) {
+        // First time starting
+        updateData.startedAt = new Date()
+      }
+      // Don't update startedAt if resuming from pause - keep elapsed time
+    } else if (status === 'PENDING') {
+      // Pausing mission - calculate elapsed time
+      if (currentMission.startedAt && currentMission.status === 'IN_PROGRESS') {
+        const sessionTime = Math.floor((Date.now() - new Date(currentMission.startedAt).getTime()) / 1000)
+        updateData.elapsedTime = (currentMission.elapsedTime || 0) + sessionTime
+      } else if (elapsedTime !== undefined) {
+        updateData.elapsedTime = elapsedTime
+      }
+    } else if (status === 'COMPLETED') {
+      // Completing mission
+      updateData.completedAt = new Date()
+      if (currentMission.startedAt && currentMission.status === 'IN_PROGRESS') {
+        const sessionTime = Math.floor((Date.now() - new Date(currentMission.startedAt).getTime()) / 1000)
+        updateData.elapsedTime = (currentMission.elapsedTime || 0) + sessionTime
+      } else if (elapsedTime !== undefined) {
+        updateData.elapsedTime = elapsedTime
+      }
+    }
+
     const mission = await prisma.mission.update({
       where: { id: missionId },
-      data: {
-        status,
-        completedAt: status === 'COMPLETED' ? new Date() : null,
-        startedAt: status === 'IN_PROGRESS' ? new Date() : undefined,
-        xpReward: xpReward !== undefined ? xpReward : undefined
-      }
+      data: updateData
     })
 
     let achievementResult = null

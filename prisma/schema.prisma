@@ -8,115 +8,100 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String?
-  image     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Gamification
-  xp          Int      @default(0)
-  level       Int      @default(1)
-  totalXp     Int      @default(0)
-  currentStreak Int    @default(0)
-  longestStreak BigInt @default(0)
-  lastActiveDate DateTime?
-  
-  // Settings
-  theme       String   @default("light")
-  notifications Boolean @default(true)
-  focusSettings Json?
-  openaiApiKey String? // User's OpenAI API key for AI features
-  
-  // Relations
-  missions    Mission[]
-  achievements UserAchievement[]
-  jobApplications JobApplication[]
-  notebookEntries NotebookEntry[]
+  id               String                   @id @default(cuid())
+  email            String                   @unique
+  password         String
+  name             String?
+  image            String?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  xp               Int                      @default(0)
+  level            Int                      @default(1)
+  totalXp          Int                      @default(0)
+  currentStreak    Int                      @default(0)
+  longestStreak    BigInt                   @default(0)
+  lastActiveDate   DateTime?
+  theme            String                   @default("light")
+  notifications    Boolean                  @default(true)
+  focusSettings    Json?
+  openaiApiKey     String?
+  activities       Activity[]
+  dailyChallenges  DailyChallengeProgress[]
+  jobApplications  JobApplication[]
   learningProgress LearningProgress[]
-  dailyChallenges DailyChallengeProgress[]
-  activities  Activity[]
-  
+  missions         Mission[]
+  notebookEntries  NotebookEntry[]
+  achievements     UserAchievement[]
+
   @@map("users")
 }
 
 model Mission {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  type        MissionType
-  duration    Int?     // in minutes
-  xpReward    Int      @default(10)
-  status      MissionStatus @default(PENDING)
-  startedAt   DateTime?
-  completedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Focus mission specific
-  blockedApps String?  // JSON array of app names
-  blockedWebsites String? // JSON array of URLs
-  
+  id              String        @id @default(cuid())
+  title           String
+  description     String?
+  type            MissionType
+  duration        Int?
+  xpReward        Int           @default(10)
+  status          MissionStatus @default(PENDING)
+  startedAt       DateTime?
+  completedAt     DateTime?
+  elapsedTime     Int?          @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  userId          String
+  blockedApps     String?
+  blockedWebsites String?
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("missions")
 }
 
 model Achievement {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String
-  icon        String
-  category    AchievementCategory
-  requirement String   // JSON describing requirement
-  xpReward    Int      @default(50)
-  createdAt   DateTime @default(now())
-  
+  id               String              @id @default(cuid())
+  name             String              @unique
+  description      String
+  icon             String
+  category         AchievementCategory
+  requirement      String
+  xpReward         Int                 @default(50)
+  createdAt        DateTime            @default(now())
   userAchievements UserAchievement[]
-  
+
   @@map("achievements")
 }
 
 model UserAchievement {
-  id          String   @id @default(cuid())
-  unlockedAt  DateTime @default(now())
-  
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id            String      @id @default(cuid())
+  unlockedAt    DateTime    @default(now())
+  userId        String
   achievementId String
-  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
-  
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, achievementId])
   @@map("user_achievements")
 }
 
 model JobApplication {
-  id          String   @id @default(cuid())
-  company     String
-  role        String
-  description String?
-  appliedDate DateTime @default(now())
-  status      ApplicationStatus @default(APPLIED)
-  notes       String?
-  nextAction  String?
-  salary      String?
-  location    String?
-  jobUrl      String?
-  
-  // File attachments
-  resumeUrl   String?
+  id             String            @id @default(cuid())
+  company        String
+  role           String
+  description    String?
+  appliedDate    DateTime          @default(now())
+  status         ApplicationStatus @default(APPLIED)
+  notes          String?
+  nextAction     String?
+  salary         String?
+  location       String?
+  jobUrl         String?
+  resumeUrl      String?
   coverLetterUrl String?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("job_applications")
 }
 
@@ -124,114 +109,104 @@ model NotebookEntry {
   id        String   @id @default(cuid())
   title     String?
   content   String
-  tags      String?  // JSON array of tags
+  tags      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@map("notebook_entries")
 }
 
 model LearningResource {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  url         String
-  type        ResourceType
-  difficulty  DifficultyLevel @default(BEGINNER)
-  estimatedTime Int?   // in minutes
-  tags        String? // JSON array of tags
-  source      String? // Platform name (Medium, Dev.to, etc.)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id               String             @id @default(cuid())
+  title            String
+  description      String?
+  url              String
+  type             ResourceType
+  difficulty       DifficultyLevel    @default(BEGINNER)
+  estimatedTime    Int?
+  tags             String?
+  source           String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
   learningProgress LearningProgress[]
-  
+
   @@map("learning_resources")
 }
 
 model LearningProgress {
-  id          String   @id @default(cuid())
-  status      ProgressStatus @default(NOT_STARTED)
+  id          String           @id @default(cuid())
+  status      ProgressStatus   @default(NOT_STARTED)
   startedAt   DateTime?
   completedAt DateTime?
-  timeSpent   Int?     // in minutes
+  timeSpent   Int?
   notes       String?
-  rating      Int?     // 1-5 stars
-  
+  rating      Int?
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
   resourceId  String
   resource    LearningResource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
-  
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, resourceId])
   @@map("learning_progress")
 }
 
 model DailyChallenge {
-  id          String   @id @default(cuid())
+  id          String                   @id @default(cuid())
   title       String
   description String
   type        ChallengeType
-  requirement String   // JSON describing requirement
-  xpReward    Int      @default(25)
-  date        DateTime @unique
-  createdAt   DateTime @default(now())
-  
+  requirement String
+  xpReward    Int                      @default(25)
+  date        DateTime                 @unique
+  createdAt   DateTime                 @default(now())
   progress    DailyChallengeProgress[]
-  
+
   @@map("daily_challenges")
 }
 
 model DailyChallengeProgress {
-  id          String   @id @default(cuid())
+  id          String         @id @default(cuid())
   status      ProgressStatus @default(NOT_STARTED)
-  progress    Int      @default(0) // 0-100 percentage
+  progress    Int            @default(0)
   completedAt DateTime?
-  
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
   challengeId String
   challenge   DailyChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-  
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, challengeId])
   @@map("daily_challenge_progress")
 }
 
 model Activity {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   type        ActivityType
   title       String
   description String?
-  metadata    String?  // JSON object with additional data
-  xpEarned    Int      @default(0)
-  createdAt   DateTime @default(now())
-  
+  metadata    String?
+  xpEarned    Int          @default(0)
+  createdAt   DateTime     @default(now())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("activities")
 }
 
 model Notification {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   title     String
   message   String
   type      NotificationType
-  read      Boolean  @default(false)
+  read      Boolean          @default(false)
   actionUrl String?
-  createdAt DateTime @default(now())
-  
+  createdAt DateTime         @default(now())
   userId    String
-  
+
   @@map("notifications")
 }
 
-// Enums
 enum MissionType {
   FOCUS
   LEARNING

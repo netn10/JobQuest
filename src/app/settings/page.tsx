@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input'
 import { useTheme } from '@/contexts/theme-context'
 import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/hooks/use-toast'
+import { useNotifications } from '@/contexts/notifications-context'
+import { notificationService } from '@/lib/notifications'
 import { 
   Settings,
   User,
@@ -21,7 +23,10 @@ import {
   Trash2,
   Save,
   RotateCcw,
-  Bot
+  Bot,
+  CheckCircle,
+  AlertCircle,
+  XCircle
 } from 'lucide-react'
 
 interface UserSettings {
@@ -70,23 +75,22 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
   const { user, updateUser } = useAuth()
   const { toast } = useToast()
+  const { 
+    preferences: notificationPreferences, 
+    permission: notificationPermission, 
+    updatePreference: updateNotificationPreference,
+    requestPermission: requestNotificationPermission 
+  } = useNotifications()
   const [isResetting, setIsResetting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isTestingApiKey, setIsTestingApiKey] = useState(false)
+  const [isRequestingPermission, setIsRequestingPermission] = useState(false)
   const [settings, setSettings] = useState<UserSettings>({
     profile: {
       name: user?.name || '',
       email: user?.email || ''
     },
-    notifications: {
-      missionReminders: true,
-      achievementUnlocks: true,
-      dailyChallenges: true,
-      jobApplicationFollowups: true,
-      learningsuggestions: true,
-      streakWarnings: true,
-      emailNotifications: false
-    },
+    notifications: notificationPreferences,
     gamification: {
       xpMultiplier: 1.0,
       difficultyPreference: 'NORMAL',
@@ -116,6 +120,14 @@ export default function SettingsPage() {
   })
 
   const [activeTab, setActiveTab] = useState('profile')
+
+  // Sync notification preferences from context
+  useEffect(() => {
+    setSettings(prev => ({
+      ...prev,
+      notifications: notificationPreferences
+    }))
+  }, [notificationPreferences])
 
   // Update settings when user data is available
   useEffect(() => {
@@ -153,6 +165,11 @@ export default function SettingsPage() {
   }, [user])
 
   const updateSettings = (section: keyof UserSettings, field: string, value: string | number | boolean) => {
+    if (section === 'notifications' && typeof field === 'string') {
+      // Update notification preference through context
+      updateNotificationPreference(field as keyof typeof notificationPreferences, value as boolean)
+    }
+    
     setSettings(prev => ({
       ...prev,
       [section]: {
@@ -267,6 +284,58 @@ export default function SettingsPage() {
     }
   }
 
+  const handleRequestNotificationPermission = async () => {
+    setIsRequestingPermission(true)
+    try {
+      const granted = await requestNotificationPermission()
+      
+      if (granted) {
+        toast({
+          title: "Notifications Enabled",
+          description: "You'll now receive browser notifications based on your preferences.",
+        })
+        
+        // Test notification
+        await notificationService.show({
+          title: "JobQuest Notifications",
+          body: "Notifications are now working! 🎉",
+          tag: 'test-notification'
+        })
+      } else {
+        toast({
+          title: "Notifications Denied",
+          description: "You can enable notifications in your browser settings later.",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to request notification permission",
+        variant: "destructive"
+      })
+    } finally {
+      setIsRequestingPermission(false)
+    }
+  }
+
+  const testNotification = async () => {
+    if (notificationPermission !== 'granted') {
+      toast({
+        title: "Notifications Not Enabled",
+        description: "Please enable notifications first",
+        variant: "destructive"
+      })
+      return
+    }
+
+    await notificationService.show({
+      title: "JobQuest Test Notification",
+      body: "This is a test notification. Notifications are working! 🚀",
+      tag: 'test-notification'
+    })
+  }
+
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -349,7 +418,55 @@ export default function SettingsPage() {
                   <CardTitle className="text-black dark:text-white">Notification Preferences</CardTitle>
                   <CardDescription className="text-gray-600 dark:text-gray-400">Choose what notifications you want to receive</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
+                  {/* Browser Notification Permission */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex-shrink-0">
+                          {notificationPermission === 'granted' && (
+                            <CheckCircle className="h-5 w-5 text-green-500" />
+                          )}
+                          {notificationPermission === 'denied' && (
+                            <XCircle className="h-5 w-5 text-red-500" />
+                          )}
+                          {notificationPermission === 'default' && (
+                            <AlertCircle className="h-5 w-5 text-yellow-500" />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                            Browser Notifications
+                          </h4>
+                          <p className="text-xs text-blue-700 dark:text-blue-300">
+                            {notificationPermission === 'granted' && 'Notifications are enabled'}
+                            {notificationPermission === 'denied' && 'Notifications are blocked. Enable in browser settings.'}
+                            {notificationPermission === 'default' && 'Click to enable browser notifications'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        {notificationPermission === 'default' && (
+                          <Button
+                            onClick={handleRequestNotificationPermission}
+                            disabled={isRequestingPermission}
+                            size="sm"
+                          >
+                            {isRequestingPermission ? 'Requesting...' : 'Enable'}
+                          </Button>
+                        )}
+                        {notificationPermission === 'granted' && (
+                          <Button
+                            onClick={testNotification}
+                            variant="outline"
+                            size="sm"
+                          >
+                            Test
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                   {Object.entries(settings.notifications).map(([key, value]) => (
                     <div key={key} className="flex items-center justify-between">
                       <div>

@@ -27,6 +27,7 @@ interface Mission {
   status: MissionStatus
   startedAt: Date | null
   completedAt: Date | null
+  elapsedTime: number | null
   createdAt: Date
   updatedAt: Date
   userId: string
@@ -98,50 +99,33 @@ export default function MissionsPage() {
 
   // Timer for active mission
   useEffect(() => {
-    if (activeMission) {
-      // Immediately update the timer for the current active mission if it's in progress
-      if (activeMission.status === 'IN_PROGRESS' && activeMission.startedAt) {
-        const updateTimer = () => {
-          setMissions(prevMissions => 
-            prevMissions.map(mission => {
-              if (mission.id === activeMission.id && mission.status === 'IN_PROGRESS') {
-                const startTime = new Date(mission.startedAt!).getTime()
-                const currentTime = Date.now()
-                const elapsedSeconds = Math.floor((currentTime - startTime) / 1000)
-                const totalSeconds = (mission.duration || 0) * 60
-                const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds)
-                
-                return {
-                  ...mission,
-                  timeRemaining: remainingSeconds
-                }
-              }
-              return mission
-            })
-          )
-        }
-        
-        // Update immediately
-        updateTimer()
-      }
-      
-      const interval = setInterval(async () => {
+    const activeMissionId = activeMission?.id
+    const activeMissionStatus = activeMission?.status
+    const activeMissionStartedAt = activeMission?.startedAt
+    
+    if (activeMissionId && activeMissionStatus === 'IN_PROGRESS' && activeMissionStartedAt) {
+      const interval = setInterval(() => {
         setMissions(prevMissions => 
           prevMissions.map(mission => {
-            if (mission.id === activeMission.id && mission.status === 'IN_PROGRESS') {
+            if (mission.id === activeMissionId && mission.status === 'IN_PROGRESS') {
               const startTime = new Date(mission.startedAt!).getTime()
               const currentTime = Date.now()
-              const elapsedSeconds = Math.floor((currentTime - startTime) / 1000)
+              const currentSessionTime = Math.floor((currentTime - startTime) / 1000)
+              const totalElapsedSeconds = (mission.elapsedTime || 0) + currentSessionTime
               const totalSeconds = (mission.duration || 0) * 60
-              const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds)
+              const remainingSeconds = Math.max(0, totalSeconds - totalElapsedSeconds)
               
               // Auto-complete mission if time is up
               if (remainingSeconds === 0 && mission.status === 'IN_PROGRESS') {
-                // Auto-complete the mission
+                // Auto-complete the mission with updated elapsed time
                 fetch('/api/missions', {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ missionId: mission.id, status: 'COMPLETED' })
+                  body: JSON.stringify({ 
+                    missionId: mission.id, 
+                    status: 'COMPLETED',
+                    elapsedTime: totalElapsedSeconds
+                  })
                 }).then(() => {
                   fetchMissions() // Refresh missions
                   stopFocusSession() // Stop focus blocking
@@ -172,7 +156,7 @@ export default function MissionsPage() {
 
       return () => clearInterval(interval)
     }
-  }, [activeMission, fetchMissions, stopFocusSession, settings.focus.autoStartBreaks, breakState.completedPomodoros])
+  }, [activeMission?.id || null, activeMission?.status || null, fetchMissions, stopFocusSession, settings.focus.autoStartBreaks, breakState.completedPomodoros])
 
   const fetchFocusSettings = async () => {
     if (!user?.id) return
@@ -258,14 +242,27 @@ export default function MissionsPage() {
   const handleMissionAction = async (missionId: string, action: 'start' | 'pause' | 'stop') => {
     let status: MissionStatus
     let xpReward = 0
+    let elapsedTime = 0
+    
+    // Get current mission to calculate elapsed time
+    const mission = missions.find(m => m.id === missionId)
+    if (!mission) return
+    
+    // Calculate current elapsed time if mission is in progress
+    if (mission.status === 'IN_PROGRESS' && mission.startedAt) {
+      const currentSessionTime = Math.floor((Date.now() - new Date(mission.startedAt).getTime()) / 1000)
+      elapsedTime = (mission.elapsedTime || 0) + currentSessionTime
+    } else {
+      elapsedTime = mission.elapsedTime || 0
+    }
     
     // Strict mode check - prevent early termination
     if ((action === 'pause' || action === 'stop') && settings.focus.strictMode) {
-      const mission = missions.find(m => m.id === missionId)
       if (mission && mission.status === 'IN_PROGRESS' && mission.timeRemaining !== undefined && mission.timeRemaining > 0) {
         if (!window.confirm(
-          'Strict Mode is enabled. Are you sure you want to end this mission early? ' +
-          'This may result in reduced XP and could break your focus streak.'
+          action === 'pause' 
+            ? 'Strict Mode is enabled. Are you sure you want to pause this mission?'
+            : 'Strict Mode is enabled. Are you sure you want to end this mission early? This may result in reduced XP and could break your focus streak.'
         )) {
           return // User cancelled, don't proceed
         }
@@ -274,11 +271,9 @@ export default function MissionsPage() {
     
     // Calculate partial XP for early completion
     if (action === 'stop') {
-      const mission = missions.find(m => m.id === missionId)
-      if (mission && mission.status === 'IN_PROGRESS' && mission.timeRemaining !== undefined) {
+      if (mission && mission.timeRemaining !== undefined) {
         const totalSeconds = (mission.duration || 0) * 60
-        const completedSeconds = totalSeconds - mission.timeRemaining
-        const completionPercentage = Math.min(100, (completedSeconds / totalSeconds) * 100)
+        const completionPercentage = Math.min(100, (elapsedTime / totalSeconds) * 100)
         xpReward = Math.floor((mission.xpReward || 0) * (completionPercentage / 100))
       }
     }
@@ -304,6 +299,7 @@ export default function MissionsPage() {
         body: JSON.stringify({ 
           missionId, 
           status,
+          elapsedTime: (action === 'pause' || action === 'stop') ? elapsedTime : undefined,
           xpReward: action === 'stop' ? xpReward : undefined
         })
       })
@@ -320,31 +316,29 @@ export default function MissionsPage() {
         // Handle focus blocking
         if (action === 'start') {
           startFocusSession()
-        } else if (action === 'pause' || action === 'stop') {
+        } else if (action === 'stop') {
+          // Only stop focus session for mission completion, not pause
           stopFocusSession()
           
           // Handle auto-start breaks for manual completion
-          if (action === 'stop' && settings.focus.autoStartBreaks) {
-            const mission = missions.find(m => m.id === missionId)
-            if (mission && mission.timeRemaining !== undefined) {
-              const totalSeconds = (mission.duration || 0) * 60
-              const completedSeconds = totalSeconds - mission.timeRemaining
-              const completionPercentage = (completedSeconds / totalSeconds) * 100
+          if (settings.focus.autoStartBreaks) {
+            const totalSeconds = (mission.duration || 0) * 60
+            const completionPercentage = (elapsedTime / totalSeconds) * 100
+            
+            // Only start break if mission was completed > 80%
+            if (completionPercentage >= 80) {
+              const newCompletedPomodoros = breakState.completedPomodoros + 1
+              const isLongBreak = newCompletedPomodoros % 4 === 0
               
-              // Only start break if mission was completed > 80%
-              if (completionPercentage >= 80) {
-                const newCompletedPomodoros = breakState.completedPomodoros + 1
-                const isLongBreak = newCompletedPomodoros % 4 === 0
-                
-                setBreakState({
-                  active: true,
-                  type: isLongBreak ? 'long' : 'short',
-                  completedPomodoros: newCompletedPomodoros
-                })
-              }
+              setBreakState({
+                active: true,
+                type: isLongBreak ? 'long' : 'short',
+                completedPomodoros: newCompletedPomodoros
+              })
             }
           }
         }
+        // Note: Don't stop focus session for pause action - keep it running
       } else {
         console.error('Failed to update mission:', data.error)
       }
@@ -777,7 +771,12 @@ export default function MissionsPage() {
                   <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
                     <div className="flex items-center space-x-1">
                       <Clock className="h-4 w-4" />
-                      <span>{mission.duration || 0} minutes</span>
+                      <span>
+                        {mission.elapsedTime && mission.elapsedTime > 0 
+                          ? `${Math.floor(mission.elapsedTime / 60)}/${mission.duration || 0} minutes`
+                          : `${mission.duration || 0} minutes`
+                        }
+                      </span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <Zap className="h-4 w-4 text-yellow-500" />
@@ -785,13 +784,25 @@ export default function MissionsPage() {
                     </div>
                   </div>
                   
+                  {/* Progress bar for paused missions */}
+                  {mission.status === 'PENDING' && mission.elapsedTime && mission.elapsedTime > 0 && (
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
+                        style={{ 
+                          width: `${Math.min(100, (mission.elapsedTime / ((mission.duration || 0) * 60)) * 100)}%` 
+                        }}
+                      ></div>
+                    </div>
+                  )}
+                  
                   {mission.status === 'PENDING' && (
                     <Button 
                       className="w-full" 
                       onClick={() => handleMissionAction(mission.id, 'start')}
                     >
                       <Play className="h-4 w-4 mr-2" />
-                      Start Mission
+                      {(mission.elapsedTime || 0) > 0 ? 'Resume Mission' : 'Start Mission'}
                     </Button>
                   )}
                   

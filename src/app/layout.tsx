@@ -4,6 +4,8 @@ import { ThemeProvider } from '@/contexts/theme-context'
 import { AuthProvider } from '@/contexts/auth-context'
 import { SettingsProvider } from '@/contexts/settings-context'
 import { UserStatsProvider } from '@/contexts/user-stats-context'
+import { NotificationsProvider } from '@/contexts/notifications-context'
+import { NotificationStoreProvider } from '@/contexts/notification-store-context'
 import { cleanupBrowserExtensions, preventHydrationMismatch } from '@/utils/hydration-cleanup'
 import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
@@ -83,10 +85,14 @@ export default function RootLayout({
           <AuthProvider>
             <UserStatsProvider>
               <SettingsProvider>
-                <div suppressHydrationWarning>
-                  {children}
-                </div>
-                <Toaster />
+                <NotificationsProvider>
+                  <NotificationStoreProvider>
+                    <div suppressHydrationWarning>
+                      {children}
+                    </div>
+                    <Toaster />
+                  </NotificationStoreProvider>
+                </NotificationsProvider>
               </SettingsProvider>
             </UserStatsProvider>
           </AuthProvider>

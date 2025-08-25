@@ -7,6 +7,10 @@ export interface AchievementRequirement {
   days?: number
   xp?: number
   minutes?: number
+  missionType?: string
+  resourceType?: string
+  beforeHour?: number
+  afterHour?: number
 }
 
 export async function checkAndUnlockAchievements(userId: string) {
@@ -17,7 +21,11 @@ export async function checkAndUnlockAchievements(userId: string) {
       include: {
         missions: true,
         jobApplications: true,
-        learningProgress: true,
+        learningProgress: {
+          include: {
+            resource: true
+          }
+        },
         achievements: {
           include: {
             achievement: true
@@ -27,13 +35,28 @@ export async function checkAndUnlockAchievements(userId: string) {
     })
 
     if (!user) {
-      throw new Error('User not found')
+      console.log('User not found in achievements check:', userId)
+      return {
+        newlyUnlockedAchievements: [],
+        totalXpAwarded: 0
+      }
     }
 
     // Get all available achievements
     const allAchievements = await prisma.achievement.findMany({
       orderBy: { createdAt: 'asc' }
+    }).catch(error => {
+      console.error('Error fetching achievements:', error)
+      return []
     })
+
+    if (allAchievements.length === 0) {
+      console.log('No achievements found in database')
+      return {
+        newlyUnlockedAchievements: [],
+        totalXpAwarded: 0
+      }
+    }
 
     const newlyUnlockedAchievements = []
     let totalXpAwarded = 0
@@ -58,7 +81,14 @@ export async function checkAndUnlockAchievements(userId: string) {
 
       switch (requirement.type) {
         case 'MISSIONS_COMPLETED':
-          const completedMissions = user.missions.filter(m => m.status === 'COMPLETED').length
+          let completedMissions
+          if (requirement.missionType) {
+            completedMissions = user.missions.filter(m => 
+              m.status === 'COMPLETED' && m.type === requirement.missionType
+            ).length
+          } else {
+            completedMissions = user.missions.filter(m => m.status === 'COMPLETED').length
+          }
           shouldUnlock = completedMissions >= (requirement.count || 1)
           break
 
@@ -75,9 +105,25 @@ export async function checkAndUnlockAchievements(userId: string) {
           shouldUnlock = applications >= (requirement.count || 1)
           break
 
+        case 'JOB_APPLICATIONS_SCREENING':
+          const screeningApps = user.jobApplications.filter(app => 
+            app.status === 'SCREENING' || app.status === 'INTERVIEWING' || app.status === 'OFFER_RECEIVED'
+          ).length
+          shouldUnlock = screeningApps >= (requirement.count || 1)
+          break
+
         case 'LEARNING_RESOURCES':
           const completedLearning = user.learningProgress.filter(lp => lp.status === 'COMPLETED').length
           shouldUnlock = completedLearning >= (requirement.count || 1)
+          break
+
+        case 'LEARNING_RESOURCES_BY_TYPE':
+          const completedByType = user.learningProgress.filter(lp => 
+            lp.status === 'COMPLETED' && 
+            lp.resource && 
+            lp.resource.type === requirement.resourceType
+          ).length
+          shouldUnlock = completedByType >= (requirement.count || 1)
           break
 
         case 'FOCUS_SESSION_DURATION':
@@ -88,6 +134,19 @@ export async function checkAndUnlockAchievements(userId: string) {
             m.duration >= (requirement.minutes || 60)
           ).length
           shouldUnlock = longSessions > 0
+          break
+
+        // New achievement types that would need additional data/logic to implement fully
+        case 'EARLY_FOCUS_SESSIONS':
+        case 'LATE_FOCUS_SESSIONS':
+        case 'WEEKEND_FOCUS_SESSIONS':
+        case 'DAILY_LEARNING_RESOURCES':
+        case 'DAILY_JOB_APPLICATIONS':
+        case 'JOB_APPLICATION_STREAK':
+          // These would require additional tracking in the database
+          // For now, mark as not unlocked (can be implemented later with enhanced data tracking)
+          shouldUnlock = false
+          console.log(`Achievement type ${requirement.type} requires enhanced tracking - not yet implemented`)
           break
 
         default:
@@ -156,7 +215,11 @@ export async function getAchievementProgress(userId: string) {
       include: {
         missions: true,
         jobApplications: true,
-        learningProgress: true,
+        learningProgress: {
+          include: {
+            resource: true
+          }
+        },
         achievements: {
           include: {
             achievement: true
@@ -185,7 +248,14 @@ export async function getAchievementProgress(userId: string) {
         
         switch (requirement.type) {
           case 'MISSIONS_COMPLETED':
-            const completedMissions = user.missions.filter(m => m.status === 'COMPLETED').length
+            let completedMissions
+            if (requirement.missionType) {
+              completedMissions = user.missions.filter(m => 
+                m.status === 'COMPLETED' && m.type === requirement.missionType
+              ).length
+            } else {
+              completedMissions = user.missions.filter(m => m.status === 'COMPLETED').length
+            }
             progress = Math.min(completedMissions, requirement.count || 1)
             maxProgress = requirement.count || 1
             break
@@ -205,10 +275,28 @@ export async function getAchievementProgress(userId: string) {
             progress = Math.min(applications, requirement.count || 1)
             maxProgress = requirement.count || 1
             break
+
+          case 'JOB_APPLICATIONS_SCREENING':
+            const screeningApps = user.jobApplications.filter(app => 
+              app.status === 'SCREENING' || app.status === 'INTERVIEWING' || app.status === 'OFFER_RECEIVED'
+            ).length
+            progress = Math.min(screeningApps, requirement.count || 1)
+            maxProgress = requirement.count || 1
+            break
             
           case 'LEARNING_RESOURCES':
             const completedLearning = user.learningProgress.filter(lp => lp.status === 'COMPLETED').length
             progress = Math.min(completedLearning, requirement.count || 1)
+            maxProgress = requirement.count || 1
+            break
+
+          case 'LEARNING_RESOURCES_BY_TYPE':
+            const completedByType = user.learningProgress.filter(lp => 
+              lp.status === 'COMPLETED' && 
+              lp.resource && 
+              lp.resource.type === requirement.resourceType
+            ).length
+            progress = Math.min(completedByType, requirement.count || 1)
             maxProgress = requirement.count || 1
             break
             
@@ -220,6 +308,17 @@ export async function getAchievementProgress(userId: string) {
               m.duration >= (requirement.minutes || 60)
             ).length
             progress = longSessions > 0 ? 1 : 0
+            maxProgress = 1
+            break
+
+          // New achievement types that would need additional data/logic to implement fully
+          case 'EARLY_FOCUS_SESSIONS':
+          case 'LATE_FOCUS_SESSIONS':
+          case 'WEEKEND_FOCUS_SESSIONS':
+          case 'DAILY_LEARNING_RESOURCES':
+          case 'DAILY_JOB_APPLICATIONS':
+          case 'JOB_APPLICATION_STREAK':
+            progress = isUnlocked ? 1 : 0
             maxProgress = 1
             break
             

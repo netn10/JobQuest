@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
       }
     } catch (error) {
       console.error('Error checking achievements in user stats:', error)
+      // Don't fail the entire request if achievements check fails
     }
 
     // Calculate XP needed for next level (simple formula: level * 100)
@@ -62,17 +63,16 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching user stats:', error)
-    
-    // Return fallback mock data with all zeros
-    return NextResponse.json({
-      totalXp: 0,
-      level: 1,
-      currentStreak: 0,
-      longestStreak: 0,
-      applications: 0,
-      pendingResponses: 0,
-      xpForNextLevel: 100,
-      xpProgress: 0
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      userId: authHeader?.replace('Bearer ', '') || 'no userId'
     })
+    
+    // Return error response instead of fallback data
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }

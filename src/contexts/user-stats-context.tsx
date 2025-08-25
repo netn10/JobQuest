@@ -43,7 +43,8 @@ export function UserStatsProvider({ children }: { children: ReactNode }) {
       })
       
       if (!response.ok) {
-        throw new Error('Failed to fetch user stats')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to fetch user stats (${response.status})`)
       }
       
       const data = await response.json()

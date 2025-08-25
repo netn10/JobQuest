@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { useUserStats } from '@/contexts/user-stats-context'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { NotificationCenter } from '@/components/notification-center'
 
 interface HeaderProps {
   title: string
@@ -114,9 +115,7 @@ export function Header({ title, children, onMenuClick, showMenuButton }: HeaderP
           
           {user ? (
             <>
-              <Button variant="ghost" size="sm" className="relative cursor-pointer">
-                <Bell className="h-5 w-5" />
-              </Button>
+              <NotificationCenter />
               
               {/* Hide stats on mobile - they'll be in the sidebar */}
               <div className="hidden lg:flex items-center space-x-3">

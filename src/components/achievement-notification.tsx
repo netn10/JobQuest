@@ -2,8 +2,9 @@
 
 import { useEffect } from 'react'
 import { useToast } from '@/hooks/use-toast'
-// import { Trophy, Zap } from 'lucide-react' // Removed unused imports
+import { notificationService } from '@/lib/notifications'
 import { useAuth } from '@/contexts/auth-context'
+import { useNotificationHelpers } from '@/contexts/notification-store-context'
 
 interface Achievement {
   id: string
@@ -23,20 +24,33 @@ export function setAchievementListener(listener: (achievements: Achievement[]) =
 export function AchievementNotification() {
   const { toast } = useToast()
   const { user } = useAuth()
+  const { addAchievementNotification } = useNotificationHelpers()
 
   useEffect(() => {
     if (!user) return
 
     // Set up the global listener
-    setAchievementListener((achievements: Achievement[]) => {
-      achievements.forEach((achievement) => {
+    setAchievementListener(async (achievements: Achievement[]) => {
+      for (const achievement of achievements) {
+        // Add to notification store
+        addAchievementNotification(achievement.name, achievement.description, achievement.xpReward)
+        
+        // Show toast notification
         toast({
           title: "🏆 Achievement Unlocked!",
           description: `${achievement.name} - ${achievement.description} (+${achievement.xpReward} XP)`,
           variant: 'success',
           duration: 5000,
         })
-      })
+        
+        // Show browser notification if enabled
+        if (notificationService.isEnabled()) {
+          await notificationService.showAchievementUnlock(
+            `${achievement.name} - ${achievement.description}`,
+            achievement.xpReward
+          )
+        }
+      }
     })
 
     return () => {
