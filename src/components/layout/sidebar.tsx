@@ -15,7 +15,8 @@ import {
   LogOut,
   Info,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Clock
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/auth-context'
@@ -29,6 +30,7 @@ const navigation = [
   { name: 'Daily Notebook', href: '/notebook', icon: BookOpen },
   { name: 'Learning', href: '/learning', icon: GraduationCap },
   { name: 'Achievements', href: '/achievements', icon: Trophy },
+  { name: 'Activity History', href: '/activities', icon: Clock },
   { name: 'Settings', href: '/settings', icon: Settings },
   { name: 'About', href: '/about', icon: Info },
 ]
@@ -64,7 +66,7 @@ export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse
   return (
     <div className={cn(
       "flex h-full flex-col bg-gray-900 dark:bg-gray-950 text-white transition-all duration-300",
-      collapsed ? "w-16" : "w-64"
+      collapsed ? "lg:w-16 w-64" : "w-64"
     )}>
       <div className="flex h-16 items-center justify-between px-6">
         <button 
@@ -75,16 +77,6 @@ export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse
           {!collapsed && <span className="font-bold text-lg">JobQuest</span>}
         </button>
         <div className="flex items-center space-x-2">
-          {onToggleCollapse && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggleCollapse}
-              className="hidden lg:flex text-gray-400 hover:text-white"
-            >
-              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </Button>
-          )}
           {onClose && (
             <Button
               variant="ghost"

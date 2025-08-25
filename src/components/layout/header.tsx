@@ -55,15 +55,14 @@ export function Header({ title, children, onMenuClick, showMenuButton }: HeaderP
   }
 
   return (
-    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <span className="text-gray-400">•</span>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{title}</h1>
+    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 lg:px-6 py-4 w-full">
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center space-x-2 lg:space-x-4 min-w-0 flex-1">
+          <h1 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">{title}</h1>
           {children}
         </div>
         
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2 lg:space-x-3">
           <div className="relative">
             <Button 
               variant="ghost" 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { checkAndUnlockAchievements } from '@/lib/achievements'
 import { updateUserStreak } from '@/lib/utils'
+import { logNotebookEntryCreated, logNotebookEntryUpdated } from '@/lib/activity-logger'
 
 export async function GET(request: NextRequest) {
   try {
@@ -79,6 +80,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    let isNewEntry = false
     if (entry) {
       // Update existing entry
       entry = await prisma.notebookEntry.update({
@@ -90,6 +92,13 @@ export async function POST(request: NextRequest) {
           updatedAt: new Date()
         }
       })
+      
+      // Log the update activity
+      try {
+        await logNotebookEntryUpdated(userId, title || 'Untitled Entry', entry.id)
+      } catch (error) {
+        console.error('Error logging notebook update activity:', error)
+      }
     } else {
       // Create new entry
       entry = await prisma.notebookEntry.create({
@@ -101,6 +110,14 @@ export async function POST(request: NextRequest) {
           createdAt: date ? new Date(date + 'T12:00:00.000Z') : new Date()
         }
       })
+      isNewEntry = true
+      
+      // Log the creation activity
+      try {
+        await logNotebookEntryCreated(userId, title || 'Untitled Entry', entry.id)
+      } catch (error) {
+        console.error('Error logging notebook creation activity:', error)
+      }
     }
 
     // Update streak and check for achievement unlocks after notebook entry creation

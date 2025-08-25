@@ -1,4 +1,5 @@
 import { prisma } from './db'
+import { logAchievementUnlocked } from './activity-logger'
 
 export interface AchievementRequirement {
   type: string
@@ -113,6 +114,13 @@ export async function checkAndUnlockAchievements(userId: string) {
               totalXp: { increment: achievement.xpReward }
             }
           })
+
+          // Log achievement unlock activity
+          try {
+            await logAchievementUnlocked(userId, achievement.name, achievement.id, achievement.xpReward)
+          } catch (error) {
+            console.error('Error logging achievement unlock activity:', error)
+          }
 
           newlyUnlockedAchievements.push({
             id: achievement.id,

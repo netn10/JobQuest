@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { checkAndUnlockAchievements } from '@/lib/achievements'
 import { updateUserStreak } from '@/lib/utils'
+import { logMissionStarted, logMissionCompleted } from '@/lib/activity-logger'
 
 export async function GET(request: NextRequest) {
   try {
@@ -63,6 +64,15 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Log mission start if auto-started
+    if (autoStart) {
+      try {
+        await logMissionStarted(userId, title, mission.id)
+      } catch (error) {
+        console.error('Error logging mission start activity:', error)
+      }
+    }
+
     return NextResponse.json({
       success: true,
       mission
@@ -104,6 +114,13 @@ export async function PATCH(request: NextRequest) {
     if (status === 'COMPLETED') {
       const xpToAward = xpReward !== undefined ? xpReward : mission.xpReward
       
+      // Log mission completion
+      try {
+        await logMissionCompleted(mission.userId, mission.title, mission.id, xpToAward)
+      } catch (error) {
+        console.error('Error logging mission completion activity:', error)
+      }
+      
       // Update user XP and streak
       await Promise.all([
         prisma.user.update({
@@ -124,6 +141,13 @@ export async function PATCH(request: NextRequest) {
         }
       } catch (error) {
         console.error('Error checking achievements after mission completion:', error)
+      }
+    } else if (status === 'IN_PROGRESS') {
+      // Log mission start if just started
+      try {
+        await logMissionStarted(mission.userId, mission.title, mission.id)
+      } catch (error) {
+        console.error('Error logging mission start activity:', error)
       }
     }
 

@@ -1,17 +1,23 @@
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// Create OpenAI instance with default API key
+const createOpenAI = (apiKey?: string) => {
+  return new OpenAI({
+    apiKey: apiKey || process.env.OPENAI_API_KEY,
+  })
+}
+
+const openai = createOpenAI()
 
 export async function generateLearningRecommendations(userProfile: {
   skills: string[]
   jobGoals: string[]
   currentLevel: string
   timeAvailable: number
-}) {
+}, userApiKey?: string) {
   try {
-    const completion = await openai.chat.completions.create({
+    const openaiInstance = userApiKey ? createOpenAI(userApiKey) : openai
+    const completion = await openaiInstance.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {
@@ -77,9 +83,10 @@ export async function generateJobApplicationInsights(application: {
   role: string
   description: string
   userSkills: string[]
-}) {
+}, userApiKey?: string) {
   try {
-    const completion = await openai.chat.completions.create({
+    const openaiInstance = userApiKey ? createOpenAI(userApiKey) : openai
+    const completion = await openaiInstance.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {
@@ -131,9 +138,10 @@ export async function generateMotivationalMessage(context: {
   streak: number
   recentAchievements: string[]
   upcomingGoals: string[]
-}) {
+}, userApiKey?: string) {
   try {
-    const completion = await openai.chat.completions.create({
+    const openaiInstance = userApiKey ? createOpenAI(userApiKey) : openai
+    const completion = await openaiInstance.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {

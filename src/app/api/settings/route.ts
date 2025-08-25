@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
         email: true,
         focusSettings: true,
         notifications: true,
-        longestStreak: true
+        longestStreak: true,
+        openaiApiKey: true
       }
     })
 
@@ -75,6 +76,10 @@ export async function GET(request: NextRequest) {
       appearance: {
         colorScheme: 'BLUE' as const,
         compactMode: false
+      },
+      ai: {
+        openaiApiKey: user.openaiApiKey || '',
+        enableAiFeatures: !!user.openaiApiKey
       }
     }
 
@@ -127,6 +132,13 @@ export async function PUT(request: NextRequest) {
         blockedApps: settings.focus.blockedApps || []
       }
       updateData.focusSettings = JSON.stringify(focusSettings)
+    }
+
+    // Store AI settings
+    if (settings.ai) {
+      if (settings.ai.openaiApiKey !== undefined) {
+        updateData.openaiApiKey = settings.ai.openaiApiKey
+      }
     }
 
     const user = await prisma.user.update({

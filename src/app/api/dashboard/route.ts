@@ -57,6 +57,10 @@ export async function GET(request: NextRequest) {
         notebookEntries: {
           orderBy: { createdAt: 'desc' },
           take: 10
+        },
+        activities: {
+          orderBy: { createdAt: 'desc' },
+          take: 50
         }
       }
     })
@@ -79,6 +83,18 @@ export async function GET(request: NextRequest) {
     // Combine all activity dates for calendar (using Israel time)
     const activeDates = new Set<string>()
     
+    // Add dates from activities
+    if (user && user.activities) {
+      user.activities.forEach(activity => {
+        const date = new Date(activity.createdAt)
+        // Convert to Israel time (UTC+3)
+        const israelDate = new Date(date.getTime() + (3 * 60 * 60 * 1000))
+        const dateStr = israelDate.toISOString().split('T')[0]
+        activeDates.add(dateStr)
+      })
+    }
+    
+    // Also include legacy dates from missions and applications for backward compatibility
     allMissions.forEach(mission => {
       if (mission.completedAt) {
         const date = new Date(mission.completedAt)
@@ -86,7 +102,6 @@ export async function GET(request: NextRequest) {
         const israelDate = new Date(date.getTime() + (3 * 60 * 60 * 1000))
         const dateStr = israelDate.toISOString().split('T')[0]
         activeDates.add(dateStr)
-        console.log('Added mission date to active dates (Israel time):', dateStr)
       }
     })
     
@@ -96,7 +111,6 @@ export async function GET(request: NextRequest) {
       const israelDate = new Date(date.getTime() + (3 * 60 * 60 * 1000))
       const dateStr = israelDate.toISOString().split('T')[0]
       activeDates.add(dateStr)
-      console.log('Added application date to active dates (Israel time):', dateStr)
     })
     
     // Get today's date in Israel time
@@ -129,32 +143,55 @@ export async function GET(request: NextRequest) {
     const xpForNextLevel = user.level * 100
     const xpProgress = user.totalXp % 100
 
-    // Get all activities for calendar and recent activity
-    const allActivities = [
-      ...user.missions.map((mission: any) => ({
-        type: 'mission',
-        title: `Completed ${mission.title}`,
-        description: `Earned ${mission.xpReward} XP`,
-        timestamp: mission.completedAt || mission.createdAt,
-        icon: 'target'
-      })),
-      ...user.achievements.map((ua: any) => ({
-        type: 'achievement',
-        title: `Unlocked "${ua.achievement.name}"`,
-        description: `Earned ${ua.achievement.xpReward} XP`,
-        timestamp: ua.unlockedAt,
-        icon: 'trophy'
-      })),
-      ...user.jobApplications.map((app: any) => ({
-        type: 'application',
-        title: `Applied to ${app.role} at ${app.company}`,
-        description: app.status,
-        timestamp: app.appliedDate,
-        icon: 'briefcase'
-      }))
-    ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    // Process activities from the Activity model
+    const allActivities = user.activities.map((activity: any) => {
+      let icon = 'clock'
+      
+      // Map activity types to icons
+      switch (activity.type) {
+        case 'MISSION_STARTED':
+        case 'MISSION_COMPLETED':
+        case 'MISSION_FAILED':
+          icon = 'target'
+          break
+        case 'JOB_APPLIED':
+        case 'JOB_STATUS_UPDATED':
+          icon = 'briefcase'
+          break
+        case 'NOTEBOOK_ENTRY_CREATED':
+        case 'NOTEBOOK_ENTRY_UPDATED':
+          icon = 'file'
+          break
+        case 'LEARNING_STARTED':
+        case 'LEARNING_COMPLETED':
+        case 'LEARNING_PROGRESS_UPDATED':
+          icon = 'book'
+          break
+        case 'ACHIEVEMENT_UNLOCKED':
+          icon = 'trophy'
+          break
+        case 'DAILY_CHALLENGE_COMPLETED':
+          icon = 'zap'
+          break
+        case 'STREAK_MILESTONE':
+        case 'XP_EARNED':
+        case 'LEVEL_UP':
+          icon = 'trending-up'
+          break
+      }
+      
+      return {
+        type: activity.type.toLowerCase(),
+        title: activity.title,
+        description: activity.description,
+        timestamp: activity.createdAt,
+        icon,
+        xpEarned: activity.xpEarned,
+        metadata: activity.metadata ? JSON.parse(activity.metadata) : null
+      }
+    }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
     
-    const recentActivity = allActivities.slice(0, 5)
+    const recentActivity = allActivities.slice(0, 10)
 
     // Get recent job applications with enhanced data
     const recentJobs = user.jobApplications.slice(0, 5).map((app: any) => ({

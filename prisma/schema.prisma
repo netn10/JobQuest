@@ -28,6 +28,7 @@ model User {
   theme       String   @default("light")
   notifications Boolean @default(true)
   focusSettings Json?
+  openaiApiKey String? // User's OpenAI API key for AI features
   
   // Relations
   missions    Mission[]
@@ -36,6 +37,7 @@ model User {
   notebookEntries NotebookEntry[]
   learningProgress LearningProgress[]
   dailyChallenges DailyChallengeProgress[]
+  activities  Activity[]
   
   @@map("users")
 }
@@ -200,6 +202,21 @@ model DailyChallengeProgress {
   @@map("daily_challenge_progress")
 }
 
+model Activity {
+  id          String   @id @default(cuid())
+  type        ActivityType
+  title       String
+  description String?
+  metadata    String?  // JSON object with additional data
+  xpEarned    Int      @default(0)
+  createdAt   DateTime @default(now())
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("activities")
+}
+
 model Notification {
   id        String   @id @default(cuid())
   title     String
@@ -277,6 +294,24 @@ enum ChallengeType {
   JOB_APPLICATION
   STREAK
   XP
+}
+
+enum ActivityType {
+  MISSION_STARTED
+  MISSION_COMPLETED
+  MISSION_FAILED
+  JOB_APPLIED
+  JOB_STATUS_UPDATED
+  NOTEBOOK_ENTRY_CREATED
+  NOTEBOOK_ENTRY_UPDATED
+  LEARNING_STARTED
+  LEARNING_COMPLETED
+  LEARNING_PROGRESS_UPDATED
+  ACHIEVEMENT_UNLOCKED
+  DAILY_CHALLENGE_COMPLETED
+  STREAK_MILESTONE
+  XP_EARNED
+  LEVEL_UP
 }
 
 enum NotificationType {

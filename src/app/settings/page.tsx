@@ -20,7 +20,8 @@ import {
   Download,
   Trash2,
   Save,
-  RotateCcw
+  RotateCcw,
+  Bot
 } from 'lucide-react'
 
 interface UserSettings {
@@ -59,6 +60,10 @@ interface UserSettings {
     colorScheme: 'BLUE' | 'GREEN' | 'PURPLE' | 'ORANGE'
     compactMode: boolean
   }
+  ai: {
+    openaiApiKey: string
+    enableAiFeatures: boolean
+  }
 }
 
 export default function SettingsPage() {
@@ -67,6 +72,7 @@ export default function SettingsPage() {
   const { toast } = useToast()
   const [isResetting, setIsResetting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isTestingApiKey, setIsTestingApiKey] = useState(false)
   const [settings, setSettings] = useState<UserSettings>({
     profile: {
       name: user?.name || '',
@@ -102,6 +108,10 @@ export default function SettingsPage() {
     appearance: {
       colorScheme: 'BLUE',
       compactMode: false
+    },
+    ai: {
+      openaiApiKey: '',
+      enableAiFeatures: false
     }
   })
 
@@ -121,6 +131,27 @@ export default function SettingsPage() {
     }
   }, [user])
 
+  // Load settings from API
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (!user) return
+      
+      try {
+        const response = await fetch(`/api/settings?userId=${user.id}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.settings) {
+            setSettings(data.settings)
+          }
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error)
+      }
+    }
+
+    loadSettings()
+  }, [user])
+
   const updateSettings = (section: keyof UserSettings, field: string, value: string | number | boolean) => {
     setSettings(prev => ({
       ...prev,
@@ -131,7 +162,7 @@ export default function SettingsPage() {
     }))
   }
 
-  const handleSaveProfile = async () => {
+  const handleSaveSettings = async () => {
     if (!user) {
       toast({
         title: "Error",
@@ -143,37 +174,36 @@ export default function SettingsPage() {
 
     setIsSaving(true)
     try {
-      const response = await fetch('/api/auth/me', {
+      const response = await fetch('/api/settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.id}`
         },
         body: JSON.stringify({
-          name: settings.profile.name,
-          email: settings.profile.email
+          userId: user.id,
+          settings
         })
       })
 
       if (response.ok) {
         toast({
-          title: "Profile Updated",
-          description: "Your profile information has been saved successfully.",
+          title: "Settings Saved",
+          description: "Your settings have been saved successfully.",
         })
-        // Update the user context with new data
+        // Update the user context with new profile data
         updateUser({
           name: settings.profile.name,
           email: settings.profile.email
         })
       } else {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to update profile')
+        throw new Error(error.error || 'Failed to save settings')
       }
     } catch (error) {
-      console.error('Error updating profile:', error)
+      console.error('Error saving settings:', error)
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update profile",
+        description: error instanceof Error ? error.message : "Failed to save settings",
         variant: "destructive"
       })
     } finally {
@@ -242,6 +272,7 @@ export default function SettingsPage() {
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'gamification', label: 'Gamification', icon: Zap },
     { id: 'focus', label: 'Focus', icon: Clock },
+    { id: 'ai', label: 'AI Features', icon: Bot },
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'privacy', label: 'Privacy', icon: Shield }
   ]
@@ -502,6 +533,129 @@ export default function SettingsPage() {
               </Card>
             )}
 
+            {/* AI Settings */}
+            {activeTab === 'ai' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-black dark:text-white">AI Features</CardTitle>
+                  <CardDescription className="text-gray-600 dark:text-gray-400">Configure AI-powered features using your OpenAI API key</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Enable AI Features</label>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Use AI for learning recommendations, job insights, and motivational messages</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settings.ai.enableAiFeatures}
+                        onChange={(e) => updateSettings('ai', 'enableAiFeatures', e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                  
+                  {settings.ai.enableAiFeatures && (
+                    <div className="flex items-center space-x-2 text-sm text-green-600 dark:text-green-400">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span>AI features are enabled</span>
+                    </div>
+                  )}
+                  
+                  {settings.ai.enableAiFeatures && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        OpenAI API Key
+                      </label>
+                      <Input
+                        type="password"
+                        value={settings.ai.openaiApiKey}
+                        onChange={(e) => updateSettings('ai', 'openaiApiKey', e.target.value)}
+                        placeholder="sk-..."
+                        className={`font-mono text-sm ${
+                          settings.ai.openaiApiKey && !settings.ai.openaiApiKey.startsWith('sk-') 
+                            ? 'border-red-500 focus:border-red-500' 
+                            : ''
+                        }`}
+                      />
+                      {settings.ai.openaiApiKey && !settings.ai.openaiApiKey.startsWith('sk-') && (
+                        <p className="text-xs text-red-500 mt-1">
+                          API key should start with "sk-"
+                        </p>
+                      )}
+                      <div className="flex items-center space-x-2 mt-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Your API key is stored securely and only used for AI features. Get your key from{' '}
+                          <a 
+                            href="https://platform.openai.com/api-keys" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 dark:text-blue-400 hover:underline"
+                          >
+                            OpenAI Platform
+                          </a>
+                        </p>
+                        {settings.ai.openaiApiKey && settings.ai.openaiApiKey.startsWith('sk-') && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              setIsTestingApiKey(true)
+                              try {
+                                const response = await fetch('/api/test-openai', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ apiKey: settings.ai.openaiApiKey })
+                                })
+                                const result = await response.json()
+                                if (result.success) {
+                                  toast({
+                                    title: "API Key Valid",
+                                    description: "Your OpenAI API key is working correctly!",
+                                  })
+                                } else {
+                                  toast({
+                                    title: "API Key Invalid",
+                                    description: result.error || "Failed to validate API key",
+                                    variant: "destructive"
+                                  })
+                                }
+                              } catch (error) {
+                                toast({
+                                  title: "Test Failed",
+                                  description: "Could not test API key. Please try again.",
+                                  variant: "destructive"
+                                })
+                              } finally {
+                                setIsTestingApiKey(false)
+                              }
+                            }}
+                            disabled={isTestingApiKey}
+                            className="text-xs"
+                          >
+                            {isTestingApiKey ? 'Testing...' : 'Test Key'}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">AI Features Include:</h4>
+                    <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                      <li>• Personalized learning recommendations based on your skills and goals</li>
+                      <li>• Job application analysis and insights</li>
+                      <li>• Motivational messages and encouragement</li>
+                      <li>• Smart content suggestions for your notebook</li>
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Appearance Settings */}
             {activeTab === 'appearance' && (
               <Card>
@@ -646,7 +800,7 @@ export default function SettingsPage() {
             <div className="flex justify-end">
               <Button 
                 className="w-32" 
-                onClick={handleSaveProfile}
+                onClick={handleSaveSettings}
                 disabled={isSaving}
               >
                 <Save className={`h-4 w-4 mr-2 ${isSaving ? 'animate-spin' : ''}`} />

@@ -142,8 +142,8 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
   if (authLoading || loading || statsLoading) {
     return (
       <DashboardLayout title="Dashboard">
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="space-y-4 lg:space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 lg:gap-6">
             {[...Array(4)].map((_, i) => (
               <Card key={i}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -189,7 +189,7 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
 
   return (
     <DashboardLayout title="Dashboard">
-      <div className="space-y-6">
+      <div className="space-y-4 lg:space-y-6">
         {/* Welcome Section */}
         {showWelcome && (
           <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800 relative">
@@ -232,7 +232,7 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
           defaultExpanded={true}
           storageKey="dashboard-quick-actions"
         >
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
             <Button 
               variant="outline" 
               className="h-20 flex-col space-y-2"
@@ -272,9 +272,9 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
         </CollapsibleCard>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           {/* Left Column - Active Missions & Daily Challenge */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 lg:space-y-6">
             {/* Active Missions */}
             <CollapsibleCard
               title="Active Missions"
@@ -459,7 +459,7 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
           </div>
 
           {/* Right Column - Calendar, Recent Activity, Recommendations */}
-          <div className="space-y-6">
+          <div className="space-y-4 lg:space-y-6">
             {/* Activity Calendar */}
             <CollapsibleCard
               title="Activity Calendar"
@@ -478,33 +478,51 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
             {/* Recent Activity */}
             <CollapsibleCard
               title="Recent Activity"
-              description="Your latest achievements and progress"
+              description="Your latest actions and achievements"
               icon={Clock}
               defaultExpanded={true}
               storageKey="dashboard-recent-activity"
             >
               {data.recentActivity.length > 0 ? (
                 <div className="space-y-3">
-                  {data.recentActivity.slice(0, 5).map((activity, index) => {
+                  {data.recentActivity.slice(0, 8).map((activity, index) => {
                     const IconComponent = getIconComponent(activity.icon)
                     return (
-                      <div key={index} className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center">
+                      <div key={index} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center flex-shrink-0">
                           <IconComponent className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{activity.title}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{formatTimeAgo(activity.timestamp)}</p>
+                          {activity.description && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{activity.description}</p>
+                          )}
+                          <p className="text-xs text-gray-400 dark:text-gray-500">{formatTimeAgo(activity.timestamp)}</p>
                         </div>
+                        {activity.xpEarned && activity.xpEarned > 0 && (
+                          <div className="flex-shrink-0">
+                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 text-xs">
+                              +{activity.xpEarned} XP
+                            </Badge>
+                          </div>
+                        )}
                       </div>
                     )
                   })}
+                  {data.recentActivity.length > 8 && (
+                    <div className="text-center pt-2">
+                      <Button variant="outline" size="sm" onClick={() => navigate('activities')}>
+                        View All Activities
+                        <ArrowRight className="h-3 w-3 ml-1" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-6 text-gray-500 dark:text-gray-400">
                   <Clock className="h-8 w-8 mx-auto mb-2 text-gray-300" />
                   <p className="text-sm">No recent activity</p>
-                  <p className="text-xs">Complete missions and challenges to see your progress here!</p>
+                  <p className="text-xs">Start using the app to see your progress here!</p>
                 </div>
               )}
             </CollapsibleCard>

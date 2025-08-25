@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { logLearningStarted, logLearningCompleted, logLearningProgressUpdated } from '@/lib/activity-logger'
 
 export async function GET(request: NextRequest) {
   try {
@@ -177,6 +178,11 @@ export async function POST(request: NextRequest) {
         )
     }
 
+    // Get the resource details for logging
+    const resource = await prisma.learningResource.findUnique({
+      where: { id: resourceId }
+    })
+
     // Upsert learning progress
     const progress = await prisma.learningProgress.upsert({
       where: {
@@ -192,6 +198,30 @@ export async function POST(request: NextRequest) {
         ...progressData
       }
     })
+
+    // Log activities based on action
+    if (resource) {
+      try {
+        switch (action) {
+          case 'start':
+            await logLearningStarted(userId, resource.title, resourceId)
+            break
+          case 'complete':
+            await logLearningCompleted(userId, resource.title, resourceId, timeSpent || 0)
+            break
+          case 'update':
+            if (timeSpent) {
+              const progressPercent = resource.estimatedTime 
+                ? Math.min(100, Math.round((timeSpent / resource.estimatedTime) * 100))
+                : 0
+              await logLearningProgressUpdated(userId, resource.title, resourceId, progressPercent)
+            }
+            break
+        }
+      } catch (error) {
+        console.error('Error logging learning activity:', error)
+      }
+    }
 
     return NextResponse.json({
       success: true,

@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       upcomingGoals: ['Complete 5 focus sessions this week', 'Apply to 3 new positions']
     }
 
-    const motivationalMessage = await generateMotivationalMessage(context)
+    const motivationalMessage = await generateMotivationalMessage(context, user.openaiApiKey || undefined)
 
     return NextResponse.json({
       success: true,
@@ -74,7 +74,13 @@ export async function GET(request: NextRequest) {
       upcomingGoals: ['Complete daily learning', 'Apply to dream job']
     }
 
-    const motivationalMessage = await generateMotivationalMessage(context)
+    // Get user to check if they have an API key
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { openaiApiKey: true }
+    })
+
+    const motivationalMessage = await generateMotivationalMessage(context, user?.openaiApiKey || undefined)
 
     return NextResponse.json({
       success: true,

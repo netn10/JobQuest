@@ -15,7 +15,13 @@ export async function POST(request: NextRequest) {
       timeAvailable
     }
 
-    const recommendations = await generateLearningRecommendations(userProfile)
+    // Get user to check if they have an API key
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { openaiApiKey: true }
+    })
+
+    const recommendations = await generateLearningRecommendations(userProfile, user?.openaiApiKey || undefined)
 
     // Optionally save recommendations to database
     // You could implement caching here to avoid repeated API calls
@@ -62,7 +68,13 @@ export async function GET(request: NextRequest) {
       timeAvailable: 30
     }
 
-    const suggestions = await generateLearningRecommendations(userProfile)
+    // Get user to check if they have an API key
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { openaiApiKey: true }
+    })
+
+    const suggestions = await generateLearningRecommendations(userProfile, user?.openaiApiKey || undefined)
 
     return NextResponse.json({
       success: true,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { checkAndUnlockAchievements } from '@/lib/achievements'
 import { updateUserStreak } from '@/lib/utils'
+import { logJobApplied } from '@/lib/activity-logger'
 
 export async function GET(request: NextRequest) {
   try {
@@ -54,6 +55,13 @@ export async function POST(request: NextRequest) {
         userId
       }
     })
+
+    // Log the job application activity
+    try {
+      await logJobApplied(userId, role, company, application.id)
+    } catch (error) {
+      console.error('Error logging job application activity:', error)
+    }
 
     // Update streak and check for achievement unlocks after job application creation
     let newlyUnlockedAchievements: any[] = []

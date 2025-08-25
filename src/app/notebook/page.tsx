@@ -256,7 +256,7 @@ export default function NotebookPage() {
                 />
                 <div className="mt-2 text-sm text-gray-500 flex justify-between">
                   <span>{currentEntry.length} characters</span>
-                  <span>Click save to persist changes</span>
+
                 </div>
               </CardContent>
             </Card>
