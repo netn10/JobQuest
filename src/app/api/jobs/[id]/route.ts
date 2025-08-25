@@ -3,8 +3,9 @@ import { prisma } from '@/lib/db'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const authHeader = request.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -22,7 +23,7 @@ export async function PUT(
 
     const application = await prisma.jobApplication.update({
       where: { 
-        id: params.id,
+        id: id,
         userId // Ensure user can only update their own applications
       },
       data: {
@@ -47,8 +48,9 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const authHeader = request.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -59,7 +61,7 @@ export async function DELETE(
 
     await prisma.jobApplication.delete({
       where: { 
-        id: params.id,
+        id: id,
         userId // Ensure user can only delete their own applications
       }
     })

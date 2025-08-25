@@ -65,18 +65,13 @@ export async function GET(request: NextRequest) {
       filteredResources = transformedResources.filter(resource => 
         resource.title.toLowerCase().includes(searchLower) ||
         resource.description.toLowerCase().includes(searchLower) ||
-        resource.tags.some(tag => tag.toLowerCase().includes(searchLower))
+        resource.tags.some((tag: string) => tag.toLowerCase().includes(searchLower))
       )
     }
 
     // Apply status filter if provided
     if (status && status !== 'ALL') {
       filteredResources = filteredResources.filter(resource => resource.status === status)
-    }
-
-    // If no resources found, return a helpful message but don't fail
-    if (filteredResources.length === 0) {
-      console.log('No learning resources found in database, this might indicate a seeding issue')
     }
 
     return NextResponse.json({

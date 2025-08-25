@@ -16,9 +16,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/auth-context'
+import { useUserStats } from '@/contexts/user-stats-context'
 import { Button } from '@/components/ui/button'
-import { useEffect, useState } from 'react'
-import { getAuthHeaders } from '@/lib/auth'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
@@ -36,44 +35,12 @@ interface SidebarProps {
   navigate: (route: string) => void
 }
 
-interface DashboardStats {
-  totalXp: number
-  currentStreak: number
-  longestStreak: number
-}
+
 
 export function Sidebar({ onClose, navigate }: SidebarProps) {
   const pathname = usePathname()
   const { user, logout } = useAuth()
-  const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!user) return
-
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/dashboard', {
-          headers: getAuthHeaders()
-        })
-        if (response.ok) {
-          const data = await response.json()
-          setStats(data.stats)
-        }
-      } catch (error) {
-        console.error('Error fetching sidebar stats:', error)
-        setStats({
-          totalXp: 0,
-          currentStreak: 0,
-          longestStreak: 0
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchStats()
-  }, [user])
+  const { stats, loading } = useUserStats()
 
   const handleNavigation = () => {
     // Close mobile menu when navigating
@@ -97,7 +64,6 @@ export function Sidebar({ onClose, navigate }: SidebarProps) {
           className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
         >
           <Zap className="h-8 w-8 text-yellow-400" />
-          <h1 className="text-xl font-bold">JobQuest</h1>
         </button>
         {onClose && (
           <Button

@@ -55,16 +55,16 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    let achievementResult = null
-
     // Update streak and check for achievement unlocks after job application creation
+    let newlyUnlockedAchievements: any[] = []
+    
     try {
       await Promise.all([
         updateUserStreak(userId, prisma),
         checkAndUnlockAchievements(userId).then(result => {
-          achievementResult = result
-          if (result.newlyUnlockedAchievements.length > 0) {
-            console.log(`Unlocked ${result.newlyUnlockedAchievements.length} achievements for user ${userId}`)
+          newlyUnlockedAchievements = result.newlyUnlockedAchievements || []
+          if (newlyUnlockedAchievements.length > 0) {
+            console.log(`Unlocked ${newlyUnlockedAchievements.length} achievements for user ${userId}`)
           }
         })
       ])
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       application,
-      newlyUnlockedAchievements: achievementResult?.newlyUnlockedAchievements || []
+      newlyUnlockedAchievements
     }, { status: 201 })
   } catch (error) {
     console.error('Error creating job application:', error)

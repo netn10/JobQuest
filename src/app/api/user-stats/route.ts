@@ -1,0 +1,78 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/db'
+import { checkAndUnlockAchievements } from '@/lib/achievements'
+
+export async function GET(request: NextRequest) {
+  try {
+    // Get user ID from authorization header
+    const authHeader = request.headers.get('authorization')
+    
+    if (!authHeader) {
+      console.log('No authorization header provided')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
+    const userId = authHeader.replace('Bearer ', '')
+    console.log('Looking for user with ID:', userId)
+    
+    // Get user data
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        jobApplications: {
+          where: {
+            status: { in: ['APPLIED', 'SCREENING'] }
+          }
+        }
+      }
+    })
+
+    // If user doesn't exist, return error
+    if (!user) {
+      console.log('User not found for ID:', userId)
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    console.log('Found user:', { id: user.id, name: user.name, email: user.email, totalXp: user.totalXp })
+
+    // Check for achievement unlocks
+    try {
+      const achievementResult = await checkAndUnlockAchievements(userId)
+      if (achievementResult.newlyUnlockedAchievements.length > 0) {
+        console.log(`Unlocked ${achievementResult.newlyUnlockedAchievements.length} achievements for user ${userId}`)
+      }
+    } catch (error) {
+      console.error('Error checking achievements in user stats:', error)
+    }
+
+    // Calculate XP needed for next level (simple formula: level * 100)
+    const xpForNextLevel = user.level * 100
+    const xpProgress = user.totalXp % 100
+
+    return NextResponse.json({
+      totalXp: user.totalXp,
+      level: user.level,
+      currentStreak: user.currentStreak,
+      longestStreak: Number(user.longestStreak),
+      applications: user.jobApplications.length,
+      pendingResponses: user.jobApplications.filter(app => app.status === 'APPLIED' || app.status === 'SCREENING').length,
+      xpForNextLevel,
+      xpProgress
+    })
+
+  } catch (error) {
+    console.error('Error fetching user stats:', error)
+    
+    // Return fallback mock data with all zeros
+    return NextResponse.json({
+      totalXp: 0,
+      level: 1,
+      currentStreak: 0,
+      longestStreak: 0,
+      applications: 0,
+      pendingResponses: 0,
+      xpForNextLevel: 100,
+      xpProgress: 0
+    })
+  }
+}

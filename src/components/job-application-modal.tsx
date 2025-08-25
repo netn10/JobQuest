@@ -39,12 +39,12 @@ export function JobApplicationModal({
   onSave,
   onUpdate
 }: JobApplicationModalProps) {
-  const [formData, setFormData] = useState<Omit<JobApplication, 'id'> & { appliedDate: Date }>({
+  const [formData, setFormData] = useState<Omit<JobApplication, 'id'>>({
     company: '',
     role: '',
     location: '',
     salary: '',
-    appliedDate: new Date(),
+    appliedDate: new Date().toISOString().split('T')[0], // Format as YYYY-MM-DD string
     status: 'APPLIED',
     description: '',
     notes: '',
@@ -62,7 +62,7 @@ export function JobApplicationModal({
         role: application.role,
         location: application.location || '',
         salary: application.salary || '',
-        appliedDate: new Date(application.appliedDate),
+        appliedDate: application.appliedDate,
         status: application.status,
         description: application.description || '',
         notes: application.notes || '',
@@ -75,7 +75,7 @@ export function JobApplicationModal({
         role: '',
         location: '',
         salary: '',
-        appliedDate: new Date(),
+        appliedDate: new Date().toISOString().split('T')[0], // Format as YYYY-MM-DD string
         status: 'APPLIED',
         description: '',
         notes: '',
@@ -144,8 +144,7 @@ export function JobApplicationModal({
     e.preventDefault()
     
     const applicationData = {
-      ...formData,
-      appliedDate: formData.appliedDate.toISOString().split('T')[0]
+      ...formData
     }
     
     if (application?.id && onUpdate) {
@@ -263,8 +262,8 @@ export function JobApplicationModal({
                 <label className="block text-sm font-medium mb-1">Applied Date</label>
                 <Input
                   type="date"
-                  value={formData.appliedDate.toISOString().split('T')[0]}
-                  onChange={(e) => setFormData({ ...formData, appliedDate: new Date(e.target.value) })}
+                  value={formData.appliedDate}
+                  onChange={(e) => setFormData({ ...formData, appliedDate: e.target.value })}
                 />
               </div>
             </div>

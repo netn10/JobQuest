@@ -44,7 +44,7 @@ export function BlockedNotification() {
             </h3>
             <div className="mt-2 text-sm text-red-700 dark:text-red-300">
               <p>
-                {blockedInfo.type === 'website' ? 'Website' : 'Application'} "{blockedInfo.site}" is blocked during your focus session.
+                {blockedInfo.type === 'website' ? 'Website' : 'Application'} &quot;{blockedInfo.site}&quot; is blocked during your focus session.
               </p>
             </div>
           </div>

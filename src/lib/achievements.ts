@@ -6,7 +6,6 @@ export interface AchievementRequirement {
   days?: number
   xp?: number
   minutes?: number
-  missionType?: string
 }
 
 export async function checkAndUnlockAchievements(userId: string) {
@@ -58,11 +57,8 @@ export async function checkAndUnlockAchievements(userId: string) {
 
       switch (requirement.type) {
         case 'MISSIONS_COMPLETED':
-          let completedMissions = user.missions.filter(m => m.status === 'COMPLETED')
-          if (requirement.missionType) {
-            completedMissions = completedMissions.filter(m => m.type === requirement.missionType)
-          }
-          shouldUnlock = completedMissions.length >= (requirement.count || 1)
+          const completedMissions = user.missions.filter(m => m.status === 'COMPLETED').length
+          shouldUnlock = completedMissions >= (requirement.count || 1)
           break
 
         case 'STREAK_DAYS':
@@ -78,34 +74,9 @@ export async function checkAndUnlockAchievements(userId: string) {
           shouldUnlock = applications >= (requirement.count || 1)
           break
 
-        case 'JOB_APPLICATIONS_SCREENING':
-          const screeningApplications = user.jobApplications.filter(ja => ja.status === 'SCREENING').length
-          shouldUnlock = screeningApplications >= (requirement.count || 1)
-          break
-
-        case 'JOB_APPLICATIONS_INTERVIEW':
-          const interviewApplications = user.jobApplications.filter(ja => ja.status === 'INTERVIEW').length
-          shouldUnlock = interviewApplications >= (requirement.count || 1)
-          break
-
         case 'LEARNING_RESOURCES':
           const completedLearning = user.learningProgress.filter(lp => lp.status === 'COMPLETED').length
           shouldUnlock = completedLearning >= (requirement.count || 1)
-          break
-
-        case 'LEARNING_RESOURCES_DAILY':
-          const today = new Date()
-          today.setHours(0, 0, 0, 0)
-          const tomorrow = new Date(today)
-          tomorrow.setDate(tomorrow.getDate() + 1)
-          
-          const dailyCompletedLearning = user.learningProgress.filter(lp => 
-            lp.status === 'COMPLETED' && 
-            lp.completedAt && 
-            lp.completedAt >= today && 
-            lp.completedAt < tomorrow
-          ).length
-          shouldUnlock = dailyCompletedLearning >= (requirement.count || 1)
           break
 
         case 'FOCUS_SESSION_DURATION':
@@ -206,11 +177,8 @@ export async function getAchievementProgress(userId: string) {
         
         switch (requirement.type) {
           case 'MISSIONS_COMPLETED':
-            let completedMissions = user.missions.filter(m => m.status === 'COMPLETED')
-            if (requirement.missionType) {
-              completedMissions = completedMissions.filter(m => m.type === requirement.missionType)
-            }
-            progress = Math.min(completedMissions.length, requirement.count || 1)
+            const completedMissions = user.missions.filter(m => m.status === 'COMPLETED').length
+            progress = Math.min(completedMissions, requirement.count || 1)
             maxProgress = requirement.count || 1
             break
             
@@ -229,38 +197,10 @@ export async function getAchievementProgress(userId: string) {
             progress = Math.min(applications, requirement.count || 1)
             maxProgress = requirement.count || 1
             break
-
-          case 'JOB_APPLICATIONS_SCREENING':
-            const screeningApplications = user.jobApplications.filter(ja => ja.status === 'SCREENING').length
-            progress = Math.min(screeningApplications, requirement.count || 1)
-            maxProgress = requirement.count || 1
-            break
-
-          case 'JOB_APPLICATIONS_INTERVIEW':
-            const interviewApplications = user.jobApplications.filter(ja => ja.status === 'INTERVIEW').length
-            progress = Math.min(interviewApplications, requirement.count || 1)
-            maxProgress = requirement.count || 1
-            break
             
           case 'LEARNING_RESOURCES':
             const completedLearning = user.learningProgress.filter(lp => lp.status === 'COMPLETED').length
             progress = Math.min(completedLearning, requirement.count || 1)
-            maxProgress = requirement.count || 1
-            break
-
-          case 'LEARNING_RESOURCES_DAILY':
-            const today = new Date()
-            today.setHours(0, 0, 0, 0)
-            const tomorrow = new Date(today)
-            tomorrow.setDate(tomorrow.getDate() + 1)
-            
-            const dailyCompletedLearning = user.learningProgress.filter(lp => 
-              lp.status === 'COMPLETED' && 
-              lp.completedAt && 
-              lp.completedAt >= today && 
-              lp.completedAt < tomorrow
-            ).length
-            progress = Math.min(dailyCompletedLearning, requirement.count || 1)
             maxProgress = requirement.count || 1
             break
             

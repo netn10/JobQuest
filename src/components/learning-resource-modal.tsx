@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/contexts/auth-context'
-import { useToast } from '@/hooks/use-toast'
 import { 
   GraduationCap, 
   Play, 
@@ -16,9 +15,7 @@ import {
   Video, 
   FileText,
   X,
-  Plus,
-  Search,
-  Loader2
+  Plus
 } from 'lucide-react'
 
 type ResourceType = 'ARTICLE' | 'VIDEO' | 'TUTORIAL' | 'COURSE' | 'BOOK' | 'PROJECT' | 'PODCAST'
@@ -32,9 +29,7 @@ interface LearningResourceModalProps {
 
 export function LearningResourceModal({ isOpen, onClose, onResourceAdded }: LearningResourceModalProps) {
   const { user } = useAuth()
-  const { toast } = useToast()
   const [loading, setLoading] = useState(false)
-  const [analyzing, setAnalyzing] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -69,27 +64,24 @@ export function LearningResourceModal({ isOpen, onClose, onResourceAdded }: Lear
       const data = await response.json()
       
       if (data.success) {
-        toast({
-          title: "Success",
-          description: "Learning resource has been added successfully!",
+        // Reset form
+        setFormData({
+          title: '',
+          description: '',
+          url: '',
+          type: 'ARTICLE',
+          difficulty: 'BEGINNER',
+          estimatedTime: '',
+          tags: '',
+          source: ''
         })
         onResourceAdded()
         onClose()
       } else {
         console.error('Failed to add resource:', data.error)
-        toast({
-          title: "Error",
-          description: data.error || "Failed to add the learning resource. Please try again.",
-          variant: "destructive",
-        })
       }
     } catch (error) {
       console.error('Error adding resource:', error)
-      toast({
-        title: "Error",
-        description: "An error occurred while adding the learning resource. Please try again.",
-        variant: "destructive",
-      })
     } finally {
       setLoading(false)
     }
@@ -101,73 +93,6 @@ export function LearningResourceModal({ isOpen, onClose, onResourceAdded }: Lear
       [field]: value
     }))
   }
-
-  const analyzeUrl = async () => {
-    if (!formData.url) return
-
-    setAnalyzing(true)
-    try {
-      const response = await fetch('/api/learning/analyze-url', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url: formData.url })
-      })
-
-      const data = await response.json()
-      
-      if (data.success && data.analysis) {
-        const analysis = data.analysis
-        setFormData(prev => ({
-          ...prev,
-          title: analysis.title || prev.title,
-          description: analysis.description || prev.description,
-          type: analysis.type || prev.type,
-          difficulty: analysis.difficulty || prev.difficulty,
-          estimatedTime: analysis.estimatedTime?.toString() || prev.estimatedTime,
-          tags: Array.isArray(analysis.tags) ? analysis.tags.join(', ') : prev.tags,
-          source: analysis.source || prev.source
-        }))
-        toast({
-          title: "Analysis Complete",
-          description: "The learning resource has been analyzed and form fields have been filled automatically.",
-        })
-      } else {
-        console.error('Failed to analyze URL:', data.error)
-        toast({
-          title: "Analysis Failed",
-          description: data.error || "Failed to analyze the URL. Please fill in the details manually.",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      console.error('Error analyzing URL:', error)
-      toast({
-        title: "Analysis Error",
-        description: "An error occurred while analyzing the URL. Please try again or fill in the details manually.",
-        variant: "destructive",
-      })
-    } finally {
-      setAnalyzing(false)
-    }
-  }
-
-  // Reset form when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setFormData({
-        title: '',
-        description: '',
-        url: '',
-        type: 'ARTICLE',
-        difficulty: 'BEGINNER',
-        estimatedTime: '',
-        tags: '',
-        source: ''
-      })
-    }
-  }, [isOpen])
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -228,33 +153,14 @@ export function LearningResourceModal({ isOpen, onClose, onResourceAdded }: Lear
 
           <div className="space-y-2">
             <Label htmlFor="url">URL *</Label>
-            <div className="flex space-x-2">
-              <Input
-                id="url"
-                type="url"
-                value={formData.url}
-                onChange={(e) => handleInputChange('url', e.target.value)}
-                placeholder="https://example.com/learning-resource"
-                required
-                className="flex-1"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={analyzeUrl}
-                disabled={!formData.url || analyzing}
-                className="px-3"
-              >
-                {analyzing ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Search className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-            <p className="text-xs text-gray-500">
-              Paste a URL and click the search icon to automatically analyze and fill the form
-            </p>
+            <Input
+              id="url"
+              type="url"
+              value={formData.url}
+              onChange={(e) => handleInputChange('url', e.target.value)}
+              placeholder="https://example.com/learning-resource"
+              required
+            />
           </div>
 
           <div className="grid grid-cols-3 gap-4">

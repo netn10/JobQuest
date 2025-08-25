@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { ThemeProvider } from '@/contexts/theme-context'
 import { AuthProvider } from '@/contexts/auth-context'
 import { SettingsProvider } from '@/contexts/settings-context'
+import { UserStatsProvider } from '@/contexts/user-stats-context'
 import { cleanupBrowserExtensions, preventHydrationMismatch } from '@/utils/hydration-cleanup'
 import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
@@ -80,12 +81,14 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <AuthProvider>
-            <SettingsProvider>
-              <div suppressHydrationWarning>
-                {children}
-              </div>
-              <Toaster />
-            </SettingsProvider>
+            <UserStatsProvider>
+              <SettingsProvider>
+                <div suppressHydrationWarning>
+                  {children}
+                </div>
+                <Toaster />
+              </SettingsProvider>
+            </UserStatsProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

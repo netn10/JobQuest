@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { useTheme } from '@/contexts/theme-context'
 import { presetThemes } from '@/lib/theme-config'
 import { useAuth } from '@/contexts/auth-context'
-import { getAuthHeaders } from '@/lib/auth'
+import { useUserStats } from '@/contexts/user-stats-context'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
@@ -16,18 +16,13 @@ interface HeaderProps {
   showMenuButton?: boolean
 }
 
-interface DashboardStats {
-  totalXp: number
-  currentStreak: number
-  longestStreak: number
-}
+
 
 export function Header({ title, children, onMenuClick, showMenuButton }: HeaderProps) {
-  const { theme, setTheme, resolvedTheme, customTheme, applyPresetTheme } = useTheme()
+  const { theme, setTheme, resolvedTheme } = useTheme()
   const [showThemeDropdown, setShowThemeDropdown] = useState(false)
   const { user, logout } = useAuth()
-  const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { stats, loading } = useUserStats()
   
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -41,35 +36,7 @@ export function Header({ title, children, onMenuClick, showMenuButton }: HeaderP
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showThemeDropdown])
 
-  useEffect(() => {
-    if (!user) return
 
-    console.log('Header: User data:', user)
-
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/dashboard', {
-          headers: getAuthHeaders()
-        })
-        if (response.ok) {
-          const data = await response.json()
-          setStats(data.stats)
-        }
-      } catch (error) {
-        console.error('Error fetching header stats:', error)
-        // Fallback to zero values if API fails
-        setStats({
-          totalXp: 0,
-          currentStreak: 0,
-          longestStreak: 0
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchStats()
-  }, [user])
 
   const cycleTheme = () => {
     if (theme === 'light') {
@@ -91,10 +58,6 @@ export function Header({ title, children, onMenuClick, showMenuButton }: HeaderP
     <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link href="/dashboard" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-            <Zap className="h-6 w-6 text-yellow-500" />
-            <span className="text-lg font-bold text-gray-900 dark:text-gray-100">JobQuest</span>
-          </Link>
           <span className="text-gray-400">•</span>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{title}</h1>
           {children}
@@ -131,28 +94,6 @@ export function Header({ title, children, onMenuClick, showMenuButton }: HeaderP
                       {themeOption === 'dark' && <Moon className="h-3 w-3" />}
                       {themeOption === 'system' && <Monitor className="h-3 w-3" />}
                       {themeOption.charAt(0).toUpperCase() + themeOption.slice(1)}
-                    </button>
-                  ))}
-                  
-                  <hr className="my-2 border-gray-200 dark:border-gray-600" />
-                  
-                  <div className="px-2 py-1 text-sm font-medium text-gray-700 dark:text-gray-300">Preset Themes</div>
-                  {presetThemes.slice(2).map((preset) => (
-                    <button
-                      key={preset.id}
-                      onClick={() => {
-                        applyPresetTheme(preset.id)
-                        setShowThemeDropdown(false)
-                      }}
-                      className={`w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 ${
-                        customTheme?.id === preset.id ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
-                      }`}
-                    >
-                      <div 
-                        className="w-3 h-3 rounded-full border border-gray-300 dark:border-gray-600"
-                        style={{ backgroundColor: Object.values(preset.customizations)[0] || (preset.baseTheme === 'dark' ? '#1f2937' : '#ffffff') }}
-                      />
-                      {preset.name}
                     </button>
                   ))}
                   

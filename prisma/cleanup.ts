@@ -57,14 +57,14 @@ async function cleanup() {
         lastActiveDate: null,
         theme: 'light',
         notifications: true,
-        focusSettings: null
+        focusSettings: {}
       }
     })
     console.log(`✅ Reset ${updatedUsers.count} users to default state`)
 
     console.log('🎉 Learning Hub cleanup completed successfully!')
     console.log('📝 Note: User accounts have been preserved but all progress has been reset.')
-    console.log('📚 Learning resources and achievements have been removed and will not be automatically re-seeded.')
+    console.log('🔄 Run "npm run seed" to re-seed the database with fresh learning resources and achievements.')
 
   } catch (error) {
     console.error('❌ Error during cleanup:', error)

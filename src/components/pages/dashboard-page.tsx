@@ -4,22 +4,14 @@ import { useEffect, useState } from 'react'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Target, Trophy, BookOpen, BriefcaseIcon, TrendingUp, Clock, Zap } from 'lucide-react'
+import { Target, Trophy, BookOpen, BriefcaseIcon, Clock, Zap } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
+import { useUserStats } from '@/contexts/user-stats-context'
 import { getAuthHeaders } from '@/lib/auth'
 import { Calendar } from '@/components/calendar'
+import { StatsDisplay } from '@/components/ui/stats-display'
 
 interface DashboardData {
-  stats: {
-    totalXp: number
-    level: number
-    currentStreak: number
-    longestStreak: number
-    applications: number
-    pendingResponses: number
-    xpForNextLevel: number
-    xpProgress: number
-  }
   activeMissions: any[]
   dailyChallenge: any
   recentActivity: any[]
@@ -33,6 +25,7 @@ interface DashboardPageProps {
 
 export default function DashboardPage({ navigate }: DashboardPageProps) {
   const { user, loading: authLoading, checkAuth } = useAuth()
+  const { stats, loading: statsLoading, error: statsError } = useUserStats()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -55,7 +48,14 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
           throw new Error('Failed to fetch dashboard data')
         }
         const dashboardData = await response.json()
-        setData(dashboardData)
+        // Only set the non-stats data since stats are managed globally
+        setData({
+          activeMissions: dashboardData.activeMissions,
+          dailyChallenge: dashboardData.dailyChallenge,
+          recentActivity: dashboardData.recentActivity,
+          allActivities: dashboardData.allActivities,
+          activeDates: dashboardData.activeDates
+        })
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred')
       } finally {
@@ -66,40 +66,15 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
     fetchDashboardData()
   }, [user])
 
-  // Fallback: if no user in context but we're in development, try to fetch with mock user
-  useEffect(() => {
-    if (!user && process.env.NODE_ENV === 'development' && !loading && !data) {
-      const fetchWithMockUser = async () => {
-        try {
-          console.log('Attempting to fetch dashboard data with mock user')
-          const response = await fetch('/api/dashboard', {
-            headers: { 'Authorization': 'Bearer mock-user-id' }
-          })
-          if (response.ok) {
-            const dashboardData = await response.json()
-            setData(dashboardData)
-            console.log('Dashboard data fetched successfully with mock user')
-          } else {
-            console.log('Failed to fetch dashboard data with mock user')
-          }
-        } catch (err) {
-          console.error('Error fetching dashboard data with mock user:', err)
-        } finally {
-          setLoading(false)
-        }
-      }
 
-      fetchWithMockUser()
-    }
-  }, [user, loading, data])
 
   const handleViewMission = () => {
     navigate('missions')
   }
 
-  if (authLoading || loading) {
+  if (authLoading || loading || statsLoading) {
     return (
-      <DashboardLayout title="Dashboard" navigate={navigate}>
+      <DashboardLayout title="Dashboard" >
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
             {[...Array(5)].map((_, i) => (
@@ -120,12 +95,12 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
     )
   }
 
-  if (error) {
+  if (error || statsError) {
     return (
-      <DashboardLayout title="Dashboard" navigate={navigate}>
+      <DashboardLayout title="Dashboard" >
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <p className="text-red-600 mb-4">Error loading dashboard: {error}</p>
+            <p className="text-red-600 mb-4">Error loading dashboard: {error || statsError}</p>
             <div className="flex gap-2 justify-center">
               <Button onClick={() => window.location.reload()}>Retry</Button>
             </div>
@@ -135,9 +110,9 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
     )
   }
 
-  if (!data) {
+  if (!data || !stats) {
     return (
-      <DashboardLayout title="Dashboard" navigate={navigate}>
+      <DashboardLayout title="Dashboard" >
         <div className="flex items-center justify-center h-64">
           <p>No data available</p>
         </div>
@@ -174,65 +149,10 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
   }
 
   return (
-    <DashboardLayout title="Dashboard" navigate={navigate}>
+    <DashboardLayout title="Dashboard" >
       <div className="space-y-6">
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total XP</CardTitle>
-              <Zap className="h-4 w-4 xp-color" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{data.stats.totalXp.toLocaleString()}</div>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Level {data.stats.level}</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Current Level</CardTitle>
-              <TrendingUp className="h-4 w-4 level-color" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{data.stats.level}</div>
-              <p className="text-xs text-gray-600 dark:text-gray-400">{data.stats.xpProgress} XP to level {data.stats.level + 1}</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
-              <Target className="h-4 w-4 streak-color" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{Math.max(1, data.stats.currentStreak)} days</div>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Keep it up!</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Longest Streak</CardTitle>
-              <Trophy className="h-4 w-4 trophy-color" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{Math.max(1, data.stats.longestStreak)} days</div>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Best record</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Applications</CardTitle>
-              <BriefcaseIcon className="h-4 w-4 application-color" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{data.stats.applications}</div>
-              <p className="text-xs text-gray-600 dark:text-gray-400">{data.stats.pendingResponses} responses pending</p>
-            </CardContent>
-          </Card>
-        </div>
+        <StatsDisplay showAll={true} />
 
         {/* Current Missions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

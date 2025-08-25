@@ -45,16 +45,6 @@ const nextConfig: NextConfig = {
       },
     ]
   },
-
-  // Rewrites for client-side routing
-  async rewrites() {
-    return [
-      {
-        source: '/:path*',
-        destination: '/',
-      },
-    ]
-  },
 }
 
 export default nextConfig

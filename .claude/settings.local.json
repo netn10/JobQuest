@@ -5,7 +5,10 @@
       "Bash(npx prisma:*)",
       "Bash(npm run dev:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(mkdir:*)",
+      "Bash(rm:*)",
+      "Bash(npm start)"
     ],
     "deny": [],
     "ask": []

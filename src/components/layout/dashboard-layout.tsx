@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Sidebar } from './sidebar'
 import { Header } from './header'
 import { HydrationSafe } from '@/components/ui/hydration-safe'
@@ -11,11 +12,11 @@ interface DashboardLayoutProps {
   children: React.ReactNode
   title: string
   headerChildren?: React.ReactNode
-  navigate: (route: string) => void
 }
 
-export function DashboardLayout({ children, title, headerChildren, navigate }: DashboardLayoutProps) {
+export function DashboardLayout({ children, title, headerChildren }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const router = useRouter()
 
   return (
     <HydrationSafe
@@ -43,7 +44,10 @@ export function DashboardLayout({ children, title, headerChildren, navigate }: D
           fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}>
-          <Sidebar onClose={() => setSidebarOpen(false)} navigate={navigate} />
+          <Sidebar 
+            onClose={() => setSidebarOpen(false)}
+            navigate={(route) => router.push(route)}
+          />
         </div>
         
         <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
