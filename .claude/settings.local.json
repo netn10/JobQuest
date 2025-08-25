@@ -13,7 +13,9 @@
       "Bash(npx tsx:*)",
       "Bash(timeout:*)",
       "Bash(pkill:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

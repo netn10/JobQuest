@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/contexts/auth-context'
 import { LearningResourceModal } from '@/components/learning-resource-modal'
+import { RandomResourcesModal } from '@/components/random-resources-modal'
 import { 
   GraduationCap, 
   Play, 
@@ -21,7 +22,8 @@ import {
   TrendingUp,
   CheckCircle,
   Circle,
-  Loader2
+  Loader2,
+  Sparkles
 } from 'lucide-react'
 
 type ResourceType = 'ARTICLE' | 'VIDEO' | 'TUTORIAL' | 'COURSE' | 'BOOK' | 'PROJECT' | 'PODCAST'
@@ -53,6 +55,7 @@ export default function LearningPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isRandomModalOpen, setIsRandomModalOpen] = useState(false)
 
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState<ResourceType | 'ALL'>('ALL')
@@ -219,16 +222,34 @@ export default function LearningPage() {
     <DashboardLayout 
       title="Learning Hub"
       headerChildren={
-        <Button onClick={() => {
-          if (!user?.id) {
-            alert('Please log in to add learning resources')
-            return
-          }
-          setIsModalOpen(true)
-        }}>
-          <GraduationCap className="h-4 w-4 mr-2" />
-          Add Resource
-        </Button>
+        <div className="flex items-center space-x-2">
+          <div className="text-xs text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">
+            🤖 AI-powered URL analysis available
+          </div>
+          <Button 
+            variant="outline"
+            onClick={() => {
+              if (!user?.id) {
+                alert('Please log in to discover random resources')
+                return
+              }
+              setIsRandomModalOpen(true)
+            }}
+          >
+            <Sparkles className="h-4 w-4 mr-2" />
+            Discover Resources
+          </Button>
+          <Button onClick={() => {
+            if (!user?.id) {
+              alert('Please log in to add learning resources')
+              return
+            }
+            setIsModalOpen(true)
+          }}>
+            <GraduationCap className="h-4 w-4 mr-2" />
+            Add Resource
+          </Button>
+        </div>
       }
     >
       <div className="space-y-6">
@@ -265,6 +286,55 @@ export default function LearningPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Surprise Me Section */}
+        <Card className="border-purple-300 bg-purple-50 dark:bg-purple-900/20">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-purple-900 dark:text-purple-200">
+              <Sparkles className="h-5 w-5" />
+              <span>Discover New Learning Resources</span>
+            </CardTitle>
+            <CardDescription className="text-purple-700 dark:text-purple-300">
+              Explore random high-quality learning resources from across the internet
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
+                  <Sparkles className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-purple-900 dark:text-purple-200">AI-Powered Discovery</h4>
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    Get personalized learning recommendations from popular platforms and sources
+                  </p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <span className="px-2 py-1 text-xs bg-purple-200 text-purple-800 dark:bg-purple-800 dark:text-purple-200 rounded">
+                      Free Resources
+                    </span>
+                    <span className="px-2 py-1 text-xs bg-purple-200 text-purple-800 dark:bg-purple-800 dark:text-purple-200 rounded">
+                      Multiple Categories
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <Button 
+                onClick={() => {
+                  if (!user?.id) {
+                    alert('Please log in to discover random resources')
+                    return
+                  }
+                  setIsRandomModalOpen(true)
+                }}
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                Surprise Me
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Today's Suggestion */}
         {!loading && resources.length > 0 && (
@@ -543,6 +613,12 @@ export default function LearningPage() {
       <LearningResourceModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        onResourceAdded={handleResourceAdded}
+      />
+      
+      <RandomResourcesModal
+        isOpen={isRandomModalOpen}
+        onClose={() => setIsRandomModalOpen(false)}
         onResourceAdded={handleResourceAdded}
       />
     </DashboardLayout>
