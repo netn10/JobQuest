@@ -174,10 +174,10 @@ export function NotificationCenter({ onNotificationClick }: NotificationCenterPr
                 className="w-full text-sm"
                 onClick={() => {
                   setIsOpen(false)
-                  // Navigate to full notifications page if it exists
+                  window.location.href = '/activities'
                 }}
               >
-                View all notifications
+                View activiy history
               </Button>
             ) : (
               <div className="space-y-2">

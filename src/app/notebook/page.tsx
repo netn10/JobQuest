@@ -7,8 +7,9 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { CalendarDays, Plus, Save, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
-import { Calendar } from '@/components/calendar'
+import { CalendarDays, Plus, Save, BookOpen } from 'lucide-react'
+import { NotebookCalendar } from '@/components/notebook-calendar'
+import { getTodayInTimezone } from '@/lib/utils'
 
 interface NotebookEntry {
   id: string
@@ -21,11 +22,17 @@ interface NotebookEntry {
 
 export default function NotebookPage() {
   const [loading, setLoading] = useState(true)
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [selectedDate, setSelectedDate] = useState(() => {
+    // Initialize with today's date in local timezone
+    const now = new Date()
+    const localToday = now.toLocaleDateString('en-CA')
+    return localToday
+  })
   const [entries, setEntries] = useState<NotebookEntry[]>([])
   const [currentEntry, setCurrentEntry] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [activeDates, setActiveDates] = useState<Date[]>([])
+  const [userTimezone, setUserTimezone] = useState<string>('UTC')
   const router = useRouter()
 
   useEffect(() => {
@@ -37,6 +44,12 @@ export default function NotebookPage() {
     
     // Load existing entries from API
     loadEntries()
+    
+    // Use local timezone for now to avoid API dependency
+    const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    setUserTimezone(localTimezone)
+    const localToday = getTodayInTimezone(localTimezone)
+    setSelectedDate(localToday)
   }, [router])
 
   const loadEntries = async () => {
@@ -105,18 +118,7 @@ export default function NotebookPage() {
     }
   }
 
-  const navigateDate = (direction: 'prev' | 'next') => {
-    const currentDate = new Date(selectedDate)
-    const newDate = new Date(currentDate)
-    
-    if (direction === 'prev') {
-      newDate.setDate(currentDate.getDate() - 1)
-    } else {
-      newDate.setDate(currentDate.getDate() + 1)
-    }
-    
-    setSelectedDate(newDate.toISOString().split('T')[0])
-  }
+
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString + 'T00:00:00')
@@ -128,7 +130,7 @@ export default function NotebookPage() {
     })
   }
 
-  if (loading) {
+  if (loading || !selectedDate) {
     return (
       <DashboardLayout title="Daily Notebook">
         <div className="space-y-6">
@@ -163,71 +165,29 @@ export default function NotebookPage() {
         </Card>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
           {/* Left Column - Calendar */}
           <div className="lg:col-span-1">
-            <Calendar 
+            <NotebookCalendar 
               activeDates={activeDates}
-              activities={entries.map(entry => ({
-                type: 'notebook' as const,
-                title: 'Journal Entry',
-                description: entry.content.substring(0, 50) + '...',
-                timestamp: entry.createdAt,
-                icon: 'book'
-              }))}
-              className="h-fit"
+              selectedDate={selectedDate}
+              className="h-full"
+              userTimezone={userTimezone}
               onDateSelect={(date) => {
-                setSelectedDate(date.toISOString().split('T')[0])
+                // Use the same timezone-aware approach for date selection
+                const selectedDateStr = userTimezone && userTimezone !== 'UTC' 
+                  ? date.toLocaleDateString('en-CA', { timeZone: userTimezone })
+                  : date.toLocaleDateString('en-CA')
+                setSelectedDate(selectedDateStr)
               }}
             />
           </div>
 
           {/* Right Column - Writing Area */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Date Navigation */}
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigateDate('prev')}
-                  >
-                    <ChevronLeft className="h-4 w-4 mr-1" />
-                    Previous
-                  </Button>
-                  
-                  <div className="flex items-center gap-2">
-                    <CalendarDays className="h-5 w-5 text-blue-600" />
-                    <span className="text-lg font-semibold">
-                      {formatDate(selectedDate)}
-                    </span>
-                  </div>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigateDate('next')}
-                    disabled={selectedDate >= new Date().toISOString().split('T')[0]}
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
-                  className="w-full"
-                >
-                  Jump to Today
-                </Button>
-              </CardContent>
-            </Card>
+          <div className="lg:col-span-2 flex flex-col">
 
             {/* Main Writing Area */}
-            <Card>
+            <Card className="flex-1 flex flex-col">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Journal Entry</span>
@@ -247,23 +207,23 @@ export default function NotebookPage() {
                   </Button>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-1 flex flex-col">
                 <Textarea
                   placeholder="What's on your mind today? Reflect on your job search progress, learnings, challenges, or any thoughts you'd like to capture..."
                   value={currentEntry}
                   onChange={(e) => setCurrentEntry(e.target.value)}
-                  className="min-h-[300px] resize-none"
+                  className="flex-1 resize-none"
                 />
                 <div className="mt-2 text-sm text-gray-500 flex justify-between">
                   <span>{currentEntry.length} characters</span>
-
+                  <span>Click save to persist changes</span>
                 </div>
               </CardContent>
             </Card>
 
             {/* Recent Entries Preview */}
             {entries.length > 0 && (
-              <Card>
+              <Card className="mt-6 flex-shrink-0">
                 <CardHeader>
                   <CardTitle>Recent Entries</CardTitle>
                 </CardHeader>

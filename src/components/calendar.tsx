@@ -48,7 +48,7 @@ export function Calendar({ activeDates, activities, className = '', onDateSelect
   }
   
   const handleDayClick = (day: any) => {
-    if (day && day.isActive) {
+    if (day) {
       setSelectedDate(day.date)
       setShowActivities(true)
       
@@ -136,14 +136,14 @@ export function Calendar({ activeDates, activities, className = '', onDateSelect
                    <div
                      key={dayIndex}
                      className={`
-                       aspect-square rounded-md text-xs font-medium flex items-center justify-center cursor-pointer transition-colors
+                       aspect-square rounded-md text-xs font-medium flex items-center justify-center transition-colors
                        ${day === null 
                          ? 'bg-transparent cursor-default' 
                          : day.isToday
-                         ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-2 border-blue-300 dark:border-blue-600 hover:bg-blue-200 dark:hover:bg-blue-900/50'
+                         ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-2 border-blue-300 dark:border-blue-600 hover:bg-blue-200 dark:hover:bg-blue-900/50 cursor-pointer'
                          : day.isActive
-                         ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50'
-                         : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                         ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50 cursor-pointer'
+                         : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer'
                        }
                      `}
                      onClick={() => handleDayClick(day)}

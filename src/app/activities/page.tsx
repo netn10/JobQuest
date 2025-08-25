@@ -191,9 +191,6 @@ export default function ActivitiesPage() {
               Track all your actions and achievements
             </p>
           </div>
-          <Button variant="outline" onClick={() => router.back()}>
-            Back to Dashboard
-          </Button>
         </div>
 
         {/* Filters */}

@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
         id: true,
         name: true,
         email: true,
+        timezone: true,
         focusSettings: true,
         notifications: true,
         longestStreak: true,
@@ -42,7 +43,8 @@ export async function GET(request: NextRequest) {
     const settings = {
       profile: {
         name: user.name || '',
-        email: user.email || ''
+        email: user.email || '',
+        timezone: user.timezone || 'UTC'
       },
       notifications: {
         missionReminders: true,
@@ -114,6 +116,7 @@ export async function PUT(request: NextRequest) {
     if (settings.profile) {
       if (settings.profile.name) updateData.name = settings.profile.name
       if (settings.profile.email) updateData.email = settings.profile.email
+      if (settings.profile.timezone) updateData.timezone = settings.profile.timezone
     }
 
     if (settings.notifications) {

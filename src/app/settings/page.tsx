@@ -33,6 +33,7 @@ interface UserSettings {
   profile: {
     name: string
     email: string
+    timezone: string
   }
   notifications: {
     missionReminders: boolean
@@ -88,7 +89,8 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<UserSettings>({
     profile: {
       name: user?.name || '',
-      email: user?.email || ''
+      email: user?.email || '',
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
     },
     notifications: notificationPreferences,
     gamification: {
@@ -403,6 +405,23 @@ export default function SettingsPage() {
                         placeholder="Enter your email address"
                       />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Timezone</label>
+                    <select
+                      value={settings.profile.timezone}
+                      onChange={(e) => updateSettings('profile', 'timezone', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-black dark:text-white"
+                    >
+                      {Intl.supportedValuesOf('timeZone').map(timezone => (
+                        <option key={timezone} value={timezone}>
+                          {timezone.replace(/_/g, ' ')} ({new Date().toLocaleString('en-US', { timeZone: timezone, timeZoneName: 'short' })})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      This affects how dates and times are displayed throughout the application
+                    </p>
                   </div>
                   <div className="text-sm text-gray-500 dark:text-gray-400">
                     <p>Your profile information is used to personalize your JobQuest experience.</p>

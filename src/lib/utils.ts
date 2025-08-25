@@ -64,23 +64,30 @@ export function getStreakStatus(lastActiveDate: Date | null): 'active' | 'broken
   return 'broken'
 }
 
-export async function updateUserStreak(userId: string, prisma: any) {
+export async function updateUserStreak(userId: string, prisma: any, userTimezone?: string) {
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
         currentStreak: true,
         longestStreak: true,
-        lastActiveDate: true
+        lastActiveDate: true,
+        timezone: true
       }
     })
 
     if (!user) return
 
     const now = new Date()
-    // Convert to Israel time (UTC+3)
-    const israelTime = new Date(now.getTime() + (3 * 60 * 60 * 1000))
-    const today = new Date(israelTime.getFullYear(), israelTime.getMonth(), israelTime.getDate())
+    const timezone = userTimezone || user?.timezone || 'UTC'
+    let today: Date
+    
+    if (timezone !== 'UTC') {
+      const dateParts = now.toLocaleDateString('en-CA', { timeZone: timezone }).split('-')
+      today = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]))
+    } else {
+      today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    }
     
     let newCurrentStreak = user.currentStreak
     let newLongestStreak = Number(user.longestStreak)
@@ -127,7 +134,7 @@ export async function updateUserStreak(userId: string, prisma: any) {
   }
 }
 
-export function generateCalendarData(activeDates: Date[] = [], currentMonth: Date = new Date()) {
+export function generateCalendarData(activeDates: Date[] = [], currentMonth: Date = new Date(), userTimezone?: string) {
   const year = currentMonth.getFullYear()
   const month = currentMonth.getMonth()
   
@@ -141,10 +148,19 @@ export function generateCalendarData(activeDates: Date[] = [], currentMonth: Dat
   const calendar = []
   let day = 1
   
-  // Get today's date in Israel time (UTC+3)
+  // Get today's date in user's timezone - use same approach as getTodayInTimezone
   const now = new Date()
-  const israelTime = new Date(now.getTime() + (3 * 60 * 60 * 1000)) // UTC+3
-  const todayIsrael = new Date(israelTime.getFullYear(), israelTime.getMonth(), israelTime.getDate())
+  let today: Date
+  
+  if (userTimezone && userTimezone !== 'UTC') {
+    // Get the date components in the specified timezone
+    const dateParts = now.toLocaleDateString('en-CA', { timeZone: userTimezone }).split('-')
+    today = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]))
+  } else {
+    // For UTC or no timezone, use local date
+    const dateParts = now.toLocaleDateString('en-CA').split('-')
+    today = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]))
+  }
   
   for (let week = 0; week < 6; week++) {
     const weekDays = []
@@ -162,7 +178,7 @@ export function generateCalendarData(activeDates: Date[] = [], currentMonth: Dat
           return dateStr === currentDateStr
         })
         
-        const isToday = currentDate.toDateString() === todayIsrael.toDateString()
+        const isToday = currentDate.toDateString() === today.toDateString()
         
         weekDays.push({
           date: currentDate,
@@ -178,4 +194,17 @@ export function generateCalendarData(activeDates: Date[] = [], currentMonth: Dat
   }
   
   return calendar
+}
+
+export function getDateInTimezone(date: Date, timezone: string): Date {
+  const dateString = date.toLocaleString('en-US', { timeZone: timezone })
+  return new Date(dateString)
+}
+
+export function getTodayInTimezone(timezone: string): string {
+  const now = new Date()
+  
+  // Always use the timezone-aware approach for consistency
+  const dateParts = now.toLocaleDateString('en-CA', { timeZone: timezone }).split('-')
+  return `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`
 }

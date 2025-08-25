@@ -87,9 +87,7 @@ export async function GET(request: NextRequest) {
     if (user && user.activities) {
       user.activities.forEach(activity => {
         const date = new Date(activity.createdAt)
-        // Convert to Israel time (UTC+3)
-        const israelDate = new Date(date.getTime() + (3 * 60 * 60 * 1000))
-        const dateStr = israelDate.toISOString().split('T')[0]
+        const dateStr = date.toISOString().split('T')[0]
         activeDates.add(dateStr)
       })
     }
@@ -98,28 +96,32 @@ export async function GET(request: NextRequest) {
     allMissions.forEach(mission => {
       if (mission.completedAt) {
         const date = new Date(mission.completedAt)
-        // Convert to Israel time (UTC+3)
-        const israelDate = new Date(date.getTime() + (3 * 60 * 60 * 1000))
-        const dateStr = israelDate.toISOString().split('T')[0]
+        const dateStr = date.toISOString().split('T')[0]
         activeDates.add(dateStr)
       }
     })
     
     allApplications.forEach(app => {
       const date = new Date(app.appliedDate)
-      // Convert to Israel time (UTC+3)
-      const israelDate = new Date(date.getTime() + (3 * 60 * 60 * 1000))
-      const dateStr = israelDate.toISOString().split('T')[0]
+      const dateStr = date.toISOString().split('T')[0]
       activeDates.add(dateStr)
     })
     
-    // Get today's date in Israel time
+    // Get today's date in user's timezone
     const now = new Date()
-    const israelTime = new Date(now.getTime() + (3 * 60 * 60 * 1000))
-    const todayIsrael = israelTime.toISOString().split('T')[0]
+    const userTimezone = user?.timezone || 'UTC'
+    let today: string
     
-    console.log('All active dates (Israel time):', Array.from(activeDates))
-    console.log('Today\'s date (Israel time):', todayIsrael)
+    if (userTimezone !== 'UTC') {
+      const dateParts = now.toLocaleDateString('en-CA', { timeZone: userTimezone }).split('-')
+      today = `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`
+    } else {
+      today = now.toISOString().split('T')[0]
+    }
+    
+    console.log('All active dates:', Array.from(activeDates))
+    console.log('Today\'s date:', today)
+    console.log('User timezone:', userTimezone)
 
     // If user doesn't exist, return error
     if (!user) {

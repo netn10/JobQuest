@@ -22,6 +22,7 @@ model User {
   longestStreak    BigInt                   @default(0)
   lastActiveDate   DateTime?
   theme            String                   @default("light")
+  timezone         String                   @default("UTC")
   notifications    Boolean                  @default(true)
   focusSettings    Json?
   openaiApiKey     String?
