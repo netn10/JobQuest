@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { useAuth } from '@/contexts/auth-context'
 import { LearningResourceModal } from '@/components/learning-resource-modal'
 import { RandomResourcesModal } from '@/components/random-resources-modal'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import { 
   GraduationCap, 
   Play, 
@@ -23,7 +24,8 @@ import {
   CheckCircle,
   Circle,
   Loader2,
-  Sparkles
+  Sparkles,
+  Trash2
 } from 'lucide-react'
 
 type ResourceType = 'ARTICLE' | 'VIDEO' | 'TUTORIAL' | 'COURSE' | 'BOOK' | 'PROJECT' | 'PODCAST'
@@ -56,6 +58,16 @@ export default function LearningPage() {
   const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isRandomModalOpen, setIsRandomModalOpen] = useState(false)
+  const [deleteConfirmationModal, setDeleteConfirmationModal] = useState<{
+    isOpen: boolean
+    type: 'single' | 'all'
+    resourceId?: string
+    resourceTitle?: string
+  }>({
+    isOpen: false,
+    type: 'single'
+  })
+  const [isDeletingResources, setIsDeletingResources] = useState(false)
 
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState<ResourceType | 'ALL'>('ALL')
@@ -144,6 +156,93 @@ export default function LearningPage() {
     }
   }
 
+  // Handle deleting a resource
+  const handleDeleteResource = (resourceId: string, resourceTitle: string) => {
+    if (!user?.id) {
+      alert('Please log in to delete learning resources')
+      return
+    }
+
+    setDeleteConfirmationModal({
+      isOpen: true,
+      type: 'single',
+      resourceId,
+      resourceTitle
+    })
+  }
+
+  // Handle the actual deletion after confirmation
+  const confirmDeleteResource = async () => {
+    if (!deleteConfirmationModal.resourceId) return
+
+    setIsDeletingResources(true)
+    try {
+      const response = await fetch(`/api/learning/resources?id=${deleteConfirmationModal.resourceId}`, {
+        method: 'DELETE'
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        // Refresh the resources to remove the deleted one
+        handleResourceAdded()
+        setDeleteConfirmationModal({ isOpen: false, type: 'single' })
+      } else {
+        console.error('Failed to delete resource:', data.error)
+        alert('Failed to delete resource')
+      }
+    } catch (err) {
+      console.error('Error deleting resource:', err)
+      alert('Failed to delete resource')
+    } finally {
+      setIsDeletingResources(false)
+    }
+  }
+
+  // Handle deleting all resources
+  const handleDeleteAllResources = () => {
+    if (!user?.id) {
+      alert('Please log in to delete learning resources')
+      return
+    }
+
+    if (resources.length === 0) {
+      alert('No resources to delete')
+      return
+    }
+
+    setDeleteConfirmationModal({
+      isOpen: true,
+      type: 'all'
+    })
+  }
+
+  // Handle the actual deletion of all resources after confirmation
+  const confirmDeleteAllResources = async () => {
+    setIsDeletingResources(true)
+    try {
+      const response = await fetch(`/api/learning/resources?all=true`, {
+        method: 'DELETE'
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        // Refresh the resources to show empty state
+        handleResourceAdded()
+        setDeleteConfirmationModal({ isOpen: false, type: 'single' })
+      } else {
+        console.error('Failed to delete all resources:', data.error)
+        alert('Failed to delete all resources')
+      }
+    } catch (err) {
+      console.error('Error deleting all resources:', err)
+      alert('Failed to delete all resources')
+    } finally {
+      setIsDeletingResources(false)
+    }
+  }
+
   // Handle resource added callback
   const handleResourceAdded = () => {
     // Refresh the resources list
@@ -223,9 +322,6 @@ export default function LearningPage() {
       title="Learning Hub"
       headerChildren={
         <div className="flex items-center space-x-2">
-          <div className="text-xs text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">
-            🤖 AI-powered URL analysis available
-          </div>
           <Button 
             variant="outline"
             onClick={() => {
@@ -249,6 +345,16 @@ export default function LearningPage() {
             <GraduationCap className="h-4 w-4 mr-2" />
             Add Resource
           </Button>
+          {user?.id && resources.length > 0 && (
+            <Button 
+              variant="destructive"
+              onClick={handleDeleteAllResources}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete All
+            </Button>
+          )}
         </div>
       }
     >
@@ -309,14 +415,6 @@ export default function LearningPage() {
                   <p className="text-sm text-purple-700 dark:text-purple-300">
                     Get personalized learning recommendations from popular platforms and sources
                   </p>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <span className="px-2 py-1 text-xs bg-purple-200 text-purple-800 dark:bg-purple-800 dark:text-purple-200 rounded">
-                      Free Resources
-                    </span>
-                    <span className="px-2 py-1 text-xs bg-purple-200 text-purple-800 dark:bg-purple-800 dark:text-purple-200 rounded">
-                      Multiple Categories
-                    </span>
-                  </div>
                 </div>
               </div>
               <Button 
@@ -502,7 +600,19 @@ export default function LearningPage() {
                         <p className="text-xs text-gray-600 dark:text-gray-400">{resource.source}</p>
                       </div>
                     </div>
-                    {getStatusIcon(resource.status)}
+                    <div className="flex items-center space-x-2">
+                      {getStatusIcon(resource.status)}
+                      {user?.id && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteResource(resource.id, resource.title)}
+                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 
@@ -620,6 +730,39 @@ export default function LearningPage() {
         isOpen={isRandomModalOpen}
         onClose={() => setIsRandomModalOpen(false)}
         onResourceAdded={handleResourceAdded}
+      />
+
+      <ConfirmationModal
+        isOpen={deleteConfirmationModal.isOpen}
+        onClose={() => setDeleteConfirmationModal({ isOpen: false, type: 'single' })}
+        onConfirm={deleteConfirmationModal.type === 'all' ? confirmDeleteAllResources : confirmDeleteResource}
+        title={
+          deleteConfirmationModal.type === 'all' 
+            ? 'Delete All Learning Resources' 
+            : 'Delete Learning Resource'
+        }
+        description={
+          deleteConfirmationModal.type === 'all'
+            ? `Are you sure you want to delete ALL ${resources.length} learning resources? This will permanently delete:
+
+• All your saved learning resources
+• All your learning progress and notes  
+• All your time tracking data
+
+This action cannot be undone.`
+            : `Are you sure you want to delete "${deleteConfirmationModal.resourceTitle}"?
+
+This will permanently delete:
+• The learning resource
+• Your progress and notes for this resource
+• Your time tracking data for this resource
+
+This action cannot be undone.`
+        }
+        confirmText={deleteConfirmationModal.type === 'all' ? 'Delete All Resources' : 'Delete Resource'}
+        requireTextConfirmation={deleteConfirmationModal.type === 'all' ? 'DELETE ALL' : undefined}
+        destructive={true}
+        isLoading={isDeletingResources}
       />
     </DashboardLayout>
   )

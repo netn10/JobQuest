@@ -15,7 +15,7 @@ async function main() {
     // Achievements will be created for new users
     const achievements = await prisma.achievement.createMany({
     data: [
-      // Focus Achievements
+      // Focus Achievements (15 total)
       {
         name: 'First Steps',
         description: 'Complete your first focus mission',
@@ -25,12 +25,12 @@ async function main() {
         xpReward: 50
       },
       {
-        name: 'Deep Focus',
-        description: 'Complete a 2-hour uninterrupted focus session',
-        icon: 'Clock',
+        name: 'Getting Started',
+        description: 'Complete 5 focus missions',
+        icon: 'Target',
         category: 'FOCUS',
-        requirement: JSON.stringify({ type: 'FOCUS_SESSION_DURATION', minutes: 120 }),
-        xpReward: 300
+        requirement: JSON.stringify({ type: 'MISSIONS_COMPLETED', count: 5, missionType: 'FOCUS' }),
+        xpReward: 100
       },
       {
         name: 'Focus Warrior',
@@ -41,6 +41,22 @@ async function main() {
         xpReward: 200
       },
       {
+        name: 'Focus Veteran',
+        description: 'Complete 25 focus missions',
+        icon: 'Target',
+        category: 'FOCUS',
+        requirement: JSON.stringify({ type: 'MISSIONS_COMPLETED', count: 25, missionType: 'FOCUS' }),
+        xpReward: 350
+      },
+      {
+        name: 'Focus Champion',
+        description: 'Complete 50 focus missions',
+        icon: 'Crown',
+        category: 'FOCUS',
+        requirement: JSON.stringify({ type: 'MISSIONS_COMPLETED', count: 50, missionType: 'FOCUS' }),
+        xpReward: 600
+      },
+      {
         name: 'Century Club',
         description: 'Complete 100 missions',
         icon: 'Crown',
@@ -48,34 +64,96 @@ async function main() {
         requirement: JSON.stringify({ type: 'MISSIONS_COMPLETED', count: 100 }),
         xpReward: 1000
       },
-      
-      // Streak Achievements
       {
-        name: 'Streak Starter',
-        description: 'Maintain a 3-day activity streak',
-        icon: 'TrendingUp',
-        category: 'STREAK',
-        requirement: JSON.stringify({ type: 'STREAK_DAYS', days: 3 }),
+        name: 'Quick Focus',
+        description: 'Complete a 30-minute focus session',
+        icon: 'Clock',
+        category: 'FOCUS',
+        requirement: JSON.stringify({ type: 'FOCUS_SESSION_DURATION', minutes: 30 }),
         xpReward: 75
       },
       {
-        name: 'Streak Keeper',
-        description: 'Maintain a 7-day activity streak',
-        icon: 'TrendingUp',
-        category: 'STREAK',
-        requirement: JSON.stringify({ type: 'STREAK_DAYS', days: 7 }),
+        name: 'Hour of Power',
+        description: 'Complete a 1-hour uninterrupted focus session',
+        icon: 'Clock',
+        category: 'FOCUS',
+        requirement: JSON.stringify({ type: 'FOCUS_SESSION_DURATION', minutes: 60 }),
         xpReward: 150
       },
       {
-        name: 'Streak Master',
-        description: 'Maintain a 30-day activity streak',
-        icon: 'TrendingUp',
-        category: 'STREAK',
-        requirement: JSON.stringify({ type: 'STREAK_DAYS', days: 30 }),
+        name: 'Deep Focus',
+        description: 'Complete a 2-hour uninterrupted focus session',
+        icon: 'Clock',
+        category: 'FOCUS',
+        requirement: JSON.stringify({ type: 'FOCUS_SESSION_DURATION', minutes: 120 }),
+        xpReward: 300
+      },
+      {
+        name: 'Marathon Focus',
+        description: 'Complete a 4-hour focus session',
+        icon: 'Clock',
+        category: 'FOCUS',
+        requirement: JSON.stringify({ type: 'FOCUS_SESSION_DURATION', minutes: 240 }),
         xpReward: 500
       },
-      
-      // Learning Achievements
+      {
+        name: 'Focus Monk',
+        description: 'Complete a 6-hour focus session',
+        icon: 'Clock',
+        category: 'FOCUS',
+        requirement: JSON.stringify({ type: 'FOCUS_SESSION_DURATION', minutes: 360 }),
+        xpReward: 750
+      },
+      {
+        name: 'Morning Person',
+        description: 'Complete 10 focus sessions before 9 AM',
+        icon: 'Sun',
+        category: 'FOCUS',
+        requirement: JSON.stringify({ type: 'EARLY_FOCUS_SESSIONS', count: 10, beforeHour: 9 }),
+        xpReward: 200
+      },
+      {
+        name: 'Night Owl',
+        description: 'Complete 10 focus sessions after 8 PM',
+        icon: 'Moon',
+        category: 'FOCUS',
+        requirement: JSON.stringify({ type: 'LATE_FOCUS_SESSIONS', count: 10, afterHour: 20 }),
+        xpReward: 200
+      },
+      {
+        name: 'Weekend Warrior',
+        description: 'Complete 20 focus sessions on weekends',
+        icon: 'Calendar',
+        category: 'FOCUS',
+        requirement: JSON.stringify({ type: 'WEEKEND_FOCUS_SESSIONS', count: 20 }),
+        xpReward: 250
+      },
+      {
+        name: 'Focus Master',
+        description: 'Complete 200 focus missions',
+        icon: 'Crown',
+        category: 'FOCUS',
+        requirement: JSON.stringify({ type: 'MISSIONS_COMPLETED', count: 200, missionType: 'FOCUS' }),
+        xpReward: 1500
+      },
+
+      // Learning Achievements (10 total)
+      {
+        name: 'First Lesson',
+        description: 'Complete your first learning resource',
+        icon: 'BookOpen',
+        category: 'LEARNING',
+        requirement: JSON.stringify({ type: 'LEARNING_RESOURCES', count: 1 }),
+        xpReward: 25
+      },
+      {
+        name: 'Quick Learner',
+        description: 'Complete 5 learning resources',
+        icon: 'BookOpen',
+        category: 'LEARNING',
+        requirement: JSON.stringify({ type: 'LEARNING_RESOURCES', count: 5 }),
+        xpReward: 100
+      },
       {
         name: 'Knowledge Seeker',
         description: 'Complete 10 learning resources',
@@ -85,6 +163,14 @@ async function main() {
         xpReward: 200
       },
       {
+        name: 'Study Buddy',
+        description: 'Complete 25 learning resources',
+        icon: 'Users',
+        category: 'LEARNING',
+        requirement: JSON.stringify({ type: 'LEARNING_RESOURCES', count: 25 }),
+        xpReward: 400
+      },
+      {
         name: 'Lifelong Learner',
         description: 'Complete 50 learning resources',
         icon: 'BookOpen',
@@ -92,8 +178,64 @@ async function main() {
         requirement: JSON.stringify({ type: 'LEARNING_RESOURCES', count: 50 }),
         xpReward: 750
       },
-      
-      // Job Search Achievements
+      {
+        name: 'Knowledge Expert',
+        description: 'Complete 100 learning resources',
+        icon: 'GraduationCap',
+        category: 'LEARNING',
+        requirement: JSON.stringify({ type: 'LEARNING_RESOURCES', count: 100 }),
+        xpReward: 1200
+      },
+      {
+        name: 'Speed Reader',
+        description: 'Complete 10 learning resources in a single day',
+        icon: 'Zap',
+        category: 'LEARNING',
+        requirement: JSON.stringify({ type: 'DAILY_LEARNING_RESOURCES', count: 10 }),
+        xpReward: 300
+      },
+      {
+        name: 'Video Scholar',
+        description: 'Complete 20 video learning resources',
+        icon: 'Play',
+        category: 'LEARNING',
+        requirement: JSON.stringify({ type: 'LEARNING_RESOURCES_BY_TYPE', count: 20, resourceType: 'VIDEO' }),
+        xpReward: 250
+      },
+      {
+        name: 'Article Enthusiast',
+        description: 'Complete 30 article learning resources',
+        icon: 'FileText',
+        category: 'LEARNING',
+        requirement: JSON.stringify({ type: 'LEARNING_RESOURCES_BY_TYPE', count: 30, resourceType: 'ARTICLE' }),
+        xpReward: 300
+      },
+      {
+        name: 'Course Completer',
+        description: 'Complete 10 course learning resources',
+        icon: 'Award',
+        category: 'LEARNING',
+        requirement: JSON.stringify({ type: 'LEARNING_RESOURCES_BY_TYPE', count: 10, resourceType: 'COURSE' }),
+        xpReward: 500
+      },
+
+      // Job Search Achievements (10 total)
+      {
+        name: 'First Application',
+        description: 'Submit your first job application',
+        icon: 'Send',
+        category: 'JOB_SEARCH',
+        requirement: JSON.stringify({ type: 'JOB_APPLICATIONS', count: 1 }),
+        xpReward: 50
+      },
+      {
+        name: 'Getting Out There',
+        description: 'Apply to 5 job positions',
+        icon: 'BriefcaseIcon',
+        category: 'JOB_SEARCH',
+        requirement: JSON.stringify({ type: 'JOB_APPLICATIONS', count: 5 }),
+        xpReward: 100
+      },
       {
         name: 'Job Hunter',
         description: 'Apply to 10 job positions',
@@ -101,6 +243,14 @@ async function main() {
         category: 'JOB_SEARCH',
         requirement: JSON.stringify({ type: 'JOB_APPLICATIONS', count: 10 }),
         xpReward: 150
+      },
+      {
+        name: 'Active Searcher',
+        description: 'Apply to 25 job positions',
+        icon: 'Search',
+        category: 'JOB_SEARCH',
+        requirement: JSON.stringify({ type: 'JOB_APPLICATIONS', count: 25 }),
+        xpReward: 300
       },
       {
         name: 'Application Master',
@@ -111,15 +261,121 @@ async function main() {
         xpReward: 400
       },
       {
+        name: 'Persistent Applicant',
+        description: 'Apply to 100 job positions',
+        icon: 'Target',
+        category: 'JOB_SEARCH',
+        requirement: JSON.stringify({ type: 'JOB_APPLICATIONS', count: 100 }),
+        xpReward: 800
+      },
+      {
         name: 'Interview Ready',
         description: 'Get 5 job applications to screening stage',
-        icon: 'BriefcaseIcon',
+        icon: 'Phone',
         category: 'JOB_SEARCH',
         requirement: JSON.stringify({ type: 'JOB_APPLICATIONS_SCREENING', count: 5 }),
         xpReward: 300
       },
-      
-      // XP Achievements
+      {
+        name: 'Interview Pro',
+        description: 'Get 15 job applications to screening stage',
+        icon: 'Phone',
+        category: 'JOB_SEARCH',
+        requirement: JSON.stringify({ type: 'JOB_APPLICATIONS_SCREENING', count: 15 }),
+        xpReward: 600
+      },
+      {
+        name: 'Daily Applier',
+        description: 'Apply to 5 jobs in a single day',
+        icon: 'Calendar',
+        category: 'JOB_SEARCH',
+        requirement: JSON.stringify({ type: 'DAILY_JOB_APPLICATIONS', count: 5 }),
+        xpReward: 200
+      },
+      {
+        name: 'Application Streak',
+        description: 'Apply to at least 1 job for 7 consecutive days',
+        icon: 'TrendingUp',
+        category: 'JOB_SEARCH',
+        requirement: JSON.stringify({ type: 'JOB_APPLICATION_STREAK', days: 7 }),
+        xpReward: 350
+      },
+
+      // Streak Achievements (8 total)
+      {
+        name: 'First Day',
+        description: 'Start your activity streak',
+        icon: 'Play',
+        category: 'STREAK',
+        requirement: JSON.stringify({ type: 'STREAK_DAYS', days: 1 }),
+        xpReward: 25
+      },
+      {
+        name: 'Streak Starter',
+        description: 'Maintain a 3-day activity streak',
+        icon: 'TrendingUp',
+        category: 'STREAK',
+        requirement: JSON.stringify({ type: 'STREAK_DAYS', days: 3 }),
+        xpReward: 75
+      },
+      {
+        name: 'One Week Strong',
+        description: 'Maintain a 7-day activity streak',
+        icon: 'TrendingUp',
+        category: 'STREAK',
+        requirement: JSON.stringify({ type: 'STREAK_DAYS', days: 7 }),
+        xpReward: 150
+      },
+      {
+        name: 'Two Weeks',
+        description: 'Maintain a 14-day activity streak',
+        icon: 'Calendar',
+        category: 'STREAK',
+        requirement: JSON.stringify({ type: 'STREAK_DAYS', days: 14 }),
+        xpReward: 250
+      },
+      {
+        name: 'Streak Master',
+        description: 'Maintain a 30-day activity streak',
+        icon: 'Crown',
+        category: 'STREAK',
+        requirement: JSON.stringify({ type: 'STREAK_DAYS', days: 30 }),
+        xpReward: 500
+      },
+      {
+        name: 'Two Month Champion',
+        description: 'Maintain a 60-day activity streak',
+        icon: 'Trophy',
+        category: 'STREAK',
+        requirement: JSON.stringify({ type: 'STREAK_DAYS', days: 60 }),
+        xpReward: 800
+      },
+      {
+        name: 'Quarter Master',
+        description: 'Maintain a 90-day activity streak',
+        icon: 'Star',
+        category: 'STREAK',
+        requirement: JSON.stringify({ type: 'STREAK_DAYS', days: 90 }),
+        xpReward: 1200
+      },
+      {
+        name: 'Year Long Dedication',
+        description: 'Maintain a 365-day activity streak',
+        icon: 'Crown',
+        category: 'STREAK',
+        requirement: JSON.stringify({ type: 'STREAK_DAYS', days: 365 }),
+        xpReward: 2000
+      },
+
+      // XP Achievements (7 total)
+      {
+        name: 'First Points',
+        description: 'Earn your first 100 XP',
+        icon: 'Zap',
+        category: 'XP',
+        requirement: JSON.stringify({ type: 'TOTAL_XP', xp: 100 }),
+        xpReward: 50
+      },
       {
         name: 'XP Collector',
         description: 'Earn 1,000 total XP',
@@ -127,6 +383,14 @@ async function main() {
         category: 'XP',
         requirement: JSON.stringify({ type: 'TOTAL_XP', xp: 1000 }),
         xpReward: 100
+      },
+      {
+        name: 'XP Enthusiast',
+        description: 'Earn 2,500 total XP',
+        icon: 'Zap',
+        category: 'XP',
+        requirement: JSON.stringify({ type: 'TOTAL_XP', xp: 2500 }),
+        xpReward: 200
       },
       {
         name: 'XP Master',
@@ -137,12 +401,28 @@ async function main() {
         xpReward: 500
       },
       {
-        name: 'XP Legend',
+        name: 'XP Champion',
         description: 'Earn 10,000 total XP',
         icon: 'Zap',
         category: 'XP',
         requirement: JSON.stringify({ type: 'TOTAL_XP', xp: 10000 }),
+        xpReward: 750
+      },
+      {
+        name: 'XP Legend',
+        description: 'Earn 25,000 total XP',
+        icon: 'Crown',
+        category: 'XP',
+        requirement: JSON.stringify({ type: 'TOTAL_XP', xp: 25000 }),
         xpReward: 1000
+      },
+      {
+        name: 'XP Grandmaster',
+        description: 'Earn 50,000 total XP',
+        icon: 'Crown',
+        category: 'XP',
+        requirement: JSON.stringify({ type: 'TOTAL_XP', xp: 50000 }),
+        xpReward: 2000
       }
     ]
   })
@@ -175,203 +455,7 @@ async function main() {
 
   console.log('Created daily challenge:', dailyChallenge)
 
-  // Check if learning resources already exist
-  const existingResources = await prisma.learningResource.count()
-  
-  if (existingResources === 0) {
-    // Create real learning resources
-    const learningResources = await prisma.learningResource.createMany({
-    data: [
-      // React & Frontend Resources
-      {
-        title: 'React 18 New Features',
-        description: 'Learn about React 18\'s concurrent features, automatic batching, and new hooks',
-        url: 'https://react.dev/blog/2022/03/29/react-v18',
-        type: 'ARTICLE',
-        difficulty: 'INTERMEDIATE',
-        estimatedTime: 25,
-        tags: JSON.stringify(['React', 'JavaScript', 'Frontend']),
-        source: 'React.dev'
-      },
-      {
-        title: 'Advanced React Patterns',
-        description: 'Master compound components, render props, and advanced hooks patterns',
-        url: 'https://kentcdodds.com/blog/advanced-react-patterns',
-        type: 'TUTORIAL',
-        difficulty: 'ADVANCED',
-        estimatedTime: 45,
-        tags: JSON.stringify(['React', 'JavaScript', 'Patterns']),
-        source: 'Kent C. Dodds'
-      },
-      {
-        title: 'TypeScript for React Developers',
-        description: 'Comprehensive guide to using TypeScript with React',
-        url: 'https://www.typescriptlang.org/docs/handbook/react.html',
-        type: 'TUTORIAL',
-        difficulty: 'INTERMEDIATE',
-        estimatedTime: 60,
-        tags: JSON.stringify(['TypeScript', 'React', 'JavaScript']),
-        source: 'TypeScript Official'
-      },
-      {
-        title: 'Next.js 14 App Router',
-        description: 'Learn the new App Router and Server Components in Next.js 14',
-        url: 'https://nextjs.org/docs/app',
-        type: 'COURSE',
-        difficulty: 'INTERMEDIATE',
-        estimatedTime: 120,
-        tags: JSON.stringify(['Next.js', 'React', 'Full Stack']),
-        source: 'Next.js Official'
-      },
-      
-      // Backend & API Resources
-      {
-        title: 'Building REST APIs with Node.js',
-        description: 'Step-by-step guide to creating scalable REST APIs',
-        url: 'https://nodejs.org/en/learn/getting-started/introduction-to-nodejs',
-        type: 'PROJECT',
-        difficulty: 'INTERMEDIATE',
-        estimatedTime: 90,
-        tags: JSON.stringify(['Node.js', 'API', 'Backend']),
-        source: 'Node.js Official'
-      },
-      {
-        title: 'Express.js Best Practices',
-        description: 'Learn best practices for building Express.js applications',
-        url: 'https://expressjs.com/en/advanced/best-practices-performance.html',
-        type: 'ARTICLE',
-        difficulty: 'INTERMEDIATE',
-        estimatedTime: 30,
-        tags: JSON.stringify(['Express.js', 'Node.js', 'Backend']),
-        source: 'Express.js Official'
-      },
-      {
-        title: 'Database Design Principles',
-        description: 'Learn fundamental database design and normalization',
-        url: 'https://www.postgresql.org/docs/current/ddl.html',
-        type: 'TUTORIAL',
-        difficulty: 'BEGINNER',
-        estimatedTime: 75,
-        tags: JSON.stringify(['Database', 'SQL', 'Design']),
-        source: 'PostgreSQL Official'
-      },
-      
-      // System Design & Architecture
-      {
-        title: 'System Design Interview Prep',
-        description: 'Comprehensive guide to system design interviews',
-        url: 'https://github.com/donnemartin/system-design-primer',
-        type: 'COURSE',
-        difficulty: 'ADVANCED',
-        estimatedTime: 180,
-        tags: JSON.stringify(['System Design', 'Interview', 'Architecture']),
-        source: 'GitHub'
-      },
-      {
-        title: 'Microservices Architecture',
-        description: 'Learn about microservices patterns and best practices',
-        url: 'https://martinfowler.com/articles/microservices.html',
-        type: 'ARTICLE',
-        difficulty: 'ADVANCED',
-        estimatedTime: 40,
-        tags: JSON.stringify(['Microservices', 'Architecture', 'Backend']),
-        source: 'Martin Fowler'
-      },
-      
-      // DevOps & Tools
-      {
-        title: 'Docker for Developers',
-        description: 'Learn Docker basics and containerization',
-        url: 'https://docs.docker.com/get-started/',
-        type: 'TUTORIAL',
-        difficulty: 'BEGINNER',
-        estimatedTime: 60,
-        tags: JSON.stringify(['Docker', 'DevOps', 'Containers']),
-        source: 'Docker Official'
-      },
-      {
-        title: 'Git Advanced Techniques',
-        description: 'Master Git workflows, branching strategies, and advanced commands',
-        url: 'https://git-scm.com/book/en/v2',
-        type: 'BOOK',
-        difficulty: 'INTERMEDIATE',
-        estimatedTime: 120,
-        tags: JSON.stringify(['Git', 'Version Control', 'Workflow']),
-        source: 'Git Official'
-      },
-      
-      // Interview Prep
-      {
-        title: 'JavaScript Interview Questions',
-        description: 'Common JavaScript interview questions and answers',
-        url: 'https://github.com/sudheerj/javascript-interview-questions',
-        type: 'ARTICLE',
-        difficulty: 'INTERMEDIATE',
-        estimatedTime: 45,
-        tags: JSON.stringify(['JavaScript', 'Interview', 'Frontend']),
-        source: 'GitHub'
-      },
-      {
-        title: 'Data Structures & Algorithms',
-        description: 'Essential data structures and algorithms for coding interviews',
-        url: 'https://leetcode.com/explore/',
-        type: 'COURSE',
-        difficulty: 'INTERMEDIATE',
-        estimatedTime: 200,
-        tags: JSON.stringify(['Algorithms', 'Data Structures', 'Interview']),
-        source: 'LeetCode'
-      },
-      
-      // Modern Web Development
-      {
-        title: 'Web Performance Optimization',
-        description: 'Learn techniques to improve website performance',
-        url: 'https://web.dev/performance/',
-        type: 'TUTORIAL',
-        difficulty: 'INTERMEDIATE',
-        estimatedTime: 90,
-        tags: JSON.stringify(['Performance', 'Web', 'Optimization']),
-        source: 'Web.dev'
-      },
-      {
-        title: 'Progressive Web Apps',
-        description: 'Build modern Progressive Web Applications',
-        url: 'https://web.dev/progressive-web-apps/',
-        type: 'COURSE',
-        difficulty: 'INTERMEDIATE',
-        estimatedTime: 150,
-        tags: JSON.stringify(['PWA', 'Web', 'Mobile']),
-        source: 'Web.dev'
-      },
-      
-      // Soft Skills
-      {
-        title: 'Technical Writing for Developers',
-        description: 'Learn to write clear documentation and technical content',
-        url: 'https://developers.google.com/tech-writing',
-        type: 'COURSE',
-        difficulty: 'BEGINNER',
-        estimatedTime: 60,
-        tags: JSON.stringify(['Writing', 'Documentation', 'Communication']),
-        source: 'Google Developers'
-      },
-      {
-        title: 'Remote Work Best Practices',
-        description: 'Tips and strategies for effective remote work',
-        url: 'https://zapier.com/blog/remote-work-guide/',
-        type: 'ARTICLE',
-        difficulty: 'BEGINNER',
-        estimatedTime: 20,
-        tags: JSON.stringify(['Remote Work', 'Productivity', 'Communication']),
-        source: 'Zapier'
-      }
-    ]
-  })
-
-      console.log('Created learning resources:', learningResources)
-    } else {
-      console.log('Learning resources already exist, skipping...')
-    }
+  // No default learning resources created - users start with empty learning hub
 
     // Daily challenge progress will be created when users participate
 }

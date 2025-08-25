@@ -88,6 +88,53 @@ export async function GET(request: NextRequest) {
   }
 }
 
+export async function DELETE(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams
+    const resourceId = searchParams.get('id')
+    const deleteAll = searchParams.get('all')
+
+    if (deleteAll === 'true') {
+      // Delete all learning resources and their associated progress
+      await prisma.learningProgress.deleteMany({})
+      await prisma.learningResource.deleteMany({})
+
+      return NextResponse.json({
+        success: true,
+        message: 'All resources deleted successfully'
+      })
+    }
+
+    if (!resourceId) {
+      return NextResponse.json(
+        { success: false, error: 'Resource ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // First, delete any learning progress associated with this resource
+    await prisma.learningProgress.deleteMany({
+      where: { resourceId }
+    })
+
+    // Then delete the resource itself
+    await prisma.learningResource.delete({
+      where: { id: resourceId }
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'Resource deleted successfully'
+    })
+  } catch (error) {
+    console.error('Error deleting learning resource:', error)
+    return NextResponse.json(
+      { success: false, error: 'Failed to delete learning resource' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
