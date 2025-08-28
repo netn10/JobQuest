@@ -107,7 +107,7 @@ export async function checkAndUnlockAchievements(userId: string) {
 
         case 'JOB_APPLICATIONS_SCREENING':
           const screeningApps = user.jobApplications.filter(app => 
-            app.status === 'SCREENING' || app.status === 'INTERVIEWING' || app.status === 'OFFER_RECEIVED'
+            app.status === 'SCREENING' || app.status === 'INTERVIEW' || app.status === 'OFFER'
           ).length
           shouldUnlock = screeningApps >= (requirement.count || 1)
           break
@@ -278,7 +278,7 @@ export async function getAchievementProgress(userId: string) {
 
           case 'JOB_APPLICATIONS_SCREENING':
             const screeningApps = user.jobApplications.filter(app => 
-              app.status === 'SCREENING' || app.status === 'INTERVIEWING' || app.status === 'OFFER_RECEIVED'
+              app.status === 'SCREENING' || app.status === 'INTERVIEW' || app.status === 'OFFER'
             ).length
             progress = Math.min(screeningApps, requirement.count || 1)
             maxProgress = requirement.count || 1
