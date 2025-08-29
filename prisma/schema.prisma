@@ -187,7 +187,7 @@ model Activity {
   title       String
   description String?
   metadata    String?
-  xpEarned    Int          @default(0)
+  xpEarned    Int?
   createdAt   DateTime     @default(now())
   userId      String
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)

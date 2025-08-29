@@ -23,7 +23,19 @@ import {
   Sparkles,
   ArrowRight,
   RefreshCw,
-  Loader2
+  Loader2,
+  BarChart3,
+  Eye,
+  CalendarDays,
+  Target as TargetIcon,
+  BookOpen as BookOpenIcon,
+  Briefcase,
+  Trophy as TrophyIcon,
+  Zap as ZapIcon,
+  Users as UsersIcon,
+  Star as StarIcon,
+  Award as AwardIcon,
+  TrendingUp as TrendingUpIcon
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 
@@ -87,15 +99,15 @@ export default function ActivitiesPage() {
 
   const getIconComponent = (iconName: string) => {
     const iconMap: Record<string, any> = {
-      'target': Target,
-      'book-open': BookOpen,
-      'briefcase': BriefcaseIcon,
-      'trophy': Trophy,
-      'zap': Zap,
-      'users': Users,
-      'star': Star,
-      'award': Award,
-      'trending-up': TrendingUp,
+      'target': TargetIcon,
+      'book-open': BookOpenIcon,
+      'briefcase': Briefcase,
+      'trophy': TrophyIcon,
+      'zap': ZapIcon,
+      'users': UsersIcon,
+      'star': StarIcon,
+      'award': AwardIcon,
+      'trending-up': TrendingUpIcon,
       'activity': Activity
     }
     return iconMap[iconName] || Activity
@@ -135,27 +147,27 @@ export default function ActivitiesPage() {
       case 'mission_started':
       case 'mission_completed':
       case 'mission_failed':
-        return 'bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30'
+        return 'bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-800'
       case 'job_applied':
       case 'job_status_updated':
-        return 'bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30'
+        return 'bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border border-emerald-200 dark:border-emerald-800'
       case 'notebook_entry_created':
       case 'notebook_entry_updated':
-        return 'bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30'
+        return 'bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800'
       case 'learning_started':
       case 'learning_completed':
       case 'learning_progress_updated':
-        return 'bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30'
+        return 'bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border border-orange-200 dark:border-orange-800'
       case 'achievement_unlocked':
-        return 'bg-gradient-to-br from-yellow-100 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30'
+        return 'bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border border-yellow-200 dark:border-yellow-800'
       case 'daily_challenge_completed':
-        return 'bg-gradient-to-br from-pink-100 to-rose-100 dark:from-pink-900/30 dark:to-rose-900/30'
+        return 'bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 border border-pink-200 dark:border-pink-800'
       case 'streak_milestone':
       case 'xp_earned':
       case 'level_up':
-        return 'bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/30'
+        return 'bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 border border-indigo-200 dark:border-indigo-800'
       default:
-        return 'bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700'
+        return 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border border-gray-200 dark:border-gray-600'
     }
   }
 
@@ -216,26 +228,26 @@ export default function ActivitiesPage() {
   }
 
   const activityTypes = [
-    { value: 'all', label: 'All Activities' },
-    { value: 'mission_started', label: 'Missions Started' },
-    { value: 'mission_completed', label: 'Missions Completed' },
-    { value: 'job_applied', label: 'Job Applications' },
-    { value: 'job_status_updated', label: 'Job Updates' },
-    { value: 'notebook_entry_created', label: 'Journal Entries' },
-    { value: 'learning_started', label: 'Learning Started' },
-    { value: 'learning_completed', label: 'Learning Completed' },
-    { value: 'achievement_unlocked', label: 'Achievements' },
-    { value: 'daily_challenge_completed', label: 'Daily Challenges' },
-    { value: 'streak_milestone', label: 'Streak Milestones' },
-    { value: 'xp_earned', label: 'XP Earned' },
-    { value: 'level_up', label: 'Level Ups' }
+    { value: 'all', label: 'All Activities', icon: Activity },
+    { value: 'mission_started', label: 'Missions Started', icon: Target },
+    { value: 'mission_completed', label: 'Missions Completed', icon: Trophy },
+    { value: 'job_applied', label: 'Job Applications', icon: Briefcase },
+    { value: 'job_status_updated', label: 'Job Updates', icon: TrendingUp },
+    { value: 'notebook_entry_created', label: 'Journal Entries', icon: BookOpen },
+    { value: 'learning_started', label: 'Learning Started', icon: BookOpen },
+    { value: 'learning_completed', label: 'Learning Completed', icon: Award },
+    { value: 'achievement_unlocked', label: 'Achievements', icon: Star },
+    { value: 'daily_challenge_completed', label: 'Daily Challenges', icon: Zap },
+    { value: 'streak_milestone', label: 'Streak Milestones', icon: TrendingUp },
+    { value: 'xp_earned', label: 'XP Earned', icon: Zap },
+    { value: 'level_up', label: 'Level Ups', icon: Trophy }
   ]
 
   const timePeriods = [
-    { value: 'all', label: 'All Time' },
-    { value: 'today', label: 'Today' },
-    { value: 'week', label: 'This Week' },
-    { value: 'month', label: 'This Month' }
+    { value: 'all', label: 'All Time', icon: BarChart3 },
+    { value: 'today', label: 'Today', icon: Calendar },
+    { value: 'week', label: 'This Week', icon: CalendarDays },
+    { value: 'month', label: 'This Month', icon: Calendar }
   ]
 
   const filteredActivities = activities.filter(activity => {
@@ -268,38 +280,50 @@ export default function ActivitiesPage() {
   if (loading) {
     return (
       <DashboardLayout title="Activity History">
-        <div className="space-y-6 max-w-6xl mx-auto">
-          {/* Header with shimmer loading */}
-          <div className="text-center space-y-4">
-            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse w-64 mx-auto"></div>
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-96 mx-auto"></div>
+        <div className="space-y-8 max-w-7xl mx-auto px-4">
+          {/* Enhanced Header with shimmer loading */}
+          <div className="text-center space-y-6">
+            <div className="relative">
+              <div className="h-12 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded-2xl animate-pulse w-80 mx-auto"></div>
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse"></div>
+            </div>
+            <div className="h-6 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded-xl animate-pulse w-96 mx-auto"></div>
           </div>
 
-          {/* Stats cards loading */}
+          {/* Enhanced Stats cards loading */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <Card key={i} className="overflow-hidden">
+              <Card key={i} className="overflow-hidden border-0 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
                 <CardContent className="p-6">
-                  <div className="animate-pulse space-y-3">
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-                    <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                  <div className="animate-pulse space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-2 flex-1">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-lg w-2/3"></div>
+                        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded-xl w-3/4"></div>
+                      </div>
+                      <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
 
-          {/* Activity items loading */}
+          {/* Enhanced Activity items loading */}
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
-              <Card key={i} className="overflow-hidden">
+              <Card key={i} className="overflow-hidden border-0 bg-white dark:bg-gray-800 shadow-lg">
                 <CardContent className="p-6">
                   <div className="animate-pulse">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                    <div className="flex items-start space-x-6">
+                      <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-2xl"></div>
+                      <div className="flex-1 space-y-3">
+                        <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-lg w-1/2"></div>
+                        <div className="flex items-center space-x-4">
+                          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-full w-20"></div>
+                          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -314,145 +338,175 @@ export default function ActivitiesPage() {
 
   return (
     <DashboardLayout title="Activity History">
-      <div className="space-y-8 max-w-7xl mx-auto">
-        {/* Enhanced Header Section */}
-        <div className="text-center space-y-4">
-          <div className="relative">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">
+      <div className="space-y-8 max-w-7xl mx-auto px-4">
+        {/* Enhanced Header Section with animated elements */}
+        <div className="text-center space-y-6">
+          <div className="relative inline-block">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-600 to-purple-600 dark:from-white dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent animate-pulse">
               Activity History
             </h1>
-            <div className="absolute -top-2 -right-2 w-4 h-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse"></div>
+            <div className="absolute -top-3 -right-3 w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-bounce shadow-lg"></div>
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
           </div>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Track all your actions and achievements with detailed insights into your progress
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            Track your journey through detailed insights and celebrate every milestone in your career quest
           </p>
         </div>
 
-        {/* Enhanced Stats Overview */}
+        {/* Enhanced Stats Overview with better animations */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20">
-            <CardContent className="p-6">
+          <Card className="group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 border-0 bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-blue-900/20 dark:via-cyan-900/20 dark:to-blue-800/20 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <CardContent className="p-6 relative">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Activities</p>
-                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.total}</p>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Total Activities</p>
+                  <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">{stats.total}</p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Activity className="h-6 w-6 text-white" />
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 shadow-lg">
+                  <Activity className="h-7 w-7 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20">
-            <CardContent className="p-6">
+          <Card className="group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 border-0 bg-gradient-to-br from-emerald-50 via-green-50 to-emerald-100 dark:from-emerald-900/20 dark:via-green-900/20 dark:to-emerald-800/20 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <CardContent className="p-6 relative">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Today</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">{stats.today}</p>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">Today</p>
+                  <p className="text-3xl font-bold text-emerald-900 dark:text-emerald-100">{stats.today}</p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Calendar className="h-6 w-6 text-white" />
+                <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-green-500 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 shadow-lg">
+                  <Calendar className="h-7 w-7 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
-            <CardContent className="p-6">
+          <Card className="group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 border-0 bg-gradient-to-br from-purple-50 via-pink-50 to-purple-100 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-purple-800/20 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <CardContent className="p-6 relative">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-purple-600 dark:text-purple-400">This Week</p>
-                  <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.thisWeek}</p>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide">This Week</p>
+                  <p className="text-3xl font-bold text-purple-900 dark:text-purple-100">{stats.thisWeek}</p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <TrendingUp className="h-6 w-6 text-white" />
+                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 shadow-lg">
+                  <TrendingUp className="h-7 w-7 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20">
-            <CardContent className="p-6">
+          <Card className="group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 border-0 bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-100 dark:from-yellow-900/20 dark:via-amber-900/20 dark:to-yellow-800/20 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <CardContent className="p-6 relative">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-yellow-600 dark:text-yellow-400">Total XP Earned</p>
-                  <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">{stats.totalXP}</p>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 uppercase tracking-wide">Total XP</p>
+                  <p className="text-3xl font-bold text-yellow-900 dark:text-yellow-100">{stats.totalXP}</p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Zap className="h-6 w-6 text-white" />
+                <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 shadow-lg">
+                  <Zap className="h-7 w-7 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Enhanced Filters Section */}
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center space-x-2 text-gray-900 dark:text-gray-100">
-              <Filter className="h-5 w-5 text-blue-500" />
-              <span>Filters & Search</span>
+        {/* Enhanced Filters Section with better visual design */}
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5"></div>
+          <CardHeader className="pb-6 relative">
+            <CardTitle className="flex items-center space-x-3 text-gray-900 dark:text-gray-100">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+                <Filter className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <span className="text-xl font-bold">Filters & Search</span>
+                <p className="text-sm text-gray-500 dark:text-gray-400 font-normal">Refine your activity view</p>
+              </div>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Search Activities</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <CardContent className="space-y-6 relative">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-3">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Search Activities</label>
+                <div className="relative group">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors duration-200" />
                   <input
                     type="text"
                     placeholder="Search activities..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-500"
                   />
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Activity Type</label>
-                <select
-                  value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                >
-                  {activityTypes.map(type => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
-                </select>
+              <div className="space-y-3">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Activity Type</label>
+                <div className="relative">
+                  <select
+                    value={selectedType}
+                    onChange={(e) => setSelectedType(e.target.value)}
+                    className="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 appearance-none cursor-pointer"
+                  >
+                    {activityTypes.map(type => (
+                      <option key={type.value} value={type.value}>
+                        {type.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Time Period</label>
-                <select
-                  value={selectedPeriod}
-                  onChange={(e) => setSelectedPeriod(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                >
-                  {timePeriods.map(period => (
-                    <option key={period.value} value={period.value}>
-                      {period.label}
-                    </option>
-                  ))}
-                </select>
+              <div className="space-y-3">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Time Period</label>
+                <div className="relative">
+                  <select
+                    value={selectedPeriod}
+                    onChange={(e) => setSelectedPeriod(e.target.value)}
+                    className="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 appearance-none cursor-pointer"
+                  >
+                    {timePeriods.map(period => (
+                      <option key={period.value} value={period.value}>
+                        {period.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
             </div>
             
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
-                <span className="font-medium">Showing {filteredActivities.length} of {activities.length} activities</span>
+            <div className="flex items-center justify-between pt-6 border-t-2 border-gray-100 dark:border-gray-700">
+              <div className="flex items-center space-x-4">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Showing {filteredActivities.length} of {activities.length} activities
+                </span>
                 {filteredActivities.length > 0 && (
-                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs">
-                    {Math.round((filteredActivities.length / activities.length) * 100)}% match
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs font-semibold">
+                      {Math.round((filteredActivities.length / activities.length) * 100)}% match
+                    </span>
+                  </div>
                 )}
               </div>
               
-              <div className="flex space-x-2">
+              <div className="flex space-x-3">
                 {(searchTerm || selectedType !== 'all' || selectedPeriod !== 'all') && (
                   <Button
                     variant="ghost"
@@ -462,7 +516,7 @@ export default function ActivitiesPage() {
                       setSelectedType('all')
                       setSelectedPeriod('all')
                     }}
-                    className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                    className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 px-4 py-2 rounded-xl transition-all duration-200"
                   >
                     Clear Filters
                   </Button>
@@ -471,7 +525,7 @@ export default function ActivitiesPage() {
                   variant="outline"
                   size="sm"
                   onClick={fetchActivities}
-                  className="flex items-center space-x-2"
+                  className="flex items-center space-x-2 px-4 py-2 rounded-xl border-2 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
                 >
                   <RefreshCw className="h-4 w-4" />
                   <span>Refresh</span>
@@ -481,7 +535,7 @@ export default function ActivitiesPage() {
           </CardContent>
         </Card>
 
-        {/* Enhanced Activities List */}
+        {/* Enhanced Activities List with staggered animations */}
         <div className="space-y-4">
           {filteredActivities.length > 0 ? (
             filteredActivities.map((activity, index) => {
@@ -489,42 +543,54 @@ export default function ActivitiesPage() {
               return (
                 <Card 
                   key={activity.id || index} 
-                  className="group hover:shadow-xl transition-all duration-300 border-0 bg-white dark:bg-gray-800 overflow-hidden relative"
+                  className="group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 border-0 bg-white dark:bg-gray-800 overflow-hidden relative"
                   style={{
-                    animationDelay: `${index * 50}ms`
+                    animationDelay: `${index * 100}ms`
                   }}
                 >
-                  {/* Animated border gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></div>
-                  <div className="absolute inset-[1px] bg-white dark:bg-gray-800 rounded-lg"></div>
+                  {/* Enhanced animated border gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
+                  <div className="absolute inset-[2px] bg-white dark:bg-gray-800 rounded-2xl"></div>
                   
-                  <CardContent className="p-6 relative">
-                    <div className="flex items-start space-x-6">
-                      {/* Enhanced Icon */}
-                      <div className={`w-16 h-16 ${getIconBgColor(activity.type)} rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-                        <IconComponent className={`h-8 w-8 ${getIconColor(activity.type)}`} />
+                  <CardContent className="p-8 relative">
+                    <div className="flex items-start space-x-8">
+                      {/* Enhanced Icon with better styling */}
+                      <div className={`w-20 h-20 ${getIconBgColor(activity.type)} rounded-3xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-xl`}>
+                        <IconComponent className={`h-10 w-10 ${getIconColor(activity.type)}`} />
                       </div>
                       
-                      {/* Content */}
-                      <div className="flex-1 min-w-0 space-y-3">
+                      {/* Enhanced Content */}
+                      <div className="flex-1 min-w-0 space-y-4">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 leading-tight">
                               {activity.title}
                             </h3>
                             {activity.description && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 leading-relaxed">
+                              <p className="text-base text-gray-600 dark:text-gray-400 mt-3 leading-relaxed">
                                 {activity.description}
                               </p>
                             )}
                           </div>
                           
-                          {/* XP Badge */}
-                          {activity.xpEarned && activity.xpEarned > 0 && (
-                            <div className="flex-shrink-0 ml-4">
-                              <div className="flex items-center space-x-1 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 px-3 py-1.5 rounded-full">
-                                <Sparkles className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                <span className="text-sm font-bold text-green-700 dark:text-green-300">
+                          {/* Enhanced XP Badge */}
+                          {activity.xpEarned !== null && activity.xpEarned !== undefined && (
+                            <div className="flex-shrink-0 ml-6">
+                              <div className={`flex items-center space-x-2 px-4 py-2 rounded-2xl border ${
+                                activity.xpEarned > 0 
+                                  ? 'bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 border-green-200 dark:border-green-800'
+                                  : 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 border-gray-200 dark:border-gray-600'
+                              }`}>
+                                <Sparkles className={`h-5 w-5 ${
+                                  activity.xpEarned > 0 
+                                    ? 'text-green-600 dark:text-green-400 animate-pulse'
+                                    : 'text-gray-500 dark:text-gray-400'
+                                }`} />
+                                <span className={`text-sm font-bold ${
+                                  activity.xpEarned > 0 
+                                    ? 'text-green-700 dark:text-green-300'
+                                    : 'text-gray-600 dark:text-gray-300'
+                                }`}>
                                   +{activity.xpEarned} XP
                                 </span>
                               </div>
@@ -532,23 +598,25 @@ export default function ActivitiesPage() {
                           )}
                         </div>
                         
-                        {/* Enhanced Metadata */}
+                        {/* Enhanced Metadata with better layout */}
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <Badge className={`${getTypeColor(activity.type)} text-xs font-medium px-3 py-1`}>
+                          <div className="flex items-center space-x-4">
+                            <Badge className={`${getTypeColor(activity.type)} text-sm font-semibold px-4 py-2 rounded-xl`}>
                               {activity.type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                             </Badge>
-                            <div className="flex items-center space-x-1 text-xs text-gray-500 dark:text-gray-400">
-                              <Clock className="h-3 w-3" />
-                              <span>{formatTimeAgo(activity.timestamp)}</span>
+                            <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                              <Clock className="h-4 w-4" />
+                              <span className="font-medium">{formatTimeAgo(activity.timestamp)}</span>
                             </div>
                           </div>
                           
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs text-gray-400 dark:text-gray-500">
+                          <div className="flex items-center space-x-3">
+                            <span className="text-sm text-gray-400 dark:text-gray-500 font-medium">
                               {formatDate(activity.timestamp)}
                             </span>
-                            <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" />
+                            <div className="w-8 h-8 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-full flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-blue-100 group-hover:to-purple-100 dark:group-hover:from-blue-900/30 dark:group-hover:to-purple-900/30 transition-all duration-300">
+                              <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors duration-300" />
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -558,20 +626,23 @@ export default function ActivitiesPage() {
               )
             })
           ) : (
-            <Card className="border-0 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
-              <CardContent className="p-12 text-center">
-                <div className="flex flex-col items-center space-y-6">
-                  <div className="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-full flex items-center justify-center">
-                    <Activity className="h-10 w-10 text-gray-400" />
+            <Card className="border-0 bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 shadow-xl">
+              <CardContent className="p-16 text-center">
+                <div className="flex flex-col items-center space-y-8">
+                  <div className="relative">
+                    <div className="w-24 h-24 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-3xl flex items-center justify-center">
+                      <Activity className="h-12 w-12 text-gray-400" />
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full animate-pulse"></div>
                   </div>
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300">
+                  <div className="space-y-4">
+                    <h3 className="text-2xl font-bold text-gray-700 dark:text-gray-300">
                       No activities found
                     </h3>
-                    <p className="text-gray-500 dark:text-gray-400 max-w-md">
+                    <p className="text-gray-500 dark:text-gray-400 max-w-md text-lg leading-relaxed">
                       {searchTerm || selectedType !== 'all' 
-                        ? 'Try adjusting your filters or search terms to find more activities.'
-                        : 'Start completing missions, applying to jobs, or learning new skills to see your activity history here!'
+                        ? 'Try adjusting your filters or search terms to discover more activities in your journey.'
+                        : 'Start your adventure by completing missions, applying to jobs, or learning new skills to see your activity history here!'
                       }
                     </p>
                   </div>
@@ -582,7 +653,7 @@ export default function ActivitiesPage() {
                         setSelectedType('all')
                         setSelectedPeriod('all')
                       }}
-                      className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+                      className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-8 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                     >
                       Clear Filters
                     </Button>

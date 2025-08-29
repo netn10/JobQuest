@@ -3,7 +3,7 @@ import type { NextConfig } from 'next'
 const nextConfig: NextConfig = {
   // Suppress hydration warnings from browser extensions
   reactStrictMode: true,
-  
+  devIndicators: false,
   // Experimental features for better hydration handling
   experimental: {
     // Better error handling for hydration mismatches
@@ -41,10 +41,15 @@ const nextConfig: NextConfig = {
             key: 'X-XSS-Protection',
             value: '1; mode=block',
           },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'",
+          },
         ],
       },
     ]
   },
+
 }
 
 export default nextConfig

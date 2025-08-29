@@ -171,10 +171,20 @@ export function generateCalendarData(activeDates: Date[] = [], currentMonth: Dat
       } else {
         const currentDate = new Date(year, month, day)
         
-        // Convert dates to ISO string format (YYYY-MM-DD) for reliable comparison
-        const currentDateStr = currentDate.toISOString().split('T')[0]
+        // Helper function to get date string in user's timezone
+        const getDateInUserTimezone = (date: Date) => {
+          if (userTimezone && userTimezone !== 'UTC') {
+            const dateParts = date.toLocaleDateString('en-CA', { timeZone: userTimezone }).split('-')
+            return `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`
+          } else {
+            return date.toISOString().split('T')[0]
+          }
+        }
+        
+        // Convert dates to timezone-aware format for reliable comparison
+        const currentDateStr = getDateInUserTimezone(currentDate)
         const isActive = activeDates.some(date => {
-          const dateStr = date.toISOString().split('T')[0]
+          const dateStr = getDateInUserTimezone(date)
           return dateStr === currentDateStr
         })
         

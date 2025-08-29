@@ -1,7 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Target, Play, Pause, Square, Clock, Shield } from 'lucide-react'
+import { useFocusSession } from '@/contexts/focus-session-context'
 
 interface FocusBlockerProps {
   isActive: boolean
@@ -10,6 +14,12 @@ interface FocusBlockerProps {
   onBlockedAccess: (type: 'website' | 'app', name: string) => void
   missionDuration?: number
   missionTitle?: string
+  missionStatus?: 'IN_PROGRESS' | 'PENDING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
+  timeRemaining?: number
+  onResume?: () => void
+  onPause?: () => void
+  onStop?: () => void
+  missionId?: string
 }
 
 export function FocusBlocker({ 
@@ -18,23 +28,55 @@ export function FocusBlocker({
   blockedApps, 
   onBlockedAccess,
   missionDuration,
-  missionTitle 
+  missionTitle,
+  missionStatus,
+  timeRemaining,
+  onResume,
+  onPause,
+  onStop,
+  missionId
 }: FocusBlockerProps) {
   const [currentUrl, setCurrentUrl] = useState<string>('')
-  const [timeRemaining, setTimeRemaining] = useState<number>(0)
   const [sessionStartTime, setSessionStartTime] = useState<number>(0)
+  const [showPersistentBanner, setShowPersistentBanner] = useState(false)
   const router = useRouter()
+  const pathname = usePathname()
+  const { setFocusSession, clearFocusSession } = useFocusSession()
+
+  // Check if we should show the persistent banner
+  const shouldShowBanner = missionId && (missionStatus === 'IN_PROGRESS' || missionStatus === 'PENDING')
+
+  // Update focus session context
+  useEffect(() => {
+    if (shouldShowBanner && missionTitle) {
+      setFocusSession({
+        isActive: true,
+        missionId,
+        missionTitle,
+        missionStatus,
+        timeRemaining,
+        missionDuration
+      })
+    } else {
+      clearFocusSession()
+    }
+  }, [shouldShowBanner, missionId, missionTitle, missionStatus, timeRemaining, missionDuration, setFocusSession, clearFocusSession])
 
   useEffect(() => {
     if (!isActive) {
       setCurrentUrl('')
-      setTimeRemaining(0)
       setSessionStartTime(0)
+      setShowPersistentBanner(false)
       return
     }
 
     // Set session start time when focus session becomes active (only if not already set)
     setSessionStartTime(prev => prev === 0 ? Date.now() : prev)
+
+    // Show persistent banner if mission is active or paused
+    if (shouldShowBanner) {
+      setShowPersistentBanner(true)
+    }
 
     // Check current URL
     const checkCurrentUrl = () => {
@@ -101,32 +143,115 @@ export function FocusBlocker({
       window.removeEventListener('popstate', handlePopState)
       window.removeEventListener('hashchange', handleHashChange)
     }
-  }, [isActive, blockedWebsites, blockedApps, onBlockedAccess, router])
+  }, [isActive, blockedWebsites, blockedApps, onBlockedAccess, router, shouldShowBanner])
 
-  // Timer effect for countdown
+  // Show/hide banner based on mission status (not page location)
   useEffect(() => {
-    if (!isActive || !missionDuration || !sessionStartTime) {
-      setTimeRemaining(0)
-      return
+    setShowPersistentBanner(shouldShowBanner)
+  }, [shouldShowBanner])
+
+  // Persistent Focus Session Banner
+  if (showPersistentBanner && missionTitle) {
+    const formatTime = (seconds: number) => {
+      const minutes = Math.floor(seconds / 60)
+      const remainingSeconds = seconds % 60
+      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
     }
 
-    const updateTimer = () => {
-      const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000 / 60)
-      const remaining = Math.max(0, missionDuration - elapsed)
-      setTimeRemaining(remaining)
+    const progress = missionDuration && timeRemaining !== undefined 
+      ? Math.max(0, Math.min(100, ((missionDuration * 60 - timeRemaining) / (missionDuration * 60)) * 100))
+      : 0
 
-      // Auto-complete when time is up
-      if (remaining <= 0) {
-        // This will be handled by the missions page timer
-        console.log('Focus session time completed')
-      }
-    }
+    const isPaused = missionStatus === 'PENDING'
+    const isActive = missionStatus === 'IN_PROGRESS'
 
-    updateTimer()
-    const timerInterval = setInterval(updateTimer, 1000)
+    return (
+      <div className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg border-b border-blue-500">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  isPaused ? 'bg-yellow-500' : 'bg-green-500'
+                }`}>
+                  <Target className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold text-sm">
+                    {missionTitle}
+                  </h3>
+                  <p className="text-blue-100 text-xs">
+                    {isPaused ? 'Paused' : 'Active'} • {missionDuration} minutes total
+                  </p>
+                </div>
+              </div>
+              
+              {timeRemaining !== undefined && (
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-4 w-4 text-blue-200" />
+                  <span className="text-white font-mono text-sm">
+                    {formatTime(timeRemaining)}
+                  </span>
+                </div>
+              )}
+            </div>
 
-    return () => clearInterval(timerInterval)
-  }, [isActive, missionDuration, sessionStartTime])
+            <div className="flex items-center space-x-3">
+              {/* Progress bar */}
+              <div className="hidden sm:block w-32 bg-blue-500/30 rounded-full h-2">
+                <div 
+                  className={`h-2 rounded-full transition-all duration-1000 ${
+                    isPaused ? 'bg-yellow-400' : 'bg-green-400'
+                  }`}
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
+
+              {/* Status indicator */}
+              <div className="flex items-center space-x-2">
+                <Shield className="h-4 w-4 text-blue-200" />
+                <span className="text-blue-100 text-xs">
+                  Distractions blocked
+                </span>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center space-x-2">
+                {isPaused ? (
+                  <Button
+                    size="sm"
+                    onClick={onResume}
+                    className="bg-green-500 hover:bg-green-600 text-white h-8 px-3"
+                  >
+                    <Play className="h-3 w-3 mr-1" />
+                    Resume
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={onPause}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white h-8 px-3"
+                  >
+                    <Pause className="h-3 w-3 mr-1" />
+                    Pause
+                  </Button>
+                )}
+                
+                <Button
+                  size="sm"
+                  onClick={onStop}
+                  className="bg-red-500 hover:bg-red-600 text-white h-8 px-3"
+                >
+                  <Square className="h-3 w-3 mr-1" />
+                  Stop
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // Show blocking overlay if on a blocked site
   if (isActive && currentUrl) {
@@ -143,7 +268,7 @@ export function FocusBlocker({
         return `${hours}:${mins.toString().padStart(2, '0')}`
       }
 
-      const progress = missionDuration ? Math.max(0, Math.min(100, ((missionDuration - timeRemaining) / missionDuration) * 100)) : 0
+      const progress = missionDuration ? Math.max(0, Math.min(100, ((missionDuration - (timeRemaining || 0) / 60) / missionDuration) * 100)) : 0
 
       return (
         <div className="fixed inset-0 bg-gradient-to-br from-red-600 to-red-800 z-50 flex items-center justify-center">
@@ -166,10 +291,10 @@ export function FocusBlocker({
               </div>
             )}
             
-            {timeRemaining > 0 && (
+            {timeRemaining !== undefined && timeRemaining > 0 && (
               <div className="mb-4">
                 <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-2">
-                  ⏰ {formatTime(timeRemaining)} remaining
+                  ⏰ {formatTime(timeRemaining / 60)} remaining
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div 

@@ -78,7 +78,17 @@ export default function AboutPage() {
 
   return (
     <DashboardLayout title="About JobQuest">
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="space-y-6 max-w-6xl mx-auto">
+        {/* Header Section */}
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            About JobQuest
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300">
+            Your AI-powered companion for focused job searching
+          </p>
+        </div>
+
         {/* Hero Section */}
         <div className="text-center space-y-6">
           <div className="flex items-center justify-center space-x-4 mb-6">

@@ -43,13 +43,32 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [showWelcome, setShowWelcome] = useState(true)
+  const [showWelcome, setShowWelcome] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('login')
     }
   }, [user, authLoading, navigate])
+
+  // Check if we should show the welcome message
+  useEffect(() => {
+    if (user) {
+      const welcomeKey = `welcome-shown-${user.id}`
+      const lastWelcomeShown = localStorage.getItem(welcomeKey)
+      const currentSession = sessionStorage.getItem('current-session')
+      
+      // Show welcome if it hasn't been shown in this session or if it's been more than 24 hours
+      const now = new Date().getTime()
+      const lastShown = lastWelcomeShown ? parseInt(lastWelcomeShown) : 0
+      const twentyFourHours = 24 * 60 * 60 * 1000
+      
+      if (!currentSession || (now - lastShown) > twentyFourHours) {
+        setShowWelcome(true)
+        sessionStorage.setItem('current-session', 'true')
+      }
+    }
+  }, [user])
 
   useEffect(() => {
     if (!user) return
@@ -189,14 +208,19 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
 
   return (
     <DashboardLayout title="Dashboard">
-      <div className="space-y-4 lg:space-y-6">
+      <div className="space-y-4 lg:space-y-6 max-w-7xl mx-auto text-center">
         {/* Welcome Section */}
         {showWelcome && (
           <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800 relative">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setShowWelcome(false)}
+              onClick={() => {
+                setShowWelcome(false)
+                // Mark welcome as shown for this user
+                const welcomeKey = `welcome-shown-${user?.id}`
+                localStorage.setItem(welcomeKey, new Date().getTime().toString())
+              }}
               className="absolute top-2 right-2 h-8 w-8 p-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
             >
               <X className="h-4 w-4" />
@@ -232,10 +256,10 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
           defaultExpanded={true}
           storageKey="dashboard-quick-actions"
         >
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4 justify-items-center">
             <Button 
               variant="outline" 
-              className="h-20 flex-col space-y-2"
+              className="h-20 w-full flex-col space-y-2"
               onClick={() => navigate('missions')}
             >
               <Target className="h-6 w-6" />
@@ -244,7 +268,7 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
             
             <Button 
               variant="outline" 
-              className="h-20 flex-col space-y-2"
+              className="h-20 w-full flex-col space-y-2"
               onClick={() => navigate('jobs')}
             >
               <BriefcaseIcon className="h-6 w-6" />
@@ -253,7 +277,7 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
             
             <Button 
               variant="outline" 
-              className="h-20 flex-col space-y-2"
+              className="h-20 w-full flex-col space-y-2"
               onClick={() => navigate('learning')}
             >
               <BookOpen className="h-6 w-6" />
@@ -262,7 +286,7 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
             
             <Button 
               variant="outline" 
-              className="h-20 flex-col space-y-2"
+              className="h-20 w-full flex-col space-y-2"
               onClick={() => navigate('notebook')}
             >
               <FileText className="h-6 w-6" />
@@ -472,6 +496,7 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
                 activeDates={data.activeDates.map(dateStr => new Date(dateStr))}
                 activities={data.allActivities}
                 className="h-fit"
+                userTimezone={user?.timezone}
               />
             </CollapsibleCard>
             
@@ -499,9 +524,13 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
                           )}
                           <p className="text-xs text-gray-400 dark:text-gray-500">{formatTimeAgo(activity.timestamp)}</p>
                         </div>
-                        {activity.xpEarned && activity.xpEarned > 0 && (
+                        {activity.xpEarned !== null && activity.xpEarned !== undefined && (
                           <div className="flex-shrink-0">
-                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 text-xs">
+                            <Badge className={`text-xs ${
+                              activity.xpEarned > 0 
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                            }`}>
                               +{activity.xpEarned} XP
                             </Badge>
                           </div>

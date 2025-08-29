@@ -247,7 +247,8 @@ export default function SettingsPage() {
       "• All job applications\n" +
       "• All notebook entries\n" +
       "• All learning progress\n" +
-      "• All daily challenge progress\n\n" +
+      "• All daily challenge progress\n" +
+      "• All activity history and calendar data\n\n" +
       "This action cannot be undone!"
     )
 
@@ -350,7 +351,17 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout title="Settings">
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-6xl mx-auto">
+        {/* Header Section */}
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Settings
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300">
+            Customize your JobQuest experience and preferences
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <Card className="lg:col-span-1">
@@ -933,7 +944,7 @@ export default function SettingsPage() {
             )}
 
             {/* Save Button */}
-            <div className="flex justify-end">
+            <div className="flex justify-center">
               <Button 
                 className="w-32" 
                 onClick={handleSaveSettings}

@@ -76,11 +76,22 @@ export default function NotebookPage() {
   useEffect(() => {
     // Load entry for selected date
     const entry = entries.find(e => {
-      const entryDate = new Date(e.createdAt).toISOString().split('T')[0]
-      return entryDate === selectedDate
+      // Helper function to get date string in user's timezone
+      const getDateInUserTimezone = (date: Date) => {
+        if (userTimezone && userTimezone !== 'UTC') {
+          const dateParts = date.toLocaleDateString('en-CA', { timeZone: userTimezone }).split('-')
+          return `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`
+        } else {
+          return date.toISOString().split('T')[0]
+        }
+      }
+      
+      const entryDate = new Date(e.createdAt)
+      const entryDateStr = getDateInUserTimezone(entryDate)
+      return entryDateStr === selectedDate
     })
     setCurrentEntry(entry?.content || '')
-  }, [selectedDate, entries])
+  }, [selectedDate, entries, userTimezone])
 
   const handleSave = async () => {
     if (!currentEntry.trim()) {
@@ -150,19 +161,16 @@ export default function NotebookPage() {
 
   return (
     <DashboardLayout title="Daily Notebook">
-      <div className="space-y-6">
-        {/* Header */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold flex items-center gap-2">
-              <BookOpen className="h-6 w-6" />
-              Daily Notebook
-            </CardTitle>
-            <p className="text-gray-600 dark:text-gray-300">
-              Capture your thoughts, reflections, and daily insights
-            </p>
-          </CardHeader>
-        </Card>
+      <div className="space-y-6 max-w-6xl mx-auto">
+        {/* Header Section */}
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Daily Notebook
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300">
+            Capture your thoughts, reflections, and daily insights
+          </p>
+        </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">

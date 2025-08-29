@@ -347,9 +347,8 @@ export default function LearningPage() {
           </Button>
           {user?.id && resources.length > 0 && (
             <Button 
-              variant="destructive"
+              variant="danger"
               onClick={handleDeleteAllResources}
-              className="bg-red-600 hover:bg-red-700"
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete All
@@ -358,37 +357,57 @@ export default function LearningPage() {
         </div>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-6xl mx-auto">
+        {/* Header Section */}
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Learning Hub
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300">
+            Discover, track, and master new skills for your career growth
+          </p>
+        </div>
+
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-foreground">{getStatusCount('TOTAL')}</div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">Total Resources</div>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          <Card className="w-full">
+            <CardContent className="p-6 h-24 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-foreground">{getStatusCount('TOTAL')}</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">Total Resources</div>
+              </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{getStatusCount('COMPLETED')}</div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">Completed</div>
+          <Card className="w-full">
+            <CardContent className="p-6 h-24 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{getStatusCount('COMPLETED')}</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">Completed</div>
+              </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{getStatusCount('IN_PROGRESS')}</div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">In Progress</div>
+          <Card className="w-full">
+            <CardContent className="p-6 h-24 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{getStatusCount('IN_PROGRESS')}</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">In Progress</div>
+              </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{getStatusCount('NOT_STARTED')}</div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">Not Started</div>
+          <Card className="w-full">
+            <CardContent className="p-6 h-24 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{getStatusCount('NOT_STARTED')}</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">Not Started</div>
+              </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{Math.floor(totalTimeSpent / 60)}h</div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">Time Learned</div>
+          <Card className="w-full">
+            <CardContent className="p-6 h-24 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{Math.floor(totalTimeSpent / 60)}h</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">Time Learned</div>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -501,8 +520,8 @@ export default function LearningPage() {
         {/* Search and Filters */}
         <Card>
           <CardContent className="p-4">
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="relative flex-1">
+            <div className="flex flex-col lg:flex-row gap-4 justify-center items-center">
+              <div className="relative w-full max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Search resources, tags..."

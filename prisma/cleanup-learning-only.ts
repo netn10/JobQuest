@@ -30,7 +30,11 @@ async function cleanupLearningOnly() {
     const deletedChallengeProgress = await prisma.dailyChallengeProgress.deleteMany({})
     console.log(`✅ Deleted ${deletedChallengeProgress.count} daily challenge progress records`)
 
-    // 7. Reset user XP and achievements (but keep other progress)
+    // 7. Delete all activities (these are generated from all user actions)
+    const deletedActivities = await prisma.activity.deleteMany({})
+    console.log(`✅ Deleted ${deletedActivities.count} activities`)
+
+    // 8. Reset user XP and achievements (but keep other progress)
     const updatedUsers = await prisma.user.updateMany({
       data: {
         xp: 0,

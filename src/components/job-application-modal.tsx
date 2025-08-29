@@ -38,6 +38,7 @@ export function JobApplicationModal({
   })
   const [linkedinUrl, setLinkedinUrl] = useState('')
   const [isImporting, setIsImporting] = useState(false)
+  const [importedFields, setImportedFields] = useState<Set<string>>(new Set())
   const { toast } = useToast()
 
   useEffect(() => {
@@ -54,6 +55,8 @@ export function JobApplicationModal({
         nextAction: application.nextAction || '',
         jobUrl: application.jobUrl || ''
       })
+      // Clear imported fields when editing an existing application
+      setImportedFields(new Set())
     } else {
       setFormData({
         company: '',
@@ -67,6 +70,8 @@ export function JobApplicationModal({
         nextAction: '',
         jobUrl: ''
       })
+      // Clear imported fields when creating a new application
+      setImportedFields(new Set())
     }
   }, [application, isOpen])
 
@@ -100,11 +105,21 @@ export function JobApplicationModal({
             jobUrl: jobData.jobUrl?.trim() || linkedinUrl.trim()
           }
           
+          // Track which fields were actually imported (not empty)
+          const importedFieldNames = new Set<string>()
+          if (cleanedData.company) importedFieldNames.add('company')
+          if (cleanedData.role) importedFieldNames.add('role')
+          if (cleanedData.location) importedFieldNames.add('location')
+          if (cleanedData.salary) importedFieldNames.add('salary')
+          if (cleanedData.description) importedFieldNames.add('description')
+          if (cleanedData.jobUrl) importedFieldNames.add('jobUrl')
+          
           setFormData(prev => ({
             ...prev,
             ...cleanedData
           }))
           
+          setImportedFields(importedFieldNames)
           setLinkedinUrl('')
           
           // Show appropriate toast based on data completeness
@@ -255,7 +270,7 @@ export function JobApplicationModal({
                     ⚠️ Please ensure the URL is a valid LinkedIn job posting
                   </p>
                 )}
-                {(formData.company || formData.role || formData.location || formData.salary || formData.description) && (
+                {importedFields.size > 0 && (
                   <div className="flex items-center gap-2 mt-2">
                     <button
                       type="button"
@@ -272,6 +287,7 @@ export function JobApplicationModal({
                           nextAction: formData.nextAction,
                           jobUrl: ''
                         })
+                        setImportedFields(new Set())
                         toast({
                           title: "Form Cleared",
                           description: "Imported data has been cleared. You can now enter information manually.",
@@ -291,7 +307,7 @@ export function JobApplicationModal({
               <div>
                 <label className="block text-sm font-medium mb-1 flex items-center gap-2">
                   Company *
-                  {formData.company && (
+                  {importedFields.has('company') && (
                     <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 px-2 py-1 rounded">
                       Imported
                     </span>
@@ -302,13 +318,13 @@ export function JobApplicationModal({
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                   placeholder="Company name"
                   required
-                  className={formData.company ? "border-green-300 focus:border-green-500 focus:ring-green-500" : ""}
+                  className={importedFields.has('company') ? "border-green-300 focus:border-green-500 focus:ring-green-500" : ""}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 flex items-center gap-2">
                   Role *
-                  {formData.role && (
+                  {importedFields.has('role') && (
                     <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 px-2 py-1 rounded">
                       Imported
                     </span>
@@ -319,7 +335,7 @@ export function JobApplicationModal({
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   placeholder="Job title"
                   required
-                  className={formData.role ? "border-green-300 focus:border-green-500 focus:ring-green-500" : ""}
+                  className={importedFields.has('role') ? "border-green-300 focus:border-green-500 focus:ring-green-500" : ""}
                 />
               </div>
             </div>
@@ -328,7 +344,7 @@ export function JobApplicationModal({
               <div>
                 <label className="block text-sm font-medium mb-1 flex items-center gap-2">
                   Location
-                  {formData.location && (
+                  {importedFields.has('location') && (
                     <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 px-2 py-1 rounded">
                       Imported
                     </span>
@@ -338,13 +354,13 @@ export function JobApplicationModal({
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   placeholder="City, State or Remote"
-                  className={formData.location ? "border-green-300 focus:border-green-500 focus:ring-green-500" : ""}
+                  className={importedFields.has('location') ? "border-green-300 focus:border-green-500 focus:ring-green-500" : ""}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 flex items-center gap-2">
                   Salary
-                  {formData.salary && (
+                  {importedFields.has('salary') && (
                     <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 px-2 py-1 rounded">
                       Imported
                     </span>
@@ -354,7 +370,7 @@ export function JobApplicationModal({
                   value={formData.salary}
                   onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
                   placeholder="e.g., $80k - $120k"
-                  className={formData.salary ? "border-green-300 focus:border-green-500 focus:ring-green-500" : ""}
+                  className={importedFields.has('salary') ? "border-green-300 focus:border-green-500 focus:ring-green-500" : ""}
                 />
               </div>
             </div>
@@ -398,7 +414,7 @@ export function JobApplicationModal({
             <div>
               <label className="block text-sm font-medium mb-1 flex items-center gap-2">
                 Description
-                {formData.description && (
+                {importedFields.has('description') && (
                   <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 px-2 py-1 rounded">
                     Imported
                   </span>
@@ -409,7 +425,7 @@ export function JobApplicationModal({
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Brief description of the role..."
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                  formData.description 
+                  importedFields.has('description')
                     ? "border-green-300 focus:ring-green-500" 
                     : "border-gray-300 focus:ring-blue-500"
                 }`}

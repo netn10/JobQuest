@@ -150,10 +150,10 @@ export function NotebookCalendar({ activeDates, selectedDate, className = '', us
                         : day.isToday
                         ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-2 border-blue-300 dark:border-blue-600 hover:bg-blue-200 dark:hover:bg-blue-900/50 cursor-pointer'
                         : isFutureDate(day)
-                        ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                        ? 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                         : day.isActive
                         ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50 cursor-pointer'
-                        : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer'
                       }
                     `}
                     onClick={() => handleDayClick(day)}
@@ -168,8 +168,8 @@ export function NotebookCalendar({ activeDates, selectedDate, className = '', us
           {/* Legend */}
           <div className="flex items-center justify-center space-x-2 pt-2 text-xs flex-wrap gap-2">
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 bg-gray-50 dark:bg-gray-800 rounded"></div>
-              <span className="text-gray-500 dark:text-gray-400">Available</span>
+              <div className="w-3 h-3 bg-gray-100 dark:bg-gray-700 rounded"></div>
+              <span className="text-gray-500 dark:text-gray-400">Past</span>
             </div>
             <div className="flex items-center space-x-1">
               <div className="w-3 h-3 bg-green-100 dark:bg-green-900/30 rounded"></div>
@@ -188,7 +188,7 @@ export function NotebookCalendar({ activeDates, selectedDate, className = '', us
               <span className="text-gray-400">Selected</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 bg-gray-100 dark:bg-gray-700 rounded"></div>
+              <div className="w-3 h-3 bg-gray-50 dark:bg-gray-800 rounded"></div>
               <span className="text-gray-500 dark:text-gray-400">Future</span>
             </div>
           </div>

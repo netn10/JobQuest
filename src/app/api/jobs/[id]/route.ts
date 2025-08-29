@@ -84,9 +84,10 @@ export async function PUT(
       }
     })
 
-    // Log status change if it changed
-    if (existingApplication.status !== application.status) {
-      try {
+    // Log activity for job updates
+    try {
+      if (existingApplication.status !== application.status) {
+        // Log status change specifically
         await logJobStatusUpdated(
           userId, 
           application.role, 
@@ -95,9 +96,31 @@ export async function PUT(
           application.status, 
           application.id
         )
-      } catch (error) {
-        console.error('Error logging job status update activity:', error)
+      } else {
+        // Log general job update if status didn't change but other fields were updated
+        const hasChanges = 
+          existingApplication.company !== application.company ||
+          existingApplication.role !== application.role ||
+          existingApplication.description !== application.description ||
+          existingApplication.notes !== application.notes ||
+          existingApplication.nextAction !== application.nextAction ||
+          existingApplication.salary !== application.salary ||
+          existingApplication.location !== application.location ||
+          existingApplication.jobUrl !== application.jobUrl
+
+        if (hasChanges) {
+          await logJobStatusUpdated(
+            userId,
+            application.role,
+            application.company,
+            'UPDATED',
+            'UPDATED',
+            application.id
+          )
+        }
       }
+    } catch (error) {
+      console.error('Error logging job update activity:', error)
     }
 
     // Update streak and check for achievement unlocks after job application update

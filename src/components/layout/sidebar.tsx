@@ -65,13 +65,22 @@ export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse
 
   return (
     <div className={cn(
-      "flex h-full flex-col bg-gray-900 dark:bg-gray-950 text-white transition-all duration-300",
+      "flex h-full flex-col bg-gray-900 dark:bg-gray-950 text-white transition-all duration-300 select-none",
       collapsed ? "lg:w-16 w-64" : "w-64"
-    )}>
+    )}
+    style={{
+      userSelect: 'none',
+      WebkitUserSelect: 'none',
+      MozUserSelect: 'none',
+      msUserSelect: 'none'
+    }}
+    onDragStart={(e) => e.preventDefault()}
+    >
       <div className="flex h-16 items-center justify-between px-6">
         <button 
           onClick={() => navigate('/dashboard')} 
           className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+          draggable="false"
         >
           <Zap className="h-8 w-8 text-yellow-400" />
           {!collapsed && <span className="font-bold text-lg">JobQuest</span>}
@@ -140,6 +149,7 @@ export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse
                 collapsed && 'justify-center'
               )}
               title={collapsed ? item.name : undefined}
+              draggable="false"
             >
               <Icon className={cn(
                 'h-6 w-6',

@@ -19,14 +19,15 @@ interface CalendarProps {
   activities: Activity[]
   className?: string
   onDateSelect?: (date: Date) => void
+  userTimezone?: string
 }
 
-export function Calendar({ activeDates, activities, className = '', onDateSelect }: CalendarProps) {
+export function Calendar({ activeDates, activities, className = '', onDateSelect, userTimezone }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [showActivities, setShowActivities] = useState(false)
   
-  const calendar = generateCalendarData(activeDates, currentMonth)
+  const calendar = generateCalendarData(activeDates, currentMonth, userTimezone)
   
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -65,10 +66,21 @@ export function Calendar({ activeDates, activities, className = '', onDateSelect
   }
   
   const getActivitiesForDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0]
+    // Helper function to get date string in user's timezone
+    const getDateInUserTimezone = (date: Date) => {
+      if (userTimezone && userTimezone !== 'UTC') {
+        const dateParts = date.toLocaleDateString('en-CA', { timeZone: userTimezone }).split('-')
+        return `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`
+      } else {
+        return date.toISOString().split('T')[0]
+      }
+    }
+    
+    const dateStr = getDateInUserTimezone(date)
     return activities.filter(activity => {
-      const activityDate = new Date(activity.timestamp).toISOString().split('T')[0]
-      return activityDate === dateStr
+      const activityDate = new Date(activity.timestamp)
+      const activityDateStr = getDateInUserTimezone(activityDate)
+      return activityDateStr === dateStr
     })
   }
   

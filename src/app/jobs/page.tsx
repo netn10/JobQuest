@@ -208,13 +208,13 @@ export default function JobsPage() {
 
   const getStatusColor = (status: ApplicationStatus) => {
     switch (status) {
-      case 'APPLIED': return 'bg-blue-50 text-blue-700 border-blue-200'
-      case 'SCREENING': return 'bg-yellow-50 text-yellow-700 border-yellow-200'
-      case 'INTERVIEW': return 'bg-green-50 text-green-700 border-green-200'
-      case 'OFFER': return 'bg-purple-50 text-purple-700 border-purple-200'
-      case 'REJECTED': return 'bg-red-50 text-red-700 border-red-200'
-      case 'WITHDRAWN': return 'bg-gray-50 text-gray-700 border-gray-200'
-      default: return 'bg-gray-50 text-gray-700 border-gray-200'
+      case 'APPLIED': return 'bg-blue-50 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700'
+      case 'SCREENING': return 'bg-yellow-50 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700'
+      case 'INTERVIEW': return 'bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700'
+      case 'OFFER': return 'bg-purple-50 dark:bg-purple-900 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700'
+      case 'REJECTED': return 'bg-red-50 dark:bg-red-900 text-red-800 dark:text-red-200 border-red-200 dark:border-red-700'
+      case 'WITHDRAWN': return 'bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-600'
+      default: return 'bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-600'
     }
   }
 
@@ -285,17 +285,78 @@ export default function JobsPage() {
 
   return (
     <DashboardLayout title="Job Applications">
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-6xl mx-auto">
         {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Your Job Applications
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300">
-              Track and manage your job search progress
-            </p>
-          </div>
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Your Job Applications
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300">
+            Track and manage your job search progress
+          </p>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card className="w-full">
+            <CardContent className="p-6 h-24 flex items-center justify-center">
+              <div className="flex items-center justify-center gap-4 w-full">
+                <div className="text-center flex-1">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Total Applications
+                  </p>
+                  <p className="text-2xl font-bold">{stats.total}</p>
+                </div>
+                <BriefcaseIcon className="h-8 w-8 text-blue-600 flex-shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="w-full">
+            <CardContent className="p-6 h-24 flex items-center justify-center">
+              <div className="flex items-center justify-center gap-4 w-full">
+                <div className="text-center flex-1">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    In Progress
+                  </p>
+                  <p className="text-2xl font-bold">{stats.inProgress}</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-yellow-600 flex-shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="w-full">
+            <CardContent className="p-6 h-24 flex items-center justify-center">
+              <div className="flex items-center justify-center gap-4 w-full">
+                <div className="text-center flex-1">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Interviews
+                  </p>
+                  <p className="text-2xl font-bold">{stats.interviews}</p>
+                </div>
+                <Calendar className="h-8 w-8 text-green-600 flex-shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="w-full">
+            <CardContent className="p-6 h-24 flex items-center justify-center">
+              <div className="flex items-center justify-center gap-4 w-full">
+                <div className="text-center flex-1">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Response Rate
+                  </p>
+                  <p className="text-2xl font-bold">{stats.responseRate}%</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-purple-600 flex-shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Action Button */}
+        <div className="flex justify-center">
           <Button 
             className="flex items-center gap-2"
             onClick={() => {
@@ -308,70 +369,11 @@ export default function JobsPage() {
           </Button>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Total Applications
-                  </p>
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                </div>
-                <BriefcaseIcon className="h-8 w-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    In Progress
-                  </p>
-                  <p className="text-2xl font-bold">{stats.inProgress}</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-yellow-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Interviews
-                  </p>
-                  <p className="text-2xl font-bold">{stats.interviews}</p>
-                </div>
-                <Calendar className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Response Rate
-                  </p>
-                  <p className="text-2xl font-bold">{stats.responseRate}%</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-purple-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Search and Filter */}
         <Card>
           <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <div className="relative w-full max-w-md">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Search applications..."
@@ -392,8 +394,8 @@ export default function JobsPage() {
         <div className="space-y-4">
           {filteredApplications.length === 0 ? (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <BriefcaseIcon className="h-12 w-12 text-gray-400 mb-4" />
+              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                <BriefcaseIcon className="h-12 w-12 text-gray-400 mb-4 mx-auto" />
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                   {applications.length === 0 ? 'No job applications yet' : 'No applications found'}
                 </h3>
@@ -405,7 +407,7 @@ export default function JobsPage() {
                 </p>
                 {applications.length === 0 && (
                   <Button 
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 mx-auto"
                     onClick={() => {
                       setEditingApplication(null)
                       setIsModalOpen(true)

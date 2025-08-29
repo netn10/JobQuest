@@ -19,7 +19,7 @@ export async function logActivity(data: ActivityData) {
         title: data.title,
         description: data.description,
         metadata: data.metadata ? JSON.stringify(data.metadata) : null,
-        xpEarned: data.xpEarned || 0
+        xpEarned: data.xpEarned !== undefined ? data.xpEarned : undefined
       }
     })
     
@@ -49,7 +49,7 @@ export async function logMissionCompleted(userId: string, missionTitle: string, 
     title: `Completed mission: ${missionTitle}`,
     description: `Earned ${xpEarned} XP`,
     metadata: { missionId, xpEarned },
-    xpEarned
+    xpEarned: xpEarned >= 0 ? xpEarned : undefined
   })
 }
 
@@ -103,13 +103,14 @@ export async function logLearningStarted(userId: string, resourceTitle: string, 
   })
 }
 
-export async function logLearningCompleted(userId: string, resourceTitle: string, resourceId: string, timeSpent: number) {
+export async function logLearningCompleted(userId: string, resourceTitle: string, resourceId: string, timeSpent: number, xpEarned?: number) {
   return logActivity({
     userId,
     type: 'LEARNING_COMPLETED',
     title: `Completed learning: ${resourceTitle}`,
-    description: `Spent ${timeSpent} minutes learning`,
-    metadata: { resourceId, title: resourceTitle, timeSpent }
+    description: xpEarned && xpEarned > 0 ? `Spent ${timeSpent} minutes learning and earned ${xpEarned} XP` : `Spent ${timeSpent} minutes learning`,
+    metadata: { resourceId, title: resourceTitle, timeSpent },
+    xpEarned: xpEarned !== undefined ? xpEarned : undefined
   })
 }
 
@@ -130,7 +131,7 @@ export async function logAchievementUnlocked(userId: string, achievementName: st
     title: `Unlocked achievement: ${achievementName}`,
     description: `Earned ${xpEarned} XP`,
     metadata: { achievementId, name: achievementName },
-    xpEarned
+    xpEarned: xpEarned >= 0 ? xpEarned : undefined
   })
 }
 
@@ -141,7 +142,7 @@ export async function logDailyChallengeCompleted(userId: string, challengeTitle:
     title: `Completed daily challenge: ${challengeTitle}`,
     description: `Earned ${xpEarned} XP`,
     metadata: { challengeId, title: challengeTitle },
-    xpEarned
+    xpEarned: xpEarned >= 0 ? xpEarned : undefined
   })
 }
 
@@ -162,7 +163,7 @@ export async function logXpEarned(userId: string, amount: number, source: string
     title: `Earned ${amount} XP`,
     description: `From: ${source}`,
     metadata: { amount, source },
-    xpEarned: amount
+    xpEarned: amount >= 0 ? amount : undefined
   })
 }
 

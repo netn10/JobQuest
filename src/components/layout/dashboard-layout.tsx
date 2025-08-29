@@ -7,6 +7,7 @@ import { Header } from './header'
 import { HydrationSafe } from '@/components/ui/hydration-safe'
 import { BlockedNotification } from '@/components/blocked-notification'
 import { AchievementNotification } from '@/components/achievement-notification'
+import { useFocusSession } from '@/contexts/focus-session-context'
 import { cn } from '@/lib/utils'
 
 interface DashboardLayoutProps {
@@ -28,6 +29,7 @@ export function DashboardLayout({ children, title, headerChildren }: DashboardLa
     startX: 0,
     startCollapsed: false
   })
+  const { focusSession } = useFocusSession()
 
   // Load sidebar collapse state from localStorage
   useEffect(() => {
@@ -159,12 +161,14 @@ export function DashboardLayout({ children, title, headerChildren }: DashboardLa
         
         {/* Sidebar */}
         <div 
-          className={`
-            fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 flex-shrink-0 group
-            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-            ${sidebarCollapsed ? 'lg:w-16 w-64' : 'w-64'}
-            ${isDragging ? 'transition-none' : ''}
-          `}
+          className={cn(
+            "fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 flex-shrink-0 group",
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+            sidebarCollapsed ? 'lg:w-16 w-64' : 'w-64',
+            isDragging ? 'transition-none' : '',
+            // Adjust top position when focus banner is visible
+            focusSession.isActive ? 'top-12' : 'top-0'
+          )}
           style={dragWidth ? { width: `${dragWidth}px` } : {}}
         >
           <Sidebar 
@@ -190,7 +194,9 @@ export function DashboardLayout({ children, title, headerChildren }: DashboardLa
           className={cn(
             "flex-1 flex flex-col overflow-hidden w-full",
             sidebarCollapsed ? "lg:ml-16" : "lg:ml-0",
-            !isDragging && "transition-all duration-300"
+            !isDragging && "transition-all duration-300",
+            // Adjust top position when focus banner is visible
+            focusSession.isActive ? "pt-12" : "pt-0"
           )}
           style={dragWidth ? { marginLeft: `${dragWidth}px` } : {}}
         >

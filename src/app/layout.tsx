@@ -6,6 +6,7 @@ import { SettingsProvider } from '@/contexts/settings-context'
 import { UserStatsProvider } from '@/contexts/user-stats-context'
 import { NotificationsProvider } from '@/contexts/notifications-context'
 import { NotificationStoreProvider } from '@/contexts/notification-store-context'
+import { FocusSessionProvider } from '@/contexts/focus-session-context'
 import { cleanupBrowserExtensions, preventHydrationMismatch } from '@/utils/hydration-cleanup'
 import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
@@ -34,48 +35,12 @@ export default function RootLayout({
   if (typeof window !== 'undefined') {
     cleanupBrowserExtensions()
     preventHydrationMismatch()
-    
-    // Force all text to be white in dark mode - ULTRA AGGRESSIVE
-    const forceWhiteText = () => {
-      if (document.documentElement.classList.contains('dark')) {
-        const elements = document.querySelectorAll('*:not(svg):not(svg *):not(path):not(circle):not(rect):not(line):not(polygon):not(polyline):not(ellipse)')
-        elements.forEach(el => {
-          if (el instanceof HTMLElement) {
-            el.style.setProperty('color', 'white', 'important')
-            // Also force any computed styles
-            const computedStyle = getComputedStyle(el)
-            if (computedStyle.color !== 'rgb(255, 255, 255)' && computedStyle.color !== 'white') {
-              el.style.color = 'white !important'
-            }
-          }
-        })
-        
-        // Also target form elements specifically
-        const formElements = document.querySelectorAll('input, select, textarea, option, label, button')
-        formElements.forEach(el => {
-          if (el instanceof HTMLElement) {
-            el.style.setProperty('color', 'white', 'important')
-          }
-        })
-      }
-    }
-    
-    // Run immediately and on DOM changes
-    forceWhiteText()
-    const observer = new MutationObserver(forceWhiteText)
-    observer.observe(document.body, { 
-      childList: true, 
-      subtree: true, 
-      attributes: true, 
-      attributeFilter: ['class'] 
-    })
   }
 
   return (
     <html lang="en" suppressHydrationWarning>
       <head suppressHydrationWarning>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <script src="/force-white-text.js" defer></script>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -87,10 +52,12 @@ export default function RootLayout({
               <SettingsProvider>
                 <NotificationsProvider>
                   <NotificationStoreProvider>
-                    <div suppressHydrationWarning>
-                      {children}
-                    </div>
-                    <Toaster />
+                    <FocusSessionProvider>
+                      <div suppressHydrationWarning>
+                        {children}
+                      </div>
+                      <Toaster />
+                    </FocusSessionProvider>
                   </NotificationStoreProvider>
                 </NotificationsProvider>
               </SettingsProvider>

@@ -130,6 +130,14 @@ export default function MissionsPage() {
                   fetchMissions() // Refresh missions
                   stopFocusSession() // Stop focus blocking
                   
+                  // Show toast notification for auto-completion
+                  toast({
+                    title: "Mission Completed! 🎉",
+                    description: `${mission.title} finished automatically. You earned ${mission.xpReward} XP!`,
+                    variant: "success",
+                    actionUrl: "/achievements"
+                  })
+                  
                   // Handle auto-start breaks
                   if (settings.focus.autoStartBreaks) {
                     const newCompletedPomodoros = breakState.completedPomodoros + 1
@@ -316,15 +324,40 @@ export default function MissionsPage() {
         // Handle focus blocking
         if (action === 'start') {
           startFocusSession()
+        } else if (action === 'pause') {
+          // Show toast notification for pause
+          toast({
+            title: "Mission Paused",
+            description: `${mission.title} has been paused. Resume when you're ready to continue.`,
+            variant: "default",
+            actionUrl: "/missions"
+          })
         } else if (action === 'stop') {
           // Only stop focus session for mission completion, not pause
           stopFocusSession()
           
+          // Show toast notification for mission end
+          const totalSeconds = (mission.duration || 0) * 60
+          const completionPercentage = (elapsedTime / totalSeconds) * 100
+          
+          if (completionPercentage >= 100) {
+            toast({
+              title: "Mission Completed! 🎉",
+              description: `${mission.title} finished successfully. You earned ${mission.xpReward} XP!`,
+              variant: "success",
+              actionUrl: "/achievements"
+            })
+          } else {
+            toast({
+              title: "Mission Ended Early",
+              description: `${mission.title} ended at ${Math.round(completionPercentage)}% completion. You earned ${xpReward} XP.`,
+              variant: "default",
+              actionUrl: "/missions"
+            })
+          }
+          
           // Handle auto-start breaks for manual completion
           if (settings.focus.autoStartBreaks) {
-            const totalSeconds = (mission.duration || 0) * 60
-            const completionPercentage = (elapsedTime / totalSeconds) * 100
-            
             // Only start break if mission was completed > 80%
             if (completionPercentage >= 80) {
               const newCompletedPomodoros = breakState.completedPomodoros + 1
@@ -375,7 +408,8 @@ export default function MissionsPage() {
           toast({
             title: "Mission Created!",
             description: `${customTitle} (${duration} minutes) has been started.`,
-            variant: "success"
+            variant: "success",
+            actionUrl: "/missions"
           })
           
           // Start focus session immediately
@@ -460,6 +494,12 @@ export default function MissionsPage() {
         blockedApps={focusSettings.blockedApps}
         missionDuration={activeMission?.duration || undefined}
         missionTitle={activeMission?.title}
+        missionStatus={activeMission?.status}
+        timeRemaining={activeMission?.timeRemaining}
+        missionId={activeMission?.id}
+        onResume={() => activeMission && handleMissionAction(activeMission.id, 'start')}
+        onPause={() => activeMission && handleMissionAction(activeMission.id, 'pause')}
+        onStop={() => activeMission && handleMissionAction(activeMission.id, 'stop')}
         onBlockedAccess={handleBlockedAccess}
       />
       
@@ -472,9 +512,19 @@ export default function MissionsPage() {
         onStart={handleBreakStart}
         autoStart={settings.focus.autoStartBreaks}
       />
-      <div className="space-y-6">
-        {/* Active Mission Timer */}
-        {activeMission && (
+      <div className="space-y-6 max-w-6xl mx-auto">
+        {/* Header Section */}
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Focus Missions
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300">
+            Stay focused and productive with timed work sessions
+          </p>
+        </div>
+
+        {/* Active Mission Timer - Only show if not using persistent banner */}
+        {activeMission && (activeMission.status === 'IN_PROGRESS' || activeMission.status === 'PENDING') && (
           <Card className="border-green-300 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -559,14 +609,14 @@ export default function MissionsPage() {
         {/* Quick Start Templates */}
         <Card>
           <CardHeader>
-                          <CardTitle className="text-foreground">Quick Start Templates</CardTitle>
+            <CardTitle className="text-foreground">Quick Start Templates</CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">Choose from pre-defined focus sessions</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 justify-items-center">
               <Button 
                 variant="outline" 
-                className="h-20 flex-col space-y-2"
+                className="h-20 w-full flex-col space-y-2"
                 onClick={async () => {
                   try {
                     const response = await fetch('/api/missions', {
@@ -587,7 +637,8 @@ export default function MissionsPage() {
                       toast({
                         title: "Mission Created!",
                         description: "Pomodoro Focus (25 minutes) has been started.",
-                        variant: "success"
+                        variant: "success",
+                        actionUrl: "/missions"
                       })
                       startFocusSession()
                     } else {
@@ -615,7 +666,7 @@ export default function MissionsPage() {
               </Button>
               <Button 
                 variant="outline" 
-                className="h-20 flex-col space-y-2"
+                className="h-20 w-full flex-col space-y-2"
                 onClick={async () => {
                   try {
                     const response = await fetch('/api/missions', {
@@ -636,7 +687,8 @@ export default function MissionsPage() {
                       toast({
                         title: "Mission Created!",
                         description: "Deep Work Session (50 minutes) has been started.",
-                        variant: "success"
+                        variant: "success",
+                        actionUrl: "/missions"
                       })
                       startFocusSession()
                     } else {
@@ -664,7 +716,7 @@ export default function MissionsPage() {
               </Button>
               <Button 
                 variant="outline" 
-                className="h-20 flex-col space-y-2"
+                className="h-20 w-full flex-col space-y-2"
                 onClick={async () => {
                   try {
                     const response = await fetch('/api/missions', {
@@ -685,7 +737,8 @@ export default function MissionsPage() {
                       toast({
                         title: "Mission Created!",
                         description: "Extended Focus (90 minutes) has been started.",
-                        variant: "success"
+                        variant: "success",
+                        actionUrl: "/missions"
                       })
                       startFocusSession()
                     } else {
@@ -718,15 +771,16 @@ export default function MissionsPage() {
         {/* Create Custom Mission */}
         <Card>
           <CardHeader>
-                          <CardTitle className="text-foreground">Create Custom Mission</CardTitle>
+            <CardTitle className="text-foreground">Create Custom Mission</CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">Set up a personalized focus session</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 justify-items-center">
               <Input
                 placeholder="Mission title"
                 value={customTitle}
                 onChange={(e) => setCustomTitle(e.target.value)}
+                className="w-full"
               />
               <Input
                 type="number"
@@ -735,10 +789,11 @@ export default function MissionsPage() {
                 onChange={(e) => setCustomDuration(e.target.value)}
                 min="5"
                 max="180"
+                className="w-full"
               />
               <Button 
                 onClick={createCustomMission} 
-                className="w-full md:w-auto"
+                className="w-full"
                 disabled={!customTitle.trim() || !customDuration || parseInt(customDuration) < 5}
               >
                 <Target className="h-4 w-4 mr-2" />
@@ -841,7 +896,7 @@ export default function MissionsPage() {
         {/* Focus Settings */}
         <Card>
           <CardHeader>
-                          <CardTitle className="flex items-center space-x-2 text-foreground">
+            <CardTitle className="flex items-center space-x-2 text-foreground">
               <Settings className="h-5 w-5" />
               <span>Focus Settings</span>
               {settingsLoading && (

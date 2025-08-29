@@ -41,6 +41,7 @@ export function AchievementNotification() {
           description: `${achievement.name} - ${achievement.description} (+${achievement.xpReward} XP)`,
           variant: 'success',
           duration: 5000,
+          actionUrl: '/achievements'
         })
         
         // Show browser notification if enabled

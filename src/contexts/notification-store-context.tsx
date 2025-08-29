@@ -101,7 +101,8 @@ export function useNotificationHelpers() {
         type: 'achievement',
         title: 'Achievement Unlocked!',
         message: `${name} - ${description} (+${xpReward} XP)`,
-        read: false
+        read: false,
+        actionUrl: '/achievements'
       })
     },
 
@@ -121,7 +122,8 @@ export function useNotificationHelpers() {
         type: 'mission',
         title: titles[type],
         message: messages[type],
-        read: false
+        read: false,
+        actionUrl: '/missions'
       })
     },
 
@@ -131,14 +133,16 @@ export function useNotificationHelpers() {
           type: 'streak',
           title: 'Streak Warning!',
           message: `Your ${streakCount}-day streak is at risk. Complete a mission to keep it alive!`,
-          read: false
+          read: false,
+          actionUrl: '/missions'
         })
       } else {
         addNotification({
           type: 'streak',
           title: 'Streak Milestone!',
           message: `Congratulations on your ${streakCount}-day streak! Keep it up!`,
-          read: false
+          read: false,
+          actionUrl: '/activities'
         })
       }
     },
@@ -150,7 +154,7 @@ export function useNotificationHelpers() {
           title: 'Follow-up Reminder',
           message: `Time to follow up on your application at ${companyName}`,
           read: false,
-          actionUrl: '/job-applications'
+          actionUrl: '/jobs'
         })
       } else {
         addNotification({
@@ -158,7 +162,7 @@ export function useNotificationHelpers() {
           title: 'Application Update',
           message: `Your application at ${companyName} has been updated`,
           read: false,
-          actionUrl: '/job-applications'
+          actionUrl: '/jobs'
         })
       }
     },
@@ -178,7 +182,8 @@ export function useNotificationHelpers() {
         type: 'daily_challenge',
         title: 'New Daily Challenge',
         message: `${challengeName} - Available until midnight`,
-        read: false
+        read: false,
+        actionUrl: '/dashboard'
       })
     }
   }

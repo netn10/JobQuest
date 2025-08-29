@@ -46,7 +46,11 @@ async function cleanup() {
     const deletedNotifications = await prisma.notification.deleteMany({})
     console.log(`✅ Deleted ${deletedNotifications.count} notifications`)
 
-    // 11. Reset all users to default state (keep users but reset their progress)
+    // 11. Delete all activities (these are generated automatically)
+    const deletedActivities = await prisma.activity.deleteMany({})
+    console.log(`✅ Deleted ${deletedActivities.count} activities`)
+
+    // 12. Reset all users to default state (keep users but reset their progress)
     const updatedUsers = await prisma.user.updateMany({
       data: {
         xp: 0,

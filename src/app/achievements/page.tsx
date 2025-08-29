@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   Trophy, 
   Target, 
@@ -19,12 +20,24 @@ import {
   Users,
   Filter,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  ArrowUpDown,
+  ChevronDown,
+  Sparkles,
+  Award,
+  Medal,
+  Gem,
+  ChevronLeft,
+  ChevronRight,
+  Grid3X3,
+  List
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/hooks/use-toast'
 
 type AchievementCategory = 'FOCUS' | 'LEARNING' | 'JOB_SEARCH' | 'STREAK' | 'XP' | 'SOCIAL'
+type AchievementRarity = 'COMMON' | 'RARE' | 'EPIC' | 'LEGENDARY'
+type SortOption = 'name' | 'rarity' | 'xpReward' | 'category' | 'unlocked' | 'progress'
 
 interface Achievement {
   id: string
@@ -50,6 +63,8 @@ interface AchievementsData {
   }
 }
 
+const ITEMS_PER_PAGE = 12
+
 export default function AchievementsPage() {
   const { user } = useAuth()
   const { toast } = useToast()
@@ -58,14 +73,25 @@ export default function AchievementsPage() {
   const [error, setError] = useState<string | null>(null)
   const [categoryFilter, setCategoryFilter] = useState<AchievementCategory | 'ALL'>('ALL')
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'UNLOCKED' | 'LOCKED'>('ALL')
+  const [rarityFilter, setRarityFilter] = useState<AchievementRarity | 'ALL'>('ALL')
+  const [sortBy, setSortBy] = useState<SortOption>('rarity')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [checkingAchievements, setCheckingAchievements] = useState(false)
   const [newlyUnlockedAchievements, setNewlyUnlockedAchievements] = useState<string[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [activeTab, setActiveTab] = useState<string>('all')
 
   useEffect(() => {
     if (user) {
       fetchAchievements()
     }
   }, [user])
+
+  useEffect(() => {
+    setCurrentPage(1) // Reset to first page when filters change
+  }, [categoryFilter, statusFilter, rarityFilter, searchQuery])
 
   const fetchAchievements = async () => {
     try {
@@ -153,22 +179,38 @@ export default function AchievementsPage() {
   }
 
   const getRarityColor = (achievement: Achievement) => {
-    // Determine rarity based on XP reward
-    if (achievement.xpReward >= 1000) return 'from-yellow-400 to-orange-500' // Legendary
-    if (achievement.xpReward >= 500) return 'from-purple-400 to-purple-600' // Epic
-    if (achievement.xpReward >= 200) return 'from-blue-400 to-blue-600' // Rare
-    return 'from-gray-400 to-gray-600' // Common
+    // Determine rarity based on XP reward with enhanced gradients
+    if (achievement.xpReward >= 1000) return 'from-yellow-300 via-yellow-400 to-orange-400' // LEGENDARY
+    if (achievement.xpReward >= 500) return 'from-purple-400 via-purple-500 to-pink-500' // Epic
+    if (achievement.xpReward >= 200) return 'from-blue-400 via-blue-500 to-cyan-500' // Rare
+    return 'from-gray-300 via-gray-400 to-gray-500' // Common
+  }
+
+  const getRarityBorder = (achievement: Achievement) => {
+    // Enhanced border colors for rarity
+    if (achievement.xpReward >= 1000) return 'border-yellow-400 shadow-lg shadow-yellow-200/50' // LEGENDARY
+    if (achievement.xpReward >= 500) return 'border-purple-400 shadow-lg shadow-purple-200/50' // Epic
+    if (achievement.xpReward >= 200) return 'border-blue-400 shadow-lg shadow-blue-200/50' // Rare
+    return 'border-gray-300 shadow-md' // Common
   }
 
   const getRarityText = (achievement: Achievement) => {
-    // Determine rarity based on XP reward
-    if (achievement.xpReward >= 1000) return 'text-yellow-600' // Legendary
-    if (achievement.xpReward >= 500) return 'text-purple-600' // Epic
-    if (achievement.xpReward >= 200) return 'text-blue-600' // Rare
-    return 'text-gray-600' // Common
+    // Determine rarity text color
+    if (achievement.xpReward >= 1000) return 'text-yellow-600 dark:text-yellow-400' // LEGENDARY
+    if (achievement.xpReward >= 500) return 'text-purple-600 dark:text-purple-400' // Epic
+    if (achievement.xpReward >= 200) return 'text-blue-600 dark:text-blue-400' // Rare
+    return 'text-gray-600 dark:text-gray-400' // Common
   }
 
-  const getRarityLabel = (achievement: Achievement) => {
+  const getRarityBg = (achievement: Achievement) => {
+    // Background color for rarity labels
+    if (achievement.xpReward >= 1000) return 'bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30' // LEGENDARY
+    if (achievement.xpReward >= 500) return 'bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30' // Epic
+    if (achievement.xpReward >= 200) return 'bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30' // Rare
+    return 'bg-gray-100 dark:bg-gray-800' // Common
+  }
+
+  const getRarityLabel = (achievement: Achievement): AchievementRarity => {
     // Determine rarity based on XP reward
     if (achievement.xpReward >= 1000) return 'LEGENDARY'
     if (achievement.xpReward >= 500) return 'EPIC'
@@ -176,22 +218,94 @@ export default function AchievementsPage() {
     return 'COMMON'
   }
 
-  const filteredAchievements = achievementsData?.achievements.filter(achievement => {
-    const matchesCategory = categoryFilter === 'ALL' || achievement.category === categoryFilter
-    const matchesStatus = statusFilter === 'ALL' || 
-                         (statusFilter === 'UNLOCKED' && achievement.isUnlocked) ||
-                         (statusFilter === 'LOCKED' && !achievement.isUnlocked)
-    return matchesCategory && matchesStatus
-  }) || []
+  const getRarityIcon = (achievement: Achievement) => {
+    const rarity = getRarityLabel(achievement)
+    switch (rarity) {
+      case 'LEGENDARY': return <Crown className="h-3 w-3" />
+      case 'EPIC': return <Gem className="h-3 w-3" />
+      case 'RARE': return <Medal className="h-3 w-3" />
+      default: return <Award className="h-3 w-3" />
+    }
+  }
+
+  const filteredAndSortedAchievements = (() => {
+    if (!achievementsData) return []
+    
+    let filtered = achievementsData.achievements.filter(achievement => {
+      // Hide social achievements for now
+      if (achievement.category === 'SOCIAL') return false
+      
+      const matchesCategory = categoryFilter === 'ALL' || achievement.category === categoryFilter
+      const matchesStatus = statusFilter === 'ALL' || 
+                           (statusFilter === 'UNLOCKED' && achievement.isUnlocked) ||
+                           (statusFilter === 'LOCKED' && !achievement.isUnlocked)
+      const matchesRarity = rarityFilter === 'ALL' || getRarityLabel(achievement) === rarityFilter
+      const matchesSearch = searchQuery === '' || 
+                           achievement.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           achievement.description.toLowerCase().includes(searchQuery.toLowerCase())
+      
+      return matchesCategory && matchesStatus && matchesRarity && matchesSearch
+    })
+
+    // Sort achievements
+    filtered.sort((a, b) => {
+      let comparison = 0
+      
+      switch (sortBy) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name)
+          break
+        case 'rarity':
+          const rarityOrder = { 'COMMON': 0, 'RARE': 1, 'EPIC': 2, 'LEGENDARY': 3 }
+          comparison = rarityOrder[getRarityLabel(a)] - rarityOrder[getRarityLabel(b)]
+          break
+        case 'xpReward':
+          comparison = a.xpReward - b.xpReward
+          break
+        case 'category':
+          comparison = a.category.localeCompare(b.category)
+          break
+        case 'unlocked':
+          comparison = (a.isUnlocked ? 1 : 0) - (b.isUnlocked ? 1 : 0)
+          break
+        case 'progress':
+          const aProgress = a.progress && a.maxProgress ? a.progress / a.maxProgress : 0
+          const bProgress = b.progress && b.maxProgress ? b.progress / b.maxProgress : 0
+          comparison = aProgress - bProgress
+          break
+        default:
+          comparison = 0
+      }
+      
+      return sortOrder === 'desc' ? -comparison : comparison
+    })
+
+    return filtered
+  })()
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredAndSortedAchievements.length / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const endIndex = startIndex + ITEMS_PER_PAGE
+  const paginatedAchievements = filteredAndSortedAchievements.slice(startIndex, endIndex)
 
   const getLatestAchievement = () => {
     if (!achievementsData) return null
     return achievementsData.achievements
-      .filter(a => a.isUnlocked)
+      .filter(a => a.isUnlocked && a.category !== 'SOCIAL')
       .sort((a, b) => new Date(b.unlockedAt || 0).getTime() - new Date(a.unlockedAt || 0).getTime())[0]
   }
 
   const latestAchievement = getLatestAchievement()
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    if (value === 'all') {
+      setCategoryFilter('ALL')
+    } else {
+      setCategoryFilter(value as AchievementCategory)
+    }
+  }
 
   if (loading) {
     return (
@@ -231,61 +345,63 @@ export default function AchievementsPage() {
 
   return (
     <DashboardLayout title="Achievements">
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Your Achievements
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300">
+            Track your progress and celebrate your accomplishments
+          </p>
+        </div>
+
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
-                  <Trophy className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="w-full">
+            <CardContent className="p-4 h-20 flex items-center justify-center">
+              <div className="flex items-center justify-center gap-3 w-full">
+                <div className="text-center flex-1">
+                  <div className="text-xl font-bold">{achievementsData.stats.unlockedAchievements}</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">Unlocked</div>
                 </div>
-                <div>
-                  <div className="text-2xl font-bold">{achievementsData.stats.unlockedAchievements}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Achievements Unlocked</div>
-                </div>
+                <Trophy className="h-6 w-6 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
           
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                  <Target className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <Card className="w-full">
+            <CardContent className="p-4 h-20 flex items-center justify-center">
+              <div className="flex items-center justify-center gap-3 w-full">
+                <div className="text-center flex-1">
+                  <div className="text-xl font-bold">{achievementsData.stats.completionRate}%</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">Complete</div>
                 </div>
-                <div>
-                  <div className="text-2xl font-bold">{achievementsData.stats.completionRate}%</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Completion Rate</div>
-                </div>
+                <Target className="h-6 w-6 text-blue-600 dark:text-blue-400 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
           
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                  <Zap className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+          <Card className="w-full">
+            <CardContent className="p-4 h-20 flex items-center justify-center">
+              <div className="flex items-center justify-center gap-3 w-full">
+                <div className="text-center flex-1">
+                  <div className="text-xl font-bold">{achievementsData.stats.totalXPFromAchievements}</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">Total XP</div>
                 </div>
-                <div>
-                  <div className="text-2xl font-bold">{achievementsData.stats.totalXPFromAchievements}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">XP from Achievements</div>
-                </div>
+                <Zap className="h-6 w-6 text-purple-600 dark:text-purple-400 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
           
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                  <Star className="h-5 w-5 text-green-600 dark:text-green-400" />
+          <Card className="w-full">
+            <CardContent className="p-4 h-20 flex items-center justify-center">
+              <div className="flex items-center justify-center gap-3 w-full">
+                <div className="text-center flex-1">
+                  <div className="text-xl font-bold">{achievementsData.achievements.filter(a => a.category !== 'SOCIAL' && getRarityLabel(a) === 'LEGENDARY' && a.isUnlocked).length}</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">Legendary</div>
                 </div>
-                <div>
-                  <div className="text-2xl font-bold">{achievementsData.achievements.filter(a => getRarityLabel(a) === 'LEGENDARY' && a.isUnlocked).length}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Legendary Unlocked</div>
-                </div>
+                <Star className="h-6 w-6 text-green-600 dark:text-green-400 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -294,18 +410,18 @@ export default function AchievementsPage() {
         {/* New Achievements Celebration */}
         {newlyUnlockedAchievements.length > 0 && (
           <Card className="border-yellow-200 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 dark:border-yellow-700 animate-pulse">
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <div className="flex items-center justify-center space-x-3">
-                <Trophy className="h-8 w-8 text-yellow-600 dark:text-yellow-400 animate-bounce" />
+                <Trophy className="h-6 w-6 text-yellow-600 dark:text-yellow-400 animate-bounce" />
                 <div className="text-center">
-                  <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-200">
+                  <h3 className="text-base font-bold text-yellow-800 dark:text-yellow-200">
                     🎉 New Achievements Unlocked! 🎉
                   </h3>
-                  <p className="text-yellow-700 dark:text-yellow-300">
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
                     Congratulations! You&apos;ve unlocked {newlyUnlockedAchievements.length} new achievement{newlyUnlockedAchievements.length > 1 ? 's' : ''}!
                   </p>
                 </div>
-                <Trophy className="h-8 w-8 text-yellow-600 dark:text-yellow-400 animate-bounce" />
+                <Trophy className="h-6 w-6 text-yellow-600 dark:text-yellow-400 animate-bounce" />
               </div>
             </CardContent>
           </Card>
@@ -314,8 +430,8 @@ export default function AchievementsPage() {
         {/* Recent Achievement */}
         {latestAchievement && (
           <Card className="border-yellow-200 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 dark:border-yellow-700">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-yellow-800 dark:text-yellow-200">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center space-x-2 text-yellow-800 dark:text-yellow-200 text-lg">
                 <Trophy className="h-5 w-5" />
                 <span>Latest Achievement</span>
               </CardTitle>
@@ -323,16 +439,16 @@ export default function AchievementsPage() {
             <CardContent>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className={`w-16 h-16 bg-gradient-to-r ${getRarityColor(latestAchievement)} rounded-full flex items-center justify-center`}>
+                  <div className={`w-12 h-12 bg-gradient-to-r ${getRarityColor(latestAchievement)} rounded-full flex items-center justify-center`}>
                     {(() => {
                       const IconComponent = getCategoryIcon(latestAchievement.category)
-                      return <IconComponent className="h-8 w-8 text-white" />
+                      return <IconComponent className="h-6 w-6 text-white" />
                     })()}
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100">{latestAchievement.name}</h3>
-                    <p className="text-yellow-700 dark:text-yellow-300">{latestAchievement.description}</p>
-                    <div className="flex items-center space-x-2 mt-2">
+                    <h3 className="text-base font-semibold text-yellow-900 dark:text-yellow-100">{latestAchievement.name}</h3>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300">{latestAchievement.description}</p>
+                    <div className="flex items-center space-x-2 mt-1">
                       <span className={`px-2 py-1 ${getRarityText(latestAchievement).replace('text-', 'bg-').replace('-600', '-100')} ${getRarityText(latestAchievement)} text-xs rounded-full font-medium dark:bg-opacity-20`}>
                         {getRarityLabel(latestAchievement)}
                       </span>
@@ -354,138 +470,387 @@ export default function AchievementsPage() {
           </Card>
         )}
 
-        {/* Filters and Actions */}
+        {/* Enhanced Filters and Actions */}
         <Card>
           <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4 items-center">
-              <div className="flex flex-col sm:flex-row gap-4 flex-1">
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value as AchievementCategory | 'ALL')}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                >
-                  <option value="ALL">All Categories</option>
-                  <option value="FOCUS">Focus</option>
-                  <option value="LEARNING">Learning</option>
-                  <option value="JOB_SEARCH">Job Search</option>
-                  <option value="STREAK">Streaks</option>
-                  <option value="XP">Experience</option>
-                  <option value="SOCIAL">Social</option>
-                </select>
-                
+            {/* Search Bar */}
+            <div className="mb-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search achievements..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Filter className="h-4 w-4 text-gray-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Category Tabs */}
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-4">
+              <TabsList className="grid w-full grid-cols-6">
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="FOCUS">🎯 Focus</TabsTrigger>
+                <TabsTrigger value="LEARNING">📚 Learning</TabsTrigger>
+                <TabsTrigger value="JOB_SEARCH">💼 Jobs</TabsTrigger>
+                <TabsTrigger value="STREAK">🔥 Streaks</TabsTrigger>
+                <TabsTrigger value="XP">⚡ XP</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {/* Filters Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as 'ALL' | 'UNLOCKED' | 'LOCKED')}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
                 >
                   <option value="ALL">All Status</option>
-                  <option value="UNLOCKED">Unlocked</option>
-                  <option value="LOCKED">Locked</option>
+                  <option value="UNLOCKED">✅ Unlocked</option>
+                  <option value="LOCKED">🔒 Locked</option>
                 </select>
               </div>
-              
-              <Button 
-                onClick={checkForNewAchievements}
-                disabled={checkingAchievements}
-                className="flex items-center space-x-2"
-              >
-                {checkingAchievements ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Rarity</label>
+                <select
+                  value={rarityFilter}
+                  onChange={(e) => setRarityFilter(e.target.value as AchievementRarity | 'ALL')}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                >
+                  <option value="ALL">All Rarities</option>
+                  <option value="COMMON">🥉 Common</option>
+                  <option value="RARE">🥈 Rare</option>
+                  <option value="EPIC">🥇 Epic</option>
+                  <option value="LEGENDARY">👑 Legendary</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Sort</label>
+                <div className="flex space-x-2">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                  >
+                    <option value="rarity">Rarity</option>
+                    <option value="name">Name</option>
+                    <option value="xpReward">XP Reward</option>
+                    <option value="unlocked">Status</option>
+                    <option value="progress">Progress</option>
+                  </select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                    className="px-2"
+                  >
+                    <ArrowUpDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons and Stats */}
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+              <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+                <span>Showing {filteredAndSortedAchievements.length} achievements</span>
+                {totalPages > 1 && (
+                  <span>Page {currentPage} of {totalPages}</span>
                 )}
-                <span>Check Achievements</span>
-              </Button>
+              </div>
+              
+              <div className="flex space-x-2">
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                  className="flex items-center space-x-2"
+                >
+                  {viewMode === 'grid' ? <List className="h-4 w-4" /> : <Grid3X3 className="h-4 w-4" />}
+                  <span>{viewMode === 'grid' ? 'List' : 'Grid'}</span>
+                </Button>
+                
+                <Button 
+                  onClick={checkForNewAchievements}
+                  disabled={checkingAchievements}
+                  className="flex items-center space-x-2"
+                  size="sm"
+                >
+                  {checkingAchievements ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
+                  <span>Check</span>
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Achievements Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAchievements.map((achievement) => {
-            const CategoryIcon = getCategoryIcon(achievement.category)
-            
-            return (
-              <Card 
-                key={achievement.id} 
-                className={`hover:shadow-md transition-all duration-300 ${
-                  achievement.isUnlocked ? 'border-l-4 border-l-yellow-400' : 'opacity-80'
-                } ${newlyUnlockedAchievements.includes(achievement.id) ? 
-                   'animate-pulse ring-2 ring-yellow-400' : ''}`}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
+        {/* Achievements Display */}
+        {viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {paginatedAchievements.map((achievement) => {
+              const CategoryIcon = getCategoryIcon(achievement.category)
+              const rarityLabel = getRarityLabel(achievement)
+              
+              return (
+                <Card 
+                  key={achievement.id} 
+                  className={`hover:shadow-lg transition-all duration-300 ${getRarityBorder(achievement)} ${
+                    achievement.isUnlocked ? 'transform hover:scale-105' : 'opacity-75'
+                  } ${newlyUnlockedAchievements.includes(achievement.id) ? 
+                     'animate-pulse ring-4 ring-yellow-400/50' : ''} relative overflow-hidden`}
+                >
+                  {/* Rarity Indicator */}
+                  <div className={`absolute top-0 right-0 w-0 h-0 border-l-[25px] border-b-[25px] border-l-transparent ${
+                    achievement.isUnlocked ? 
+                      (rarityLabel === 'LEGENDARY' ? 'border-b-yellow-400' :
+                       rarityLabel === 'EPIC' ? 'border-b-purple-500' :
+                       rarityLabel === 'RARE' ? 'border-b-blue-500' : 'border-b-gray-400') 
+                      : 'border-b-gray-300'
+                  }`}>
+                  </div>
+                  
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br ${
+                          achievement.isUnlocked ? getRarityColor(achievement) : 'from-gray-300 to-gray-400'
+                        } shadow-lg`}>
+                          {achievement.isUnlocked ? (
+                            <CategoryIcon className="h-5 w-5 text-white drop-shadow-sm" />
+                          ) : (
+                            <Lock className="h-5 w-5 text-white drop-shadow-sm" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-sm leading-tight truncate">{achievement.name}</h3>
+                          <div className={`inline-flex items-center space-x-1 px-1 py-0.5 rounded-full text-xs font-bold ${getRarityBg(achievement)} ${getRarityText(achievement)} mt-1`}>
+                            {getRarityIcon(achievement)}
+                            <span className="text-xs">{rarityLabel}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-3">
+                    <p className={`text-xs leading-relaxed line-clamp-2 ${
+                      achievement.isUnlocked ? 'text-gray-700 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'
+                    }`}>
+                      {achievement.description}
+                    </p>
+                    
+                    {achievement.progress !== undefined && achievement.maxProgress && (
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600 dark:text-gray-400">Progress</span>
+                          <span className={`font-bold ${achievement.isUnlocked ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                            {achievement.progress} / {achievement.maxProgress}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-1000 ease-out ${
+                              achievement.isUnlocked ? 
+                                'bg-gradient-to-r from-green-400 to-green-600' : 
+                                'bg-gradient-to-r from-blue-400 to-blue-600'
+                            }`}
+                            style={{ width: `${Math.min((achievement.progress / achievement.maxProgress) * 100, 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
+                      <div className="flex items-center space-x-1 bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-full">
+                        <Zap className="h-3 w-3 text-yellow-500" />
+                        <span className="text-xs font-bold text-yellow-700 dark:text-yellow-300">+{achievement.xpReward}</span>
+                      </div>
+                      {achievement.unlockedAt && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {new Date(achievement.unlockedAt).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        ) : (
+          // List View
+          <div className="space-y-2">
+            {paginatedAchievements.map((achievement) => {
+              const CategoryIcon = getCategoryIcon(achievement.category)
+              const rarityLabel = getRarityLabel(achievement)
+              
+              return (
+                <Card 
+                  key={achievement.id}
+                  className={`hover:shadow-md transition-all duration-200 ${getRarityBorder(achievement)} ${
+                    achievement.isUnlocked ? '' : 'opacity-75'
+                  } ${newlyUnlockedAchievements.includes(achievement.id) ? 
+                     'animate-pulse ring-2 ring-yellow-400/50' : ''}`}
+                >
+                  <CardContent className="p-3">
                     <div className="flex items-center space-x-3">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-r ${
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br ${
                         achievement.isUnlocked ? getRarityColor(achievement) : 'from-gray-300 to-gray-400'
-                      }`}>
+                      } shadow-md flex-shrink-0`}>
                         {achievement.isUnlocked ? (
-                          <CategoryIcon className="h-6 w-6 text-white" />
+                          <CategoryIcon className="h-5 w-5 text-white" />
                         ) : (
-                          <Lock className="h-6 w-6 text-white" />
+                          <Lock className="h-5 w-5 text-white" />
                         )}
                       </div>
-                      <div>
-                        <h3 className="font-semibold">{achievement.name}</h3>
-                        <span className={`text-xs font-medium ${getRarityText(achievement)}`}>
-                          {getRarityLabel(achievement)}
-                        </span>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h3 className="font-bold text-sm truncate">{achievement.name}</h3>
+                          <div className={`inline-flex items-center space-x-1 px-1 py-0.5 rounded-full text-xs font-bold ${getRarityBg(achievement)} ${getRarityText(achievement)}`}>
+                            {getRarityIcon(achievement)}
+                            <span className="text-xs">{rarityLabel}</span>
+                          </div>
+                        </div>
+                        <p className={`text-xs ${achievement.isUnlocked ? 'text-gray-700 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'} line-clamp-1`}>
+                          {achievement.description}
+                        </p>
+                        
+                        {achievement.progress !== undefined && achievement.maxProgress && (
+                          <div className="mt-1">
+                            <div className="flex items-center justify-between text-xs mb-1">
+                              <span className="text-gray-600 dark:text-gray-400">Progress</span>
+                              <span className={achievement.isUnlocked ? 'text-green-600 dark:text-green-400 font-bold' : 'text-blue-600 dark:text-blue-400 font-bold'}>
+                                {achievement.progress} / {achievement.maxProgress}
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                              <div 
+                                className={`h-1.5 rounded-full transition-all duration-500 ${
+                                  achievement.isUnlocked ? 'bg-green-500' : 'bg-blue-500'
+                                }`}
+                                style={{ width: `${Math.min((achievement.progress / achievement.maxProgress) * 100, 100)}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex flex-col items-end space-y-1 flex-shrink-0">
+                        <div className="flex items-center space-x-1 bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-full">
+                          <Zap className="h-3 w-3 text-yellow-500" />
+                          <span className="text-xs font-bold text-yellow-700 dark:text-yellow-300">+{achievement.xpReward}</span>
+                        </div>
+                        {achievement.unlockedAt && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {new Date(achievement.unlockedAt).toLocaleDateString()}
+                          </span>
+                        )}
                       </div>
                     </div>
-                    {achievement.isUnlocked ? (
-                      <Unlock className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <Lock className="h-5 w-5 text-gray-400" />
-                    )}
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="space-y-4">
-                  <p className={`text-sm ${achievement.isUnlocked ? 'text-gray-700 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
-                    {achievement.description}
-                  </p>
-                  
-                  {achievement.progress !== undefined && achievement.maxProgress && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Progress</span>
-                        <span className={achievement.isUnlocked ? 'text-green-600 font-medium' : 'text-gray-600'}>
-                          {achievement.progress} / {achievement.maxProgress}
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full transition-all duration-500 ${
-                            achievement.isUnlocked ? 'bg-green-500' : 'bg-blue-500'
-                          }`}
-                          style={{ width: `${(achievement.progress / achievement.maxProgress) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-1">
-                      <Zap className="h-4 w-4 text-yellow-500" />
-                      <span className="text-sm font-medium">+{achievement.xpReward} XP</span>
-                    </div>
-                    {achievement.unlockedAt && (
-                      <span className="text-xs text-gray-500">
-                        {new Date(achievement.unlockedAt).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        )}
 
-        {filteredAchievements.length === 0 && (
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Showing {startIndex + 1}-{Math.min(endIndex, filteredAndSortedAchievements.length)} of {filteredAndSortedAchievements.length} achievements
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum
+                      if (totalPages <= 5) {
+                        pageNum = i + 1
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i
+                      } else {
+                        pageNum = currentPage - 2 + i
+                      }
+                      
+                      return (
+                                                 <Button
+                           key={pageNum}
+                           variant={currentPage === pageNum ? "primary" : "outline"}
+                           size="sm"
+                           onClick={() => setCurrentPage(pageNum)}
+                           className="w-8 h-8 p-0"
+                         >
+                           {pageNum}
+                         </Button>
+                      )
+                    })}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {filteredAndSortedAchievements.length === 0 && (
           <Card>
             <CardContent className="p-12 text-center">
-              <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No achievements found matching your filters</p>
+              <div className="flex flex-col items-center space-y-4">
+                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                  <Trophy className="h-8 w-8 text-gray-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">No achievements found</h3>
+                  <p className="text-gray-500 dark:text-gray-400">Try adjusting your filters or search terms</p>
+                </div>
+                <Button 
+                  onClick={() => {
+                    setCategoryFilter('ALL')
+                    setStatusFilter('ALL')
+                    setRarityFilter('ALL')
+                    setSearchQuery('')
+                    setActiveTab('all')
+                  }}
+                  variant="outline"
+                >
+                  Clear Filters
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}

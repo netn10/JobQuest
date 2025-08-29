@@ -80,14 +80,25 @@ export async function GET(request: NextRequest) {
       select: { appliedDate: true }
     })
 
-    // Combine all activity dates for calendar (using Israel time)
+    // Combine all activity dates for calendar (using user's timezone)
     const activeDates = new Set<string>()
+    const userTimezone = user?.timezone || 'UTC'
+    
+    // Helper function to get date string in user's timezone
+    const getDateInUserTimezone = (date: Date) => {
+      if (userTimezone !== 'UTC') {
+        const dateParts = date.toLocaleDateString('en-CA', { timeZone: userTimezone }).split('-')
+        return `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`
+      } else {
+        return date.toISOString().split('T')[0]
+      }
+    }
     
     // Add dates from activities
     if (user && user.activities) {
       user.activities.forEach(activity => {
         const date = new Date(activity.createdAt)
-        const dateStr = date.toISOString().split('T')[0]
+        const dateStr = getDateInUserTimezone(date)
         activeDates.add(dateStr)
       })
     }
@@ -96,20 +107,19 @@ export async function GET(request: NextRequest) {
     allMissions.forEach(mission => {
       if (mission.completedAt) {
         const date = new Date(mission.completedAt)
-        const dateStr = date.toISOString().split('T')[0]
+        const dateStr = getDateInUserTimezone(date)
         activeDates.add(dateStr)
       }
     })
     
     allApplications.forEach(app => {
       const date = new Date(app.appliedDate)
-      const dateStr = date.toISOString().split('T')[0]
+      const dateStr = getDateInUserTimezone(date)
       activeDates.add(dateStr)
     })
     
     // Get today's date in user's timezone
     const now = new Date()
-    const userTimezone = user?.timezone || 'UTC'
     let today: string
     
     if (userTimezone !== 'UTC') {

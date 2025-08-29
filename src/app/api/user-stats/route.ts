@@ -3,10 +3,10 @@ import { prisma } from '@/lib/db'
 import { checkAndUnlockAchievements } from '@/lib/achievements'
 
 export async function GET(request: NextRequest) {
+  // Get user ID from authorization header
+  const authHeader = request.headers.get('authorization')
+  
   try {
-    // Get user ID from authorization header
-    const authHeader = request.headers.get('authorization')
-    
     if (!authHeader) {
       console.log('No authorization header provided')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

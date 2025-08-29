@@ -63,6 +63,11 @@ export async function POST(request: NextRequest) {
       await tx.dailyChallengeProgress.deleteMany({
         where: { userId }
       })
+
+      // Delete all activities
+      await tx.activity.deleteMany({
+        where: { userId }
+      })
     })
 
     return NextResponse.json({

@@ -1,19 +1,16 @@
 import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
 async function main() {
-  // Mock user removed - users should register normally
-
-  // Sample missions removed - will be created when users register
-
-  // Check if achievements already exist
-  const existingAchievements = await prisma.achievement.count()
+  // Delete all existing achievements
+  await prisma.userAchievement.deleteMany({})
+  await prisma.achievement.deleteMany({})
   
-  if (existingAchievements === 0) {
-    // Achievements will be created for new users
-    const achievements = await prisma.achievement.createMany({
+  console.log('Deleted all existing achievements')
+
+  // Add all achievements
+  const achievements = await prisma.achievement.createMany({
     data: [
       // Focus Achievements (15 total)
       {
@@ -753,7 +750,7 @@ async function main() {
         xpReward: 400
       },
 
-      // Social Achievements (New Category - 10 total)
+      // Social Achievements (10 total)
       {
         name: 'Community Member',
         description: 'Join the Job Quest community',
@@ -787,7 +784,7 @@ async function main() {
         xpReward: 250
       },
       {
-        name: 'Study Buddy',
+        name: 'Study Partner',
         description: 'Form 3 study partnerships',
         icon: 'UserPlus',
         category: 'SOCIAL',
@@ -837,37 +834,7 @@ async function main() {
     ]
   })
 
-      console.log('Created achievements:', achievements)
-    } else {
-      console.log('Achievements already exist, skipping...')
-    }
-
-    // User achievements will be created when users unlock them
-
-  // Sample job applications removed - will be created by users
-
-  // Create today's daily challenge
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  
-  const dailyChallenge = await prisma.dailyChallenge.upsert({
-    where: { date: today },
-    update: {},
-    create: {
-      title: 'Focus Master',
-      description: 'Complete 3 focus sessions without breaks',
-      type: 'FOCUS',
-      requirement: JSON.stringify({ type: 'focus_sessions', count: 3, consecutive: true }),
-      xpReward: 50,
-      date: today
-    }
-  })
-
-  console.log('Created daily challenge:', dailyChallenge)
-
-  // No default learning resources created - users start with empty learning hub
-
-    // Daily challenge progress will be created when users participate
+  console.log(`Created ${achievements.count} achievements successfully!`)
 }
 
 main()
