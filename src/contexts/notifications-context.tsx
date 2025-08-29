@@ -72,8 +72,29 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const updatePreference = (key: keyof NotificationPreferences, value: boolean) => {
-    setPreferences(prev => ({ ...prev, [key]: value }))
+  const updatePreference = async (key: keyof NotificationPreferences, value: boolean) => {
+    const newPreferences = { ...preferences, [key]: value }
+    setPreferences(newPreferences)
+    
+    // Save to database if user is logged in
+    if (user?.id) {
+      try {
+        await fetch('/api/settings', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: user.id,
+            settings: {
+              notifications: newPreferences
+            }
+          })
+        })
+      } catch (error) {
+        console.error('Error saving notification preferences:', error)
+      }
+    }
   }
 
   const requestPermission = async (): Promise<boolean> => {

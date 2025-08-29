@@ -40,21 +40,24 @@ export async function GET(request: NextRequest) {
       blockedApps: ['Slack', 'Discord', 'Steam']
     }
 
+    // Parse notification preferences or use defaults
+    const notificationPreferences = user.notificationPreferences ? JSON.parse(user.notificationPreferences as string) : {
+      missionReminders: true,
+      achievementUnlocks: true,
+      dailyChallenges: true,
+      jobApplicationFollowups: true,
+      learningsuggestions: true,
+      streakWarnings: true,
+      emailNotifications: user.notifications || false
+    }
+
     const settings = {
       profile: {
         name: user.name || '',
         email: user.email || '',
         timezone: user.timezone || 'UTC'
       },
-      notifications: {
-        missionReminders: true,
-        achievementUnlocks: true,
-        dailyChallenges: true,
-        jobApplicationFollowups: true,
-        learningsuggestions: true,
-        streakWarnings: true,
-        emailNotifications: user.notifications || false
-      },
+      notifications: notificationPreferences,
       gamification: {
         xpMultiplier: 1.0,
         difficultyPreference: 'NORMAL' as const,
@@ -120,6 +123,9 @@ export async function PUT(request: NextRequest) {
     }
 
     if (settings.notifications) {
+      // Store granular notification preferences as JSON
+      updateData.notificationPreferences = JSON.stringify(settings.notifications)
+      // Keep the legacy notifications field for backward compatibility
       updateData.notifications = settings.notifications.emailNotifications
     }
 

@@ -8,31 +8,32 @@ datasource db {
 }
 
 model User {
-  id               String                   @id @default(cuid())
-  email            String                   @unique
-  password         String
-  name             String?
-  image            String?
-  createdAt        DateTime                 @default(now())
-  updatedAt        DateTime                 @updatedAt
-  xp               Int                      @default(0)
-  level            Int                      @default(1)
-  totalXp          Int                      @default(0)
-  currentStreak    Int                      @default(0)
-  longestStreak    BigInt                   @default(0)
-  lastActiveDate   DateTime?
-  theme            String                   @default("light")
-  timezone         String                   @default("UTC")
-  notifications    Boolean                  @default(true)
-  focusSettings    Json?
-  openaiApiKey     String?
-  activities       Activity[]
-  dailyChallenges  DailyChallengeProgress[]
-  jobApplications  JobApplication[]
-  learningProgress LearningProgress[]
-  missions         Mission[]
-  notebookEntries  NotebookEntry[]
-  achievements     UserAchievement[]
+  id                    String                   @id @default(cuid())
+  email                 String                   @unique
+  password              String
+  name                  String?
+  image                 String?
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+  xp                    Int                      @default(0)
+  level                 Int                      @default(1)
+  totalXp               Int                      @default(0)
+  currentStreak         Int                      @default(0)
+  longestStreak         BigInt                   @default(0)
+  lastActiveDate        DateTime?
+  theme                 String                   @default("light")
+  timezone              String                   @default("UTC")
+  notifications         Boolean                  @default(true)
+  notificationPreferences Json?
+  focusSettings         Json?
+  openaiApiKey          String?
+  activities            Activity[]
+  dailyChallenges       DailyChallengeProgress[]
+  jobApplications       JobApplication[]
+  learningProgress      LearningProgress[]
+  missions              Mission[]
+  notebookEntries       NotebookEntry[]
+  achievements          UserAchievement[]
 
   @@map("users")
 }
