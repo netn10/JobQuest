@@ -43,7 +43,6 @@ export async function checkAndUnlockAchievements(userId: string) {
     })
 
     if (!user) {
-      console.log('User not found in achievements check:', userId)
       return {
         newlyUnlockedAchievements: [],
         totalXpAwarded: 0
@@ -54,12 +53,10 @@ export async function checkAndUnlockAchievements(userId: string) {
     const allAchievements = await prisma.achievement.findMany({
       orderBy: { createdAt: 'asc' }
     }).catch(error => {
-      console.error('Error fetching achievements:', error)
       return []
     })
 
     if (allAchievements.length === 0) {
-      console.log('No achievements found in database')
       return {
         newlyUnlockedAchievements: [],
         totalXpAwarded: 0
@@ -307,7 +304,6 @@ export async function checkAndUnlockAchievements(userId: string) {
       try {
         requirement = JSON.parse(achievement.requirement)
       } catch (error) {
-        console.error(`Failed to parse requirement for achievement ${achievement.id}:`, error)
         continue
       }
 
@@ -540,7 +536,6 @@ export async function checkAndUnlockAchievements(userId: string) {
           break
 
         default:
-          console.warn(`Unknown achievement requirement type: ${requirement.type}`)
           continue
       }
 
@@ -568,7 +563,7 @@ export async function checkAndUnlockAchievements(userId: string) {
           try {
             await logAchievementUnlocked(userId, achievement.name, achievement.id, achievement.xpReward)
           } catch (error) {
-            console.error('Error logging achievement unlock activity:', error)
+            console.error('Error logging achievement unlock activity
           }
 
           newlyUnlockedAchievements.push({
@@ -581,7 +576,6 @@ export async function checkAndUnlockAchievements(userId: string) {
 
           totalXpAwarded += achievement.xpReward
 
-          console.log(`Achievement unlocked: ${achievement.name} (+${achievement.xpReward} XP)`)
         } catch (error) {
           console.error(`Failed to unlock achievement ${achievement.id}:`, error)
         }
@@ -593,7 +587,6 @@ export async function checkAndUnlockAchievements(userId: string) {
       totalXpAwarded
     }
   } catch (error) {
-    console.error('Error checking achievements:', error)
     throw error
   }
 }
@@ -992,7 +985,6 @@ export async function getAchievementProgress(userId: string) {
       }
     })
   } catch (error) {
-    console.error('Error getting achievement progress:', error)
     throw error
   }
 }

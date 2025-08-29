@@ -129,7 +129,6 @@ export async function updateUserStreak(userId: string, prisma: any, userTimezone
       longestStreak: newLongestStreak
     }
   } catch (error) {
-    console.error('Error updating user streak:', error)
     throw error
   }
 }

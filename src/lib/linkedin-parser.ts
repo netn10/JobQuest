@@ -64,7 +64,6 @@ async function scrapeLinkedInJob(url: string): Promise<string> {
     
     return content
   } catch (error) {
-    console.error('Error scraping LinkedIn job:', error)
     throw new Error('Failed to scrape job posting content')
   } finally {
     if (browser) {
@@ -126,7 +125,6 @@ function extractJobContentFromHTML(html: string, url: string): LinkedInJobData {
     if (element.length > 0) {
       companyName = element.text().trim()
       if (companyName) {
-        console.log('Found company name with selector:', selector, 'Value:', companyName)
         break
       }
     }
@@ -271,7 +269,6 @@ function extractJobContentFromHTML(html: string, url: string): LinkedInJobData {
     const urlMatch = url.match(/\/company\/([^\/\?]+)/)
     if (urlMatch) {
       finalCompanyName = urlMatch[1].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-      console.log('Extracted company name from URL:', finalCompanyName)
     }
   }
   
@@ -382,7 +379,6 @@ async function enhanceJobDataWithAI(jobData: LinkedInJobData): Promise<LinkedInJ
     if (jobData.company && jobData.role) {
       // Check if OpenAI API key is available
       if (!process.env.OPENAI_API_KEY) {
-        console.warn('OpenAI API key not found. Skipping AI enhancement.')
         return jobData
       }
       
@@ -466,7 +462,6 @@ Please provide the cleaned data in JSON format.`
             postedDate: enhancedData.postedDate || jobData.postedDate
           }
         } catch (parseError) {
-          console.error('Error parsing AI enhanced data:', parseError)
           return jobData
         }
       }
@@ -474,7 +469,6 @@ Please provide the cleaned data in JSON format.`
     
     return jobData
   } catch (error) {
-    console.error('Error enhancing job data with AI:', error)
     return jobData
   }
 }
@@ -504,8 +498,6 @@ export async function parseLinkedInJob(linkedinUrl: string): Promise<LinkedInJob
     return enhancedData
     
   } catch (error) {
-    console.error('Error parsing LinkedIn job:', error)
-    
     // Provide more specific error messages
     if (error instanceof Error) {
       if (error.message.includes('Invalid LinkedIn job URL format')) {

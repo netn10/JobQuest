@@ -63,12 +63,9 @@ export default function ActivitiesPage() {
       setLoading(true)
       
       if (!user?.id) {
-        console.error('No user ID available')
         setActivities([])
         return
       }
-      
-      console.log('Fetching activities for user:', user.id)
       const response = await fetch('/api/dashboard', {
         headers: {
           'Authorization': `Bearer ${user.id}`
@@ -77,14 +74,12 @@ export default function ActivitiesPage() {
 
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('API response not ok:', response.status, errorText)
         throw new Error(`Failed to fetch activities: ${response.status} ${errorText}`)
       }
 
       const data = await response.json()
       setActivities(data.allActivities || [])
     } catch (error) {
-      console.error('Error fetching activities:', error)
       setActivities([])
     } finally {
       setLoading(false)

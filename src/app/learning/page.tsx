@@ -100,7 +100,6 @@ export default function LearningPage() {
         }
       } catch (err) {
         setError('Failed to fetch learning resources')
-        console.error('Error fetching resources:', err)
       } finally {
         setLoading(false)
       }
@@ -148,11 +147,9 @@ export default function LearningPage() {
         if (refreshData.success) {
           setResources(refreshData.resources)
         }
-      } else {
-        console.error('Failed to update progress:', data.error)
       }
     } catch (err) {
-      console.error('Error updating learning progress:', err)
+      // Error updating learning progress
     }
   }
 
@@ -188,11 +185,9 @@ export default function LearningPage() {
         handleResourceAdded()
         setDeleteConfirmationModal({ isOpen: false, type: 'single' })
       } else {
-        console.error('Failed to delete resource:', data.error)
         alert('Failed to delete resource')
       }
     } catch (err) {
-      console.error('Error deleting resource:', err)
       alert('Failed to delete resource')
     } finally {
       setIsDeletingResources(false)
@@ -232,11 +227,9 @@ export default function LearningPage() {
         handleResourceAdded()
         setDeleteConfirmationModal({ isOpen: false, type: 'single' })
       } else {
-        console.error('Failed to delete all resources:', data.error)
         alert('Failed to delete all resources')
       }
     } catch (err) {
-      console.error('Error deleting all resources:', err)
       alert('Failed to delete all resources')
     } finally {
       setIsDeletingResources(false)
@@ -269,7 +262,6 @@ export default function LearningPage() {
         }
       } catch (err) {
         setError('Failed to fetch learning resources')
-        console.error('Error fetching resources:', err)
       } finally {
         setLoading(false)
       }

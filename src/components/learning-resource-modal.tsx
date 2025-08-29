@@ -98,7 +98,6 @@ export function LearningResourceModal({ isOpen, onClose, onResourceAdded }: Lear
         })
       }
     } catch (error) {
-      console.error('Error analyzing URL:', error)
       toast({
         title: "Analysis Failed",
         description: "Network error. Please check your connection and try again.",
@@ -151,7 +150,6 @@ export function LearningResourceModal({ isOpen, onClose, onResourceAdded }: Lear
           variant: "default",
         })
       } else {
-        console.error('Failed to add resource:', data.error)
         toast({
           title: "Error",
           description: data.error || "Failed to add learning resource",
@@ -159,7 +157,6 @@ export function LearningResourceModal({ isOpen, onClose, onResourceAdded }: Lear
         })
       }
     } catch (error) {
-      console.error('Error adding resource:', error)
       toast({
         title: "Error",
         description: "Failed to add learning resource",

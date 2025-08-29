@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -83,30 +83,32 @@ export function CollapsibleCard({
               variant="ghost"
               size="sm"
               onClick={handleToggle}
-              className="h-6 w-6 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="h-7 w-7 p-0 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-all duration-200"
             >
-              {isExpanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
+              <ChevronDown className={cn(
+                "h-4 w-4 transition-transform duration-300 ease-in-out",
+                isExpanded ? "rotate-0" : "-rotate-90"
+              )} />
             </Button>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              {Icon && <Icon className="h-5 w-5" />}
+            <CardTitle className="flex items-center gap-3 text-xl font-bold">
+              {Icon && <Icon className="h-6 w-6 text-blue-600" />}
               {title}
             </CardTitle>
           </div>
           {headerChildren}
         </div>
         {description && (
-          <CardDescription className="ml-8">{description}</CardDescription>
+          <CardDescription className="ml-8 text-base">{description}</CardDescription>
         )}
       </CardHeader>
-      {isExpanded && (
+      <div className={cn(
+        "overflow-hidden transition-all duration-300 ease-in-out",
+        isExpanded ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+      )}>
         <CardContent className="pt-0">
           {children}
         </CardContent>
-      )}
+      </div>
     </Card>
   )
 }

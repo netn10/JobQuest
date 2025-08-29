@@ -61,7 +61,6 @@ export default function JobsPage() {
         const data = await response.json()
         setApplications(data)
       } else {
-        console.error('Failed to fetch applications')
         toast({
           title: "Error",
           description: "Failed to load job applications",
@@ -69,7 +68,6 @@ export default function JobsPage() {
         })
       }
     } catch (error) {
-      console.error('Error fetching applications:', error)
       toast({
         title: "Error",
         description: "Failed to load job applications",
@@ -109,7 +107,6 @@ export default function JobsPage() {
         })
       }
     } catch (error) {
-      console.error('Error adding application:', error)
       toast({
         title: "Error",
         description: "Failed to add application",
@@ -159,7 +156,6 @@ export default function JobsPage() {
         })
       }
     } catch (error) {
-      console.error('Error updating application:', error)
       toast({
         title: "Error",
         description: "Failed to update application",
@@ -197,7 +193,6 @@ export default function JobsPage() {
         })
       }
     } catch (error) {
-      console.error('Error deleting application:', error)
       toast({
         title: "Error",
         description: "Failed to delete application",

@@ -44,7 +44,6 @@ export function NotificationStoreProvider({ children }: { children: ReactNode })
     // If the notification is unread, trigger a browser notification if enabled
     if (!notification.read) {
       // This will be handled by the notification service
-      console.log('New notification added:', newNotification)
     }
   }
 

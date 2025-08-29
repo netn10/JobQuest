@@ -108,7 +108,6 @@ export function RandomResourcesModal({ isOpen, onClose, onResourceAdded }: Rando
         }
       }
     } catch (error) {
-      console.error('Error generating resources:', error)
       toast({
         title: "Generation Failed",
         description: "Network error. Please check your connection and try again.",
@@ -166,7 +165,6 @@ export function RandomResourcesModal({ isOpen, onClose, onResourceAdded }: Rando
         })
       }
     } catch (error) {
-      console.error('Error adding resource:', error)
       toast({
         title: "Failed to Add",
         description: "Failed to add resource to your collection",

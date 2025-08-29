@@ -13,8 +13,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     blockedApps = message.blockedApps || []
     focusStartTime = message.startTime || Date.now()
     focusDuration = message.duration || null
-    console.log('Focus session started in content script:', { blockedSites, focusDuration })
-    
     // Check if current page should be blocked
     checkCurrentPage()
   } else if (message.type === 'FOCUS_STOP') {
@@ -23,7 +21,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     blockedApps = []
     focusStartTime = null
     focusDuration = null
-    console.log('Focus session stopped in content script')
     
     // Remove any blocking overlays
     removeBlockingOverlay()
@@ -245,4 +242,4 @@ window.addEventListener('hashchange', () => {
   setTimeout(checkCurrentPage, 100)
 })
 
-console.log('JobQuest Focus Blocker content script loaded')
+// JobQuest Focus Blocker content script loaded

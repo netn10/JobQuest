@@ -121,8 +121,11 @@ export async function PATCH(request: NextRequest) {
       if (!currentMission.startedAt) {
         // First time starting
         updateData.startedAt = new Date()
+      } else if (currentMission.status === 'PENDING') {
+        // Resuming from pause - set new start time to continue from where we left off
+        updateData.startedAt = new Date()
       }
-      // Don't update startedAt if resuming from pause - keep elapsed time
+      // Don't update startedAt if already in progress
     } else if (status === 'PENDING') {
       // Pausing mission - calculate elapsed time
       if (currentMission.startedAt && currentMission.status === 'IN_PROGRESS') {

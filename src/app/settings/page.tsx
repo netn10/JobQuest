@@ -5,7 +5,6 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useTheme } from '@/contexts/theme-context'
 import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/hooks/use-toast'
 import { useNotifications } from '@/contexts/notifications-context'
@@ -15,7 +14,6 @@ import {
   User,
   Bell,
   Shield,
-  Palette,
   Zap,
   Clock,
   Globe,
@@ -73,7 +71,6 @@ interface UserSettings {
 }
 
 export default function SettingsPage() {
-  const { theme, setTheme } = useTheme()
   const { user, updateUser } = useAuth()
   const { toast } = useToast()
   const { 
@@ -159,7 +156,7 @@ export default function SettingsPage() {
           }
         }
       } catch (error) {
-        console.error('Error loading settings:', error)
+        // Error loading settings
       }
     }
 
@@ -219,7 +216,6 @@ export default function SettingsPage() {
         throw new Error(error.error || 'Failed to save settings')
       }
     } catch (error) {
-      console.error('Error saving settings:', error)
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to save settings",
@@ -276,7 +272,6 @@ export default function SettingsPage() {
         throw new Error(error.error || 'Failed to reset progress')
       }
     } catch (error) {
-      console.error('Error resetting progress:', error)
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to reset progress",
@@ -345,7 +340,6 @@ export default function SettingsPage() {
     { id: 'gamification', label: 'Gamification', icon: Zap },
     { id: 'focus', label: 'Focus', icon: Clock },
     { id: 'ai', label: 'AI Features', icon: Bot },
-    { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'privacy', label: 'Privacy', icon: Shield }
   ]
 
@@ -647,8 +641,8 @@ export default function SettingsPage() {
                   
                   <div className="flex items-center justify-between">
                     <div>
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Auto-start Breaks</label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Automatically start break timers</p>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Auto-start Timer</label>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Automatically start focus timers when created</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -803,65 +797,6 @@ export default function SettingsPage() {
               </Card>
             )}
 
-            {/* Appearance Settings */}
-            {activeTab === 'appearance' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-black dark:text-white">Appearance</CardTitle>
-                  <CardDescription className="text-gray-600 dark:text-gray-400">Customize the look and feel of JobQuest</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Theme</label>
-                    <select
-                      value={theme}
-                      onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'system')}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-black dark:text-white"
-                    >
-                      <option value="light">Light</option>
-                      <option value="dark">Dark</option>
-                      <option value="system">System</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Color Scheme</label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {['BLUE', 'GREEN', 'PURPLE', 'ORANGE'].map(color => (
-                        <button
-                          key={color}
-                          onClick={() => updateSettings('appearance', 'colorScheme', color)}
-                          className={`h-12 rounded-md flex items-center justify-center text-white font-medium cursor-pointer ${
-                            color === 'BLUE' ? 'bg-blue-500' :
-                            color === 'GREEN' ? 'bg-green-500' :
-                            color === 'PURPLE' ? 'bg-purple-500' :
-                            'bg-orange-500'
-                          } ${settings.appearance.colorScheme === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''}`}
-                        >
-                          {color}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Compact Mode</label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Reduce spacing for smaller screens</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={settings.appearance.compactMode}
-                        onChange={(e) => updateSettings('appearance', 'compactMode', e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             {/* Privacy Settings */}
             {activeTab === 'privacy' && (

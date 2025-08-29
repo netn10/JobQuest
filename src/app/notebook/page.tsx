@@ -67,7 +67,7 @@ export default function NotebookPage() {
         setActiveDates(dates)
       }
     } catch (error) {
-      console.error('Failed to load entries:', error)
+      // Failed to load entries
     } finally {
       setLoading(false)
     }
@@ -124,7 +124,6 @@ export default function NotebookPage() {
         throw new Error('Failed to save entry')
       }
     } catch (error) {
-      console.error('Failed to save entry:', error)
       setIsSaving(false)
     }
   }

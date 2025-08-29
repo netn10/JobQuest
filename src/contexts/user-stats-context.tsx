@@ -51,7 +51,6 @@ export function UserStatsProvider({ children }: { children: ReactNode }) {
       setStats(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
-      console.error('Error fetching user stats:', err)
     } finally {
       setLoading(false)
     }

@@ -6,8 +6,6 @@ async function main() {
   // Delete all existing achievements
   await prisma.userAchievement.deleteMany({})
   await prisma.achievement.deleteMany({})
-  
-  console.log('Deleted all existing achievements')
 
   // Add all achievements
   const achievements = await prisma.achievement.createMany({
@@ -834,12 +832,10 @@ async function main() {
     ]
   })
 
-  console.log(`Created ${achievements.count} achievements successfully!`)
 }
 
 main()
   .catch((e) => {
-    console.error(e)
     process.exit(1)
   })
   .finally(async () => {

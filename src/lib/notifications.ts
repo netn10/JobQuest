@@ -22,7 +22,6 @@ class NotificationService {
 
   async requestPermission(): Promise<boolean> {
     if (typeof window === 'undefined' || !('Notification' in window)) {
-      console.warn('Browser notifications are not supported')
       return false
     }
 
@@ -41,14 +40,12 @@ class NotificationService {
       this.enabled = result === 'granted'
       return this.enabled
     } catch (error) {
-      console.error('Error requesting notification permission:', error)
       return false
     }
   }
 
   async show(options: NotificationOptions): Promise<boolean> {
     if (!this.enabled) {
-      console.warn('Notifications are not enabled')
       return false
     }
 
@@ -74,7 +71,6 @@ class NotificationService {
 
       return true
     } catch (error) {
-      console.error('Error showing notification:', error)
       return false
     }
   }

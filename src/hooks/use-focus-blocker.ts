@@ -18,8 +18,6 @@ export function useFocusBlocker({ blockedWebsites, blockedApps, duration }: UseF
       navigator.serviceWorker
         .register('/focus-blocker.js')
         .then((registration) => {
-          console.log('Focus blocker service worker registered:', registration)
-          
           // Get the active service worker
           if (registration.active) {
             setServiceWorker(registration.active)
@@ -38,7 +36,7 @@ export function useFocusBlocker({ blockedWebsites, blockedApps, duration }: UseF
           })
         })
         .catch((error) => {
-          console.error('Failed to register focus blocker service worker:', error)
+          // Failed to register focus blocker service worker
         })
     }
   }, [])
@@ -53,7 +51,6 @@ export function useFocusBlocker({ blockedWebsites, blockedApps, duration }: UseF
         duration
       })
       setIsActive(true)
-      console.log('Focus session started with blocking:', { blockedWebsites, blockedApps, duration })
     }
   }, [serviceWorker, blockedWebsites, blockedApps, duration])
 
@@ -64,7 +61,6 @@ export function useFocusBlocker({ blockedWebsites, blockedApps, duration }: UseF
         type: 'FOCUS_STOP'
       })
       setIsActive(false)
-      console.log('Focus session stopped')
     }
   }, [serviceWorker])
 

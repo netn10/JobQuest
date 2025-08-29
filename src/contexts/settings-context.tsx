@@ -130,7 +130,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       }
     } catch (err) {
       setError('Failed to load settings')
-      console.error('Error loading settings:', err)
     } finally {
       setLoading(false)
     }
@@ -178,7 +177,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       }
     } catch (err) {
       setError('Failed to save settings')
-      console.error('Error saving settings:', err)
       return false
     } finally {
       setLoading(false)

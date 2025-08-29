@@ -837,9 +837,6 @@ async function main() {
     ]
   })
 
-      console.log('Created achievements:', achievements)
-    } else {
-      console.log('Achievements already exist, skipping...')
     }
 
     // User achievements will be created when users unlock them
@@ -863,16 +860,10 @@ async function main() {
     }
   })
 
-  console.log('Created daily challenge:', dailyChallenge)
-
-  // No default learning resources created - users start with empty learning hub
-
-    // Daily challenge progress will be created when users participate
 }
 
 main()
   .catch((e) => {
-    console.error(e)
     process.exit(1)
   })
   .finally(async () => {

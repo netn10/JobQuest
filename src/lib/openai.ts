@@ -53,7 +53,6 @@ export async function generateLearningRecommendations(userProfile: {
 
     return JSON.parse(content)
   } catch (error) {
-    console.error('OpenAI API error:', error)
     // Fallback recommendations
     return [
       {
@@ -119,7 +118,6 @@ export async function generateJobApplicationInsights(application: {
 
     return JSON.parse(content)
   } catch (error) {
-    console.error('OpenAI API error:', error)
     // Fallback insights
     return {
       matchScore: 75,
@@ -165,7 +163,6 @@ export async function generateMotivationalMessage(context: {
 
     return content.trim()
   } catch (error) {
-    console.error('OpenAI API error:', error)
     return "Keep pushing forward! Every step you take brings you closer to your goals. Your consistency is building the foundation for your success."
   }
 }
@@ -206,7 +203,6 @@ export async function analyzeLearningResource(url: string, userApiKey?: string) 
       
       content = textContent
     } catch (fetchError) {
-      console.log('Failed to fetch URL content:', fetchError)
       // Continue with URL analysis only
     }
 
@@ -263,8 +259,6 @@ export async function analyzeLearningResource(url: string, userApiKey?: string) 
       source: analysis.source?.trim() || ''
     }
   } catch (error) {
-    console.error('Error analyzing learning resource:', error)
-    
     // Fallback analysis based on URL patterns
     const urlLower = url.toLowerCase()
     let type = 'ARTICLE'
@@ -412,8 +406,6 @@ export async function generateRandomLearningResources(options: {
       year: parseInt(resource.year) || new Date().getFullYear()
     }))
   } catch (error) {
-    console.error('Error generating random learning resources:', error)
-    
     // Re-throw the software-related error
     if (error instanceof Error && error.message === 'SUBJECT_NOT_SOFTWARE_RELATED') {
       throw error

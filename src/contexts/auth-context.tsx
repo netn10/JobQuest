@@ -30,7 +30,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null)
       }
     } catch (error) {
-      console.error('Auth check failed:', error)
       setUser(null)
     } finally {
       setLoading(false)
@@ -52,7 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json()
 
       if (response.ok) {
-        console.log('Login successful, user data:', data.user)
         setCurrentUser(data.user)
         setUser(data.user)
         return { success: true }
@@ -77,7 +75,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json()
 
       if (response.ok) {
-        console.log('Registration successful, user data:', data.user)
         setCurrentUser(data.user)
         setUser(data.user)
         return { success: true }

@@ -176,7 +176,6 @@ export function JobApplicationModal({
         }
       }
     } catch (error) {
-      console.error('Error importing from LinkedIn:', error)
       toast({
         title: "Import Failed",
         description: "Network error. Please check your connection and try again.",

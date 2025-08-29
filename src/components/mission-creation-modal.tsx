@@ -112,7 +112,6 @@ export function MissionCreationModal({
         throw new Error(error.error || 'Failed to create mission')
       }
     } catch (error) {
-      console.error('Error creating mission:', error)
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : 'Failed to create mission',

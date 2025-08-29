@@ -23,10 +23,8 @@ export async function logActivity(data: ActivityData) {
       }
     })
     
-    console.log(`Activity logged: ${data.type} - ${data.title} for user ${data.userId}`)
     return activity
   } catch (error) {
-    console.error('Error logging activity:', error)
     throw error
   }
 }

@@ -59,7 +59,7 @@ export default function MissionsPage() {
   const [newApp, setNewApp] = useState('')
 
   // Calculate active mission
-  const activeMission = missions.find(m => m.status === 'IN_PROGRESS')
+  const activeMission = missions.find(m => m.status === 'IN_PROGRESS' || m.status === 'PENDING')
 
   // Initialize focus blocker
   const { isActive: focusBlockerActive, startFocusSession, stopFocusSession } = useFocusBlocker({
@@ -70,7 +70,7 @@ export default function MissionsPage() {
 
   // Stable callback for blocked access
   const handleBlockedAccess = useCallback((type: 'website' | 'app', name: string) => {
-    console.log(`Blocked ${type}: ${name}`)
+    // Blocked access handled silently
   }, [])
 
   const fetchMissions = useCallback(async () => {
@@ -81,11 +81,9 @@ export default function MissionsPage() {
       const data = await response.json()
       if (data.success) {
         setMissions(data.missions)
-      } else {
-        console.error('Failed to fetch missions:', data.error)
       }
     } catch (error) {
-      console.error('Error fetching missions:', error)
+      // Error fetching missions
     } finally {
       setLoading(false)
     }
@@ -138,17 +136,7 @@ export default function MissionsPage() {
                     actionUrl: "/achievements"
                   })
                   
-                  // Handle auto-start breaks
-                  if (settings.focus.autoStartBreaks) {
-                    const newCompletedPomodoros = breakState.completedPomodoros + 1
-                    const isLongBreak = newCompletedPomodoros % 4 === 0
-                    
-                    setBreakState({
-                      active: true,
-                      type: isLongBreak ? 'long' : 'short',
-                      completedPomodoros: newCompletedPomodoros
-                    })
-                  }
+                  // Auto-start breaks functionality removed - now controls auto-start of timers
                 })
               }
               
@@ -163,8 +151,24 @@ export default function MissionsPage() {
       }, 1000) // Update every second
 
       return () => clearInterval(interval)
+    } else if (activeMissionId && activeMissionStatus === 'PENDING') {
+      // For paused missions, calculate and preserve the timeRemaining based on elapsedTime
+      setMissions(prevMissions => 
+        prevMissions.map(mission => {
+          if (mission.id === activeMissionId && mission.status === 'PENDING') {
+            const totalSeconds = (mission.duration || 0) * 60
+            const remainingSeconds = Math.max(0, totalSeconds - (mission.elapsedTime || 0))
+            
+            return {
+              ...mission,
+              timeRemaining: remainingSeconds
+            }
+          }
+          return mission
+        })
+      )
     }
-  }, [activeMission?.id || null, activeMission?.status || null, fetchMissions, stopFocusSession, settings.focus.autoStartBreaks, breakState.completedPomodoros])
+  }, [activeMission?.id || null, activeMission?.status || null, fetchMissions, stopFocusSession, breakState.completedPomodoros])
 
   const fetchFocusSettings = async () => {
     if (!user?.id) return
@@ -176,7 +180,7 @@ export default function MissionsPage() {
         setFocusSettings(data.focusSettings)
       }
     } catch (error) {
-      console.error('Error fetching focus settings:', error)
+      // Error fetching focus settings
     }
   }
 
@@ -195,11 +199,9 @@ export default function MissionsPage() {
       const data = await response.json()
       if (data.success) {
         setFocusSettings(newSettings)
-      } else {
-        console.error('Failed to update focus settings:', data.error)
       }
     } catch (error) {
-      console.error('Error updating focus settings:', error)
+      // Error updating focus settings
     } finally {
       setSettingsLoading(false)
     }
@@ -314,7 +316,34 @@ export default function MissionsPage() {
       
       const data = await response.json()
       if (data.success) {
-        await fetchMissions() // Refresh missions
+        // Immediately update the mission state locally to prevent timer flicker
+        if (action === 'start') {
+          setMissions(prevMissions => 
+            prevMissions.map(m => 
+              m.id === missionId 
+                ? { 
+                    ...m, 
+                    status: 'IN_PROGRESS', 
+                    startedAt: new Date() // Set new start time for resumed missions
+                  }
+                : m
+            )
+          )
+        } else if (action === 'stop') {
+          setMissions(prevMissions => 
+            prevMissions.map(m => 
+              m.id === missionId 
+                ? { 
+                    ...m, 
+                    status: 'COMPLETED',
+                    completedAt: new Date()
+                  }
+                : m
+            )
+          )
+        }
+        
+        await fetchMissions() // Refresh missions to get server state
         
         // Show achievement notifications if any were unlocked
         if (data.newlyUnlockedAchievements && data.newlyUnlockedAchievements.length > 0) {
@@ -356,27 +385,12 @@ export default function MissionsPage() {
             })
           }
           
-          // Handle auto-start breaks for manual completion
-          if (settings.focus.autoStartBreaks) {
-            // Only start break if mission was completed > 80%
-            if (completionPercentage >= 80) {
-              const newCompletedPomodoros = breakState.completedPomodoros + 1
-              const isLongBreak = newCompletedPomodoros % 4 === 0
-              
-              setBreakState({
-                active: true,
-                type: isLongBreak ? 'long' : 'short',
-                completedPomodoros: newCompletedPomodoros
-              })
-            }
-          }
+          // Auto-start breaks functionality removed - now controls auto-start of timers
         }
         // Note: Don't stop focus session for pause action - keep it running
-      } else {
-        console.error('Failed to update mission:', data.error)
       }
     } catch (error) {
-      console.error('Error updating mission:', error)
+      // Error updating mission
     }
   }
 
@@ -394,7 +408,7 @@ export default function MissionsPage() {
             description: `Custom focus session for ${duration} minutes`,
             type: 'CUSTOM',
             duration,
-            autoStart: true // Signal to auto-start the mission
+            autoStart: settings.focus.autoStartBreaks // Signal to auto-start the mission based on setting
           })
         })
         
@@ -407,15 +421,18 @@ export default function MissionsPage() {
           // Show success toast
           toast({
             title: "Mission Created!",
-            description: `${customTitle} (${duration} minutes) has been started.`,
+            description: settings.focus.autoStartBreaks 
+              ? `${customTitle} (${duration} minutes) has been started.`
+              : `${customTitle} (${duration} minutes) has been created. Click to start.`,
             variant: "success",
             actionUrl: "/missions"
           })
           
-          // Start focus session immediately
-          startFocusSession()
+          // Start focus session if auto-start is enabled
+          if (settings.focus.autoStartBreaks) {
+            startFocusSession()
+          }
         } else {
-          console.error('Failed to create mission:', data.error)
           toast({
             title: "Failed to Create Mission",
             description: data.error || "An error occurred while creating the mission.",
@@ -423,7 +440,7 @@ export default function MissionsPage() {
           })
         }
       } catch (error) {
-        console.error('Error creating mission:', error)
+        // Error creating mission
       }
     }
   }
@@ -431,6 +448,7 @@ export default function MissionsPage() {
   const getStatusColor = (status: MissionStatus) => {
     switch (status) {
       case 'IN_PROGRESS': return 'text-green-800 bg-green-100 dark:bg-green-900/30 dark:text-green-300'
+      case 'PENDING': return 'text-green-800 bg-green-100 dark:bg-green-900/30 dark:text-green-300'
       case 'COMPLETED': return 'text-blue-800 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300'
       case 'FAILED': return 'text-red-800 bg-red-100 dark:bg-red-900/30 dark:text-red-300'
       case 'CANCELLED': return 'text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-300'
@@ -540,15 +558,27 @@ export default function MissionsPage() {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleMissionAction(activeMission.id, 'pause')}
-                    className={settings.focus.strictMode ? 'border-yellow-500 text-yellow-600 hover:bg-yellow-50' : ''}
-                    title={settings.focus.strictMode ? 'Strict mode enabled - confirm to pause' : 'Pause mission'}
-                  >
-                    <Pause className="h-4 w-4" />
-                  </Button>
+                  {activeMission.status === 'IN_PROGRESS' ? (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleMissionAction(activeMission.id, 'pause')}
+                      className={settings.focus.strictMode ? 'border-yellow-500 text-yellow-600 hover:bg-yellow-50' : ''}
+                      title={settings.focus.strictMode ? 'Strict mode enabled - confirm to pause' : 'Pause mission'}
+                    >
+                      <Pause className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleMissionAction(activeMission.id, 'start')}
+                      className="border-green-500 text-green-600 hover:bg-green-50"
+                      title="Resume mission"
+                    >
+                      <Play className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     size="sm"
@@ -628,7 +658,7 @@ export default function MissionsPage() {
                         description: 'Pomodoro focus session for 25 minutes',
                         type: 'FOCUS',
                         duration: 25,
-                        autoStart: true
+                        autoStart: settings.focus.autoStartBreaks
                       })
                     })
                     const data = await response.json()
@@ -636,11 +666,15 @@ export default function MissionsPage() {
                       await fetchMissions()
                       toast({
                         title: "Mission Created!",
-                        description: "Pomodoro Focus (25 minutes) has been started.",
+                        description: settings.focus.autoStartBreaks 
+                          ? "Pomodoro Focus (25 minutes) has been started." 
+                          : "Pomodoro Focus (25 minutes) has been created. Click to start.",
                         variant: "success",
                         actionUrl: "/missions"
                       })
-                      startFocusSession()
+                      if (settings.focus.autoStartBreaks) {
+                        startFocusSession()
+                      }
                     } else {
                       toast({
                         title: "Failed to Create Mission",
@@ -649,7 +683,6 @@ export default function MissionsPage() {
                       })
                     }
                   } catch (error) {
-                    console.error('Error creating mission:', error)
                     toast({
                       title: "Failed to Create Mission",
                       description: "An error occurred while creating the mission.",
@@ -678,7 +711,7 @@ export default function MissionsPage() {
                         description: 'Deep work session for 50 minutes',
                         type: 'FOCUS',
                         duration: 50,
-                        autoStart: true
+                        autoStart: settings.focus.autoStartBreaks
                       })
                     })
                     const data = await response.json()
@@ -686,11 +719,15 @@ export default function MissionsPage() {
                       await fetchMissions()
                       toast({
                         title: "Mission Created!",
-                        description: "Deep Work Session (50 minutes) has been started.",
+                        description: settings.focus.autoStartBreaks 
+                          ? "Deep Work Session (50 minutes) has been started." 
+                          : "Deep Work Session (50 minutes) has been created. Click to start.",
                         variant: "success",
                         actionUrl: "/missions"
                       })
-                      startFocusSession()
+                      if (settings.focus.autoStartBreaks) {
+                        startFocusSession()
+                      }
                     } else {
                       toast({
                         title: "Failed to Create Mission",
@@ -699,7 +736,6 @@ export default function MissionsPage() {
                       })
                     }
                   } catch (error) {
-                    console.error('Error creating mission:', error)
                     toast({
                       title: "Failed to Create Mission",
                       description: "An error occurred while creating the mission.",
@@ -728,7 +764,7 @@ export default function MissionsPage() {
                         description: 'Extended focus session for 90 minutes',
                         type: 'FOCUS',
                         duration: 90,
-                        autoStart: true
+                        autoStart: settings.focus.autoStartBreaks
                       })
                     })
                     const data = await response.json()
@@ -736,11 +772,15 @@ export default function MissionsPage() {
                       await fetchMissions()
                       toast({
                         title: "Mission Created!",
-                        description: "Extended Focus (90 minutes) has been started.",
+                        description: settings.focus.autoStartBreaks 
+                          ? "Extended Focus (90 minutes) has been started." 
+                          : "Extended Focus (90 minutes) has been created. Click to start.",
                         variant: "success",
                         actionUrl: "/missions"
                       })
-                      startFocusSession()
+                      if (settings.focus.autoStartBreaks) {
+                        startFocusSession()
+                      }
                     } else {
                       toast({
                         title: "Failed to Create Mission",
@@ -749,7 +789,6 @@ export default function MissionsPage() {
                       })
                     }
                   } catch (error) {
-                    console.error('Error creating mission:', error)
                     toast({
                       title: "Failed to Create Mission",
                       description: "An error occurred while creating the mission.",

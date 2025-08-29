@@ -21,8 +21,8 @@ model User {
   currentStreak         Int                      @default(0)
   longestStreak         BigInt                   @default(0)
   lastActiveDate        DateTime?
-  theme                 String                   @default("light")
   timezone              String                   @default("UTC")
+  theme                 String                   @default("light")
   notifications         Boolean                  @default(true)
   notificationPreferences Json?
   focusSettings         Json?

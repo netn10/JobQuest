@@ -2,9 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Target, Play, Pause, Square, Clock, Shield } from 'lucide-react'
 import { useFocusSession } from '@/contexts/focus-session-context'
 
 interface FocusBlockerProps {
@@ -38,7 +35,6 @@ export function FocusBlocker({
 }: FocusBlockerProps) {
   const [currentUrl, setCurrentUrl] = useState<string>('')
   const [sessionStartTime, setSessionStartTime] = useState<number>(0)
-  const [showPersistentBanner, setShowPersistentBanner] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
   const { setFocusSession, clearFocusSession } = useFocusSession()
@@ -66,17 +62,11 @@ export function FocusBlocker({
     if (!isActive) {
       setCurrentUrl('')
       setSessionStartTime(0)
-      setShowPersistentBanner(false)
       return
     }
 
     // Set session start time when focus session becomes active (only if not already set)
     setSessionStartTime(prev => prev === 0 ? Date.now() : prev)
-
-    // Show persistent banner if mission is active or paused
-    if (shouldShowBanner) {
-      setShowPersistentBanner(true)
-    }
 
     // Check current URL
     const checkCurrentUrl = () => {
@@ -145,113 +135,10 @@ export function FocusBlocker({
     }
   }, [isActive, blockedWebsites, blockedApps, onBlockedAccess, router, shouldShowBanner])
 
-  // Show/hide banner based on mission status (not page location)
-  useEffect(() => {
-    setShowPersistentBanner(shouldShowBanner)
-  }, [shouldShowBanner])
 
-  // Persistent Focus Session Banner
-  if (showPersistentBanner && missionTitle) {
-    const formatTime = (seconds: number) => {
-      const minutes = Math.floor(seconds / 60)
-      const remainingSeconds = seconds % 60
-      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
-    }
 
-    const progress = missionDuration && timeRemaining !== undefined 
-      ? Math.max(0, Math.min(100, ((missionDuration * 60 - timeRemaining) / (missionDuration * 60)) * 100))
-      : 0
-
-    const isPaused = missionStatus === 'PENDING'
-    const isActive = missionStatus === 'IN_PROGRESS'
-
-    return (
-      <div className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg border-b border-blue-500">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  isPaused ? 'bg-yellow-500' : 'bg-green-500'
-                }`}>
-                  <Target className="h-4 w-4 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-white font-semibold text-sm">
-                    {missionTitle}
-                  </h3>
-                  <p className="text-blue-100 text-xs">
-                    {isPaused ? 'Paused' : 'Active'} • {missionDuration} minutes total
-                  </p>
-                </div>
-              </div>
-              
-              {timeRemaining !== undefined && (
-                <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4 text-blue-200" />
-                  <span className="text-white font-mono text-sm">
-                    {formatTime(timeRemaining)}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center space-x-3">
-              {/* Progress bar */}
-              <div className="hidden sm:block w-32 bg-blue-500/30 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full transition-all duration-1000 ${
-                    isPaused ? 'bg-yellow-400' : 'bg-green-400'
-                  }`}
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
-
-              {/* Status indicator */}
-              <div className="flex items-center space-x-2">
-                <Shield className="h-4 w-4 text-blue-200" />
-                <span className="text-blue-100 text-xs">
-                  Distractions blocked
-                </span>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex items-center space-x-2">
-                {isPaused ? (
-                  <Button
-                    size="sm"
-                    onClick={onResume}
-                    className="bg-green-500 hover:bg-green-600 text-white h-8 px-3"
-                  >
-                    <Play className="h-3 w-3 mr-1" />
-                    Resume
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    onClick={onPause}
-                    className="bg-yellow-500 hover:bg-yellow-600 text-white h-8 px-3"
-                  >
-                    <Pause className="h-3 w-3 mr-1" />
-                    Pause
-                  </Button>
-                )}
-                
-                <Button
-                  size="sm"
-                  onClick={onStop}
-                  className="bg-red-500 hover:bg-red-600 text-white h-8 px-3"
-                >
-                  <Square className="h-3 w-3 mr-1" />
-                  Stop
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // Persistent Focus Session Banner - REMOVED
+  // The banner that appeared at the top when missions start has been removed
 
   // Show blocking overlay if on a blocked site
   if (isActive && currentUrl) {

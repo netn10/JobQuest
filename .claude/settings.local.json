@@ -19,7 +19,9 @@
       "Bash(curl:*)",
       "Bash(sqlite3:*)",
       "Bash(taskkill:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(if exist .next rmdir /s /q .next)",
+      "Read(c:\\Users\\netn1\\Pictures\\Screenshots/**)"
     ],
     "deny": [],
     "ask": [],

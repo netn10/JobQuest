@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { ThemeProvider } from '@/contexts/theme-context'
 import { AuthProvider } from '@/contexts/auth-context'
 import { SettingsProvider } from '@/contexts/settings-context'
 import { UserStatsProvider } from '@/contexts/user-stats-context'
@@ -38,7 +37,7 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head suppressHydrationWarning>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </head>
@@ -46,24 +45,22 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <ThemeProvider>
-          <AuthProvider>
-            <UserStatsProvider>
-              <SettingsProvider>
-                <NotificationsProvider>
-                  <NotificationStoreProvider>
-                    <FocusSessionProvider>
-                      <div suppressHydrationWarning>
-                        {children}
-                      </div>
-                      <Toaster />
-                    </FocusSessionProvider>
-                  </NotificationStoreProvider>
-                </NotificationsProvider>
-              </SettingsProvider>
-            </UserStatsProvider>
-          </AuthProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <UserStatsProvider>
+            <SettingsProvider>
+              <NotificationsProvider>
+                <NotificationStoreProvider>
+                  <FocusSessionProvider>
+                    <div suppressHydrationWarning>
+                      {children}
+                    </div>
+                    <Toaster />
+                  </FocusSessionProvider>
+                </NotificationStoreProvider>
+              </NotificationsProvider>
+            </SettingsProvider>
+          </UserStatsProvider>
+        </AuthProvider>
       </body>
     </html>
   )

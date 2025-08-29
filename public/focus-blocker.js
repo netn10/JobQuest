@@ -13,8 +13,6 @@ self.addEventListener('message', (event) => {
     blockedApps = event.data.blockedApps || []
     focusStartTime = Date.now()
     focusDuration = event.data.duration || null
-    console.log('Focus session started, blocking:', blockedSites, 'Duration:', focusDuration)
-    
     // Notify all clients (content scripts)
     self.clients.matchAll().then(clients => {
       clients.forEach(client => {
@@ -33,8 +31,6 @@ self.addEventListener('message', (event) => {
     blockedApps = []
     focusStartTime = null
     focusDuration = null
-    console.log('Focus session stopped')
-    
     // Notify all clients (content scripts)
     self.clients.matchAll().then(clients => {
       clients.forEach(client => {
@@ -236,12 +232,10 @@ self.addEventListener('fetch', (event) => {
 
 // Handle installation
 self.addEventListener('install', (event) => {
-  console.log('Focus Blocker Service Worker installed')
   self.skipWaiting()
 })
 
 // Handle activation
 self.addEventListener('activate', (event) => {
-  console.log('Focus Blocker Service Worker activated')
   event.waitUntil(self.clients.claim())
 })
