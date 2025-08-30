@@ -16,7 +16,8 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
-  Clock
+  Clock,
+  Award
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/auth-context'
@@ -26,6 +27,7 @@ import { Button } from '@/components/ui/button'
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   { name: 'Focus Missions', href: '/missions', icon: Target },
+  { name: 'Daily Challenges', href: '/daily-challenges', icon: Award },
   { name: 'Job Tracker', href: '/jobs', icon: BriefcaseIcon },
   { name: 'Daily Notebook', href: '/notebook', icon: BookOpen },
   { name: 'Learning', href: '/learning', icon: GraduationCap },
@@ -41,8 +43,6 @@ interface SidebarProps {
   collapsed?: boolean
   onToggleCollapse?: () => void
 }
-
-
 
 export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse }: SidebarProps) {
   const pathname = usePathname()
@@ -65,7 +65,7 @@ export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse
 
   return (
     <div className={cn(
-      "flex h-full flex-col bg-gray-900 dark:bg-gray-950 text-white transition-all duration-300 select-none",
+      "flex h-full flex-col bg-[#020617] border-r border-[#1E293B] text-white transition-all duration-300 select-none shadow-elevated",
       collapsed ? "lg:w-16 w-64" : "w-64"
     )}
     style={{
@@ -76,14 +76,14 @@ export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse
     }}
     onDragStart={(e) => e.preventDefault()}
     >
-      <div className="flex h-16 items-center justify-between px-6">
+      <div className="flex h-16 items-center justify-between px-6 border-b border-[#1E293B]">
         <button 
           onClick={() => navigate('/dashboard')} 
           className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
           draggable="false"
         >
-          <Zap className="h-8 w-8 text-yellow-400" />
-          {!collapsed && <span className="font-bold text-lg">JobQuest</span>}
+          <Zap className="h-8 w-8 text-[#3B82F6]" />
+          {!collapsed && <span className="font-bold text-lg text-[#F8FAFC]">JobQuest</span>}
         </button>
         <div className="flex items-center space-x-2">
           {onClose && (
@@ -91,7 +91,7 @@ export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="lg:hidden text-gray-400 hover:text-white"
+              className="lg:hidden text-[#94A3B8] hover:text-white"
             >
               <X className="h-5 w-5" />
             </Button>
@@ -101,27 +101,27 @@ export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse
       
       {/* Mobile-only user stats section */}
       {onClose && user && (
-        <div className="lg:hidden px-4 py-3 border-b border-gray-700">
+        <div className="lg:hidden px-4 py-3 border-b border-[#1E293B] bg-[#0F172A]">
           <div className="space-y-3">
             {loading ? (
               <>
-                <div className="flex items-center space-x-2 bg-gray-700 px-3 py-2 rounded-md">
-                  <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium text-gray-300 w-20 h-4 bg-gray-600 rounded animate-pulse"></span>
+                <div className="flex items-center space-x-2 bg-[#1E293B] px-3 py-2 rounded-lg">
+                  <div className="w-2 h-2 bg-[#64748B] rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium text-[#64748B] w-20 h-4 bg-[#334155] rounded animate-pulse"></span>
                 </div>
                 
-                <div className="flex items-center space-x-2 bg-gray-700 px-3 py-2 rounded-md">
-                  <span className="text-sm font-medium text-gray-300 w-16 h-4 bg-gray-600 rounded animate-pulse"></span>
+                <div className="flex items-center space-x-2 bg-[#1E293B] px-3 py-2 rounded-lg">
+                  <span className="text-sm font-medium text-[#64748B] w-16 h-4 bg-[#334155] rounded animate-pulse"></span>
                 </div>
               </>
             ) : (
               <>
-                <div className="flex items-center space-x-2 bg-gray-700 px-3 py-2 rounded-md">
-                  <span className="text-sm font-medium text-gray-300">{stats?.currentStreak || 0} day streak</span>
+                <div className="flex items-center space-x-2 bg-[#1E293B] px-3 py-2 rounded-lg">
+                  <span className="text-sm font-medium text-[#F1F5F9]">{stats?.currentStreak || 0} day streak</span>
                 </div>
                 
-                <div className="flex items-center space-x-2 bg-gray-700 px-3 py-2 rounded-md">
-                  <span className="text-sm font-medium text-gray-300">{(stats?.totalXp || 0).toLocaleString()} XP</span>
+                <div className="flex items-center space-x-2 bg-[#1E293B] px-3 py-2 rounded-lg">
+                  <span className="text-sm font-medium text-[#F1F5F9]">{(stats?.totalXp || 0).toLocaleString()} XP</span>
                 </div>
               </>
             )}
@@ -142,19 +142,19 @@ export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse
                 handleNavigation()
               }}
               className={cn(
-                'group flex items-center px-2 py-2 text-sm font-medium rounded-md cursor-pointer w-full text-left',
+                'group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg cursor-pointer w-full text-left transition-all duration-200',
                 isActive 
-                  ? 'bg-gray-800 text-white' 
-                  : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                  ? 'bg-[#3B82F6] text-white shadow-professional' 
+                  : 'text-[#F1F5F9] hover:bg-[#1E293B] hover:text-white',
                 collapsed && 'justify-center'
               )}
               title={collapsed ? item.name : undefined}
               draggable="false"
             >
               <Icon className={cn(
-                'h-6 w-6',
+                'h-5 w-5',
                 !collapsed && 'mr-3',
-                isActive ? 'text-gray-300' : 'text-gray-400 group-hover:text-gray-300'
+                isActive ? 'text-white' : 'text-[#64748B] group-hover:text-[#F1F5F9]'
               )} />
               {!collapsed && item.name}
             </button>
@@ -162,21 +162,21 @@ export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse
         })}
       </nav>
       
-      <div className="flex-shrink-0 px-4 py-4">
+      <div className="flex-shrink-0 px-4 py-4 border-t border-[#1E293B] bg-[#0F172A]">
         {user ? (
           <div className="space-y-3">
             <div className={cn("flex items-center", collapsed && "justify-center")}>
-              <div className="h-8 w-8 rounded-full bg-gray-600 flex items-center justify-center">
-                <span className="text-sm font-medium">
+              <div className="h-8 w-8 rounded-full bg-[#3B82F6] flex items-center justify-center shadow-professional">
+                <span className="text-sm font-medium text-white">
                   {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                 </span>
               </div>
               {!collapsed && (
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-white">
+                  <p className="text-sm font-medium text-[#F8FAFC]">
                     {user?.name || user?.email || 'User'}
                   </p>
-                  <p className="text-xs text-gray-400">Level {user?.level || 1}</p>
+                  <p className="text-xs text-[#64748B]">Level {user?.level || 1}</p>
                 </div>
               )}
             </div>
@@ -187,7 +187,7 @@ export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="w-full justify-start text-gray-300 hover:bg-gray-700 hover:text-white"
+                className="w-full justify-start text-[#F1F5F9] hover:bg-[#1E293B] hover:text-white"
               >
                 <LogOut className="mr-3 h-4 w-4" />
                 Sign Out
@@ -200,7 +200,7 @@ export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="w-full justify-start text-gray-300 hover:bg-gray-700 hover:text-white"
+                className="w-full justify-start text-[#F1F5F9] hover:bg-[#1E293B] hover:text-white"
                 onClick={() => {
                   navigate('/login')
                   handleNavigation()
@@ -210,7 +210,7 @@ export function Sidebar({ onClose, navigate, collapsed = false, onToggleCollapse
               </Button>
               <Button 
                 size="sm" 
-                className="w-full"
+                className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white"
                 onClick={() => {
                   navigate('/register')
                   handleNavigation()

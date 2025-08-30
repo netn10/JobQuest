@@ -563,7 +563,7 @@ export async function checkAndUnlockAchievements(userId: string) {
           try {
             await logAchievementUnlocked(userId, achievement.name, achievement.id, achievement.xpReward)
           } catch (error) {
-            console.error('Error logging achievement unlock activity
+            console.error('Error logging achievement unlock activity')
           }
 
           newlyUnlockedAchievements.push({

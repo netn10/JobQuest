@@ -13,6 +13,10 @@ interface UserStats {
   pendingResponses: number
   xpForNextLevel: number
   xpProgress: number
+  notebookEntries: number
+  completedLearning: number
+  unlockedAchievements: number
+  totalLearningHours: number
 }
 
 interface UserStatsContextType {

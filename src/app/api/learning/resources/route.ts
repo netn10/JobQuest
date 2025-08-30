@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type')
     const difficulty = searchParams.get('difficulty')
     const status = searchParams.get('status')
+    const rating = searchParams.get('rating')
     const search = searchParams.get('search')
 
     // Build where clause for filtering
@@ -73,6 +74,18 @@ export async function GET(request: NextRequest) {
     // Apply status filter if provided
     if (status && status !== 'ALL') {
       filteredResources = filteredResources.filter(resource => resource.status === status)
+    }
+
+    // Apply rating filter if provided
+    if (rating && rating !== 'ALL') {
+      const ratingValue = parseInt(rating)
+      if (ratingValue === 0) {
+        // Show unrated resources
+        filteredResources = filteredResources.filter(resource => !resource.rating || resource.rating === 0)
+      } else {
+        // Show resources with rating >= specified value
+        filteredResources = filteredResources.filter(resource => resource.rating && resource.rating >= ratingValue)
+      }
     }
 
     return NextResponse.json({

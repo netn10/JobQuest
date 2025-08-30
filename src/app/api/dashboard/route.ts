@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { checkAndUnlockAchievements } from '@/lib/achievements'
+import { getDailyChallengeProgress } from '@/lib/daily-challenges'
 
 export async function GET(request: NextRequest) {
   try {
@@ -151,6 +152,9 @@ export async function GET(request: NextRequest) {
       console.error('Error checking achievements in dashboard:', error)
     }
 
+    // Get daily challenge progress
+    const dailyChallengesData = await getDailyChallengeProgress(userId)
+
     // Calculate XP needed for next level (simple formula: level * 100)
     const xpForNextLevel = user.level * 100
     const xpProgress = user.totalXp % 100
@@ -290,7 +294,7 @@ export async function GET(request: NextRequest) {
         xpProgress
       },
       activeMissions: user.missions,
-      dailyChallenge: user.dailyChallenges[0] || null,
+              dailyChallenges: dailyChallengesData || [],
       recentActivity,
       allActivities,
       activeDates: Array.from(activeDates),
@@ -325,7 +329,7 @@ export async function GET(request: NextRequest) {
         xpProgress: 0
       },
       activeMissions: [],
-      dailyChallenge: null,
+              dailyChallenges: [],
       recentActivity: [],
       allActivities: [],
       activeDates: [],

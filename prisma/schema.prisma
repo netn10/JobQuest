@@ -26,6 +26,7 @@ model User {
   notifications         Boolean                  @default(true)
   notificationPreferences Json?
   focusSettings         Json?
+  dailyChallengeSettings Json?
   openaiApiKey          String?
   activities            Activity[]
   dailyChallenges       DailyChallengeProgress[]
@@ -161,10 +162,11 @@ model DailyChallenge {
   type        ChallengeType
   requirement String
   xpReward    Int                      @default(25)
-  date        DateTime                 @unique
+  date        DateTime
   createdAt   DateTime                 @default(now())
   progress    DailyChallengeProgress[]
 
+  @@unique([date, title])
   @@map("daily_challenges")
 }
 

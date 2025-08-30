@@ -8,6 +8,7 @@ import { NotificationStoreProvider } from '@/contexts/notification-store-context
 import { FocusSessionProvider } from '@/contexts/focus-session-context'
 import { cleanupBrowserExtensions, preventHydrationMismatch } from '@/utils/hydration-cleanup'
 import { Toaster } from '@/components/ui/toaster'
+import { DailyChallengeProvider } from '@/components/daily-challenge-provider'
 import './globals.css'
 
 const geistSans = Geist({
@@ -51,10 +52,12 @@ export default function RootLayout({
               <NotificationsProvider>
                 <NotificationStoreProvider>
                   <FocusSessionProvider>
-                    <div suppressHydrationWarning>
-                      {children}
-                    </div>
-                    <Toaster />
+                    <DailyChallengeProvider>
+                      <div suppressHydrationWarning>
+                        {children}
+                      </div>
+                      <Toaster />
+                    </DailyChallengeProvider>
                   </FocusSessionProvider>
                 </NotificationStoreProvider>
               </NotificationsProvider>

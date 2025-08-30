@@ -12,10 +12,11 @@ import { useUserStats } from '@/contexts/user-stats-context'
 import { getAuthHeaders } from '@/lib/auth'
 import { Calendar as CalendarComponent } from '@/components/calendar'
 import { StatsDisplay } from '@/components/ui/stats-display'
+import { useToast } from '@/hooks/use-toast'
 
 interface DashboardData {
   activeMissions: any[]
-  dailyChallenge: any
+  dailyChallenges: any[]
   recentActivity: any[]
   allActivities: any[]
   activeDates: string[]
@@ -40,10 +41,12 @@ interface DashboardPageProps {
 export default function DashboardPage({ navigate }: DashboardPageProps) {
   const { user, loading: authLoading, checkAuth } = useAuth()
   const { stats, loading: statsLoading, error: statsError } = useUserStats()
+  const { toast } = useToast()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showWelcome, setShowWelcome] = useState(false)
+  const [previousChallengeStatus, setPreviousChallengeStatus] = useState<string | null>(null)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -82,9 +85,50 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
           throw new Error('Failed to fetch dashboard data')
         }
         const dashboardData = await response.json()
+        // Check for daily challenge completion
+        if (dashboardData.dailyChallenges && 
+            dashboardData.dailyChallenges.length > 0) {
+          
+          // Check if any challenge was just completed
+          const completedChallenge = dashboardData.dailyChallenges.find(
+            (challenge: any) => challenge.progress && 
+            previousChallengeStatus && 
+            previousChallengeStatus !== 'COMPLETED' && 
+            challenge.progress.status === 'COMPLETED'
+          )
+          
+          if (completedChallenge) {
+            // Show completion toast
+            toast({
+              title: "🎉 Daily Challenge Completed!",
+              description: `Congratulations! You completed "${completedChallenge.challenge.title}" and earned ${completedChallenge.challenge.xpReward} XP!`,
+              variant: "default",
+              actionUrl: "/daily-challenges"
+            })
+          }
+        }
+
+        // Also check recent activities for challenge completion events
+        if (dashboardData.recentActivity && dashboardData.recentActivity.length > 0) {
+          const challengeCompletionActivity = dashboardData.recentActivity.find(
+            (activity: any) => activity.type === 'daily_challenge_completed' && 
+            activity.timestamp && 
+            new Date(activity.timestamp).getTime() > Date.now() - 30000 // Within last 30 seconds
+          )
+          
+          if (challengeCompletionActivity) {
+            toast({
+              title: "🎉 Daily Challenge Completed!",
+              description: `Congratulations! You completed a daily challenge and earned ${challengeCompletionActivity.xpEarned || 0} XP!`,
+              variant: "default",
+              actionUrl: "/daily-challenges"
+            })
+          }
+        }
+
         setData({
           activeMissions: dashboardData.activeMissions || [],
-          dailyChallenge: dashboardData.dailyChallenge,
+          dailyChallenges: dashboardData.dailyChallenges || [],
           recentActivity: dashboardData.recentActivity || [],
           allActivities: dashboardData.allActivities || [],
           activeDates: dashboardData.activeDates || [],
@@ -101,6 +145,31 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
             notebookEntries: 0
           }
         })
+
+        // Update previous challenge status for next comparison
+        if (dashboardData.dailyChallenges && dashboardData.dailyChallenges.length > 0) {
+          const firstChallenge = dashboardData.dailyChallenges[0]
+          if (firstChallenge.progress) {
+            setPreviousChallengeStatus(firstChallenge.progress.status)
+          }
+        }
+
+        // Challenges are now automatically started when created
+        
+        // Update daily challenge progress to ensure it's current
+        if (dashboardData.dailyChallenges && dashboardData.dailyChallenges.length > 0) {
+          try {
+            await fetch('/api/daily-challenges/update-progress', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+              }
+            })
+          } catch (error) {
+            console.error('Error updating daily challenge progress:', error)
+          }
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred')
       } finally {
@@ -114,6 +183,7 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
   const handleViewMission = () => {
     navigate('missions')
   }
+
 
   const getIconComponent = (iconName: string) => {
     switch (iconName) {
@@ -131,13 +201,13 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
 
   const getStatusColor = (status: string) => {
     switch (status?.toUpperCase()) {
-      case 'APPLIED': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-      case 'INTERVIEW': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
-      case 'OFFER': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-      case 'REJECTED': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-      case 'COMPLETED': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-      case 'IN_PROGRESS': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+      case 'APPLIED': return 'bg-[#3B82F6]/10 text-[#3B82F6] border-[#3B82F6]/20'
+      case 'INTERVIEW': return 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20'
+      case 'OFFER': return 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20'
+      case 'REJECTED': return 'bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/20'
+      case 'COMPLETED': return 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20'
+      case 'IN_PROGRESS': return 'bg-[#6366F1]/10 text-[#6366F1] border-[#6366F1]/20'
+      default: return 'bg-[#64748B]/10 text-[#64748B] border-[#64748B]/20'
     }
   }
 
@@ -211,7 +281,7 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
       <div className="space-y-6 lg:space-y-8 max-w-7xl mx-auto">
         {/* Welcome Section */}
         {showWelcome && (
-          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800 relative shadow-lg">
+          <Card className="relative shadow-professional">
             <Button
               variant="ghost"
               size="sm"
@@ -221,16 +291,16 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
                 const welcomeKey = `welcome-shown-${user?.id}`
                 localStorage.setItem(welcomeKey, new Date().getTime().toString())
               }}
-              className="absolute top-2 right-2 h-8 w-8 p-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
+              className="absolute top-2 right-2 h-8 w-8 p-0 text-[#64748B] hover:text-[#F1F5F9]"
             >
               <X className="h-4 w-4" />
             </Button>
             <CardHeader>
-              <CardTitle className="text-3xl font-bold flex items-center gap-3 text-blue-900 dark:text-blue-100 pr-8">
-                <TrendingUp className="h-6 w-6" />
+              <CardTitle className="text-3xl font-bold flex items-center gap-3 text-[#F8FAFC] pr-8">
+                <TrendingUp className="h-6 w-6 text-[#3B82F6]" />
                 Welcome back, {user?.name || 'Job Seeker'}!
               </CardTitle>
-              <CardDescription className="text-base text-blue-700 dark:text-blue-300 mt-2">
+              <CardDescription className="text-base text-[#F1F5F9] mt-2">
                 Ready to continue your job search journey? Here's your progress overview.
               </CardDescription>
             </CardHeader>
@@ -259,37 +329,37 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
             <Button 
               variant="outline" 
-              className="h-24 w-full flex-col space-y-2 border-2 hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all duration-200"
+              className="h-24 w-full flex-col space-y-2 border-2 border-[#1E293B] hover:border-[#3B82F6] hover:bg-[#111827] transition-all duration-200"
               onClick={() => navigate('missions')}
             >
-              <Target className="h-7 w-7 text-blue-600" />
+              <Target className="h-7 w-7 text-[#3B82F6]" />
               <span className="text-sm font-medium">Start Mission</span>
             </Button>
             
             <Button 
               variant="outline" 
-              className="h-24 w-full flex-col space-y-2 border-2 hover:border-green-300 hover:bg-green-50 dark:hover:bg-green-900/10 transition-all duration-200"
+              className="h-24 w-full flex-col space-y-2 border-2 border-[#1E293B] hover:border-[#6366F1] hover:bg-[#111827] transition-all duration-200"
               onClick={() => navigate('jobs')}
             >
-              <BriefcaseIcon className="h-7 w-7 text-green-600" />
+              <BriefcaseIcon className="h-7 w-7 text-[#6366F1]" />
               <span className="text-sm font-medium">Add Job</span>
             </Button>
             
             <Button 
               variant="outline" 
-              className="h-24 w-full flex-col space-y-2 border-2 hover:border-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-all duration-200"
+              className="h-24 w-full flex-col space-y-2 border-2 border-[#1E293B] hover:border-[#10B981] hover:bg-[#111827] transition-all duration-200"
               onClick={() => navigate('learning')}
             >
-              <BookOpen className="h-7 w-7 text-purple-600" />
+              <BookOpen className="h-7 w-7 text-[#10B981]" />
               <span className="text-sm font-medium">Learn</span>
             </Button>
             
             <Button 
               variant="outline" 
-              className="h-24 w-full flex-col space-y-2 border-2 hover:border-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/10 transition-all duration-200"
+              className="h-24 w-full flex-col space-y-2 border-2 border-[#1E293B] hover:border-[#F59E0B] hover:bg-[#111827] transition-all duration-200"
               onClick={() => navigate('notebook')}
             >
-              <FileText className="h-7 w-7 text-orange-600" />
+              <FileText className="h-7 w-7 text-[#F59E0B]" />
               <span className="text-sm font-medium">Journal</span>
             </Button>
           </div>
@@ -316,9 +386,9 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
               <div className="space-y-4">
                 {data.activeMissions.length > 0 ? (
                   data.activeMissions.map((mission) => (
-                    <div key={mission.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-750 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-200">
+                    <div key={mission.id} className="flex items-center justify-between p-4 bg-[#1E293B] rounded-xl border border-[#334155] hover:shadow-professional transition-all duration-200">
                       <div className="flex items-center space-x-3">
-                        <Target className="h-5 w-5 text-blue-600" />
+                        <Target className="h-5 w-5 text-[#3B82F6]" />
                         <div>
                           <p className="font-semibold text-lg">{mission.title}</p>
                           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{mission.description}</p>
@@ -329,9 +399,9 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
                   ))
                 ) : (
                   <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                    <Target className="h-16 w-16 mx-auto mb-6 text-gray-300" />
+                    <Target className="h-16 w-16 mx-auto mb-6 text-[#64748B]" />
                     <p className="text-lg font-medium mb-2">No active missions</p>
-                    <p className="text-sm text-gray-400">Start a new mission to begin earning XP!</p>
+                    <p className="text-sm text-[#94A3B8]">Start a new mission to begin earning XP!</p>
                     <Button size="sm" className="mt-2" onClick={() => navigate('missions')}>
                       <Plus className="h-4 w-4 mr-1" />
                       Create Mission
@@ -341,47 +411,56 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
               </div>
             </CollapsibleCard>
 
-            {/* Daily Challenge */}
+            {/* Daily Challenges */}
             <CollapsibleCard
-              title="Today's Challenge"
+              title="Daily Challenges"
               description="Complete daily challenges for bonus XP"
               icon={Trophy}
               defaultExpanded={true}
               storageKey="dashboard-daily-challenge"
+              headerChildren={
+                <Button variant="outline" size="sm" onClick={() => navigate('daily-challenges')}>
+                  View All
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              }
             >
-              {data.dailyChallenge ? (
+              {data.dailyChallenges && data.dailyChallenges.length > 0 ? (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
-                        <Trophy className="h-4 w-4 text-white" />
+                  {data.dailyChallenges.map((challengeData: any) => (
+                    <div key={challengeData.challenge.id} className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-[#3B82F6] rounded-full flex items-center justify-center shadow-professional">
+                            <Trophy className="h-4 w-4 text-white" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-lg">{challengeData.challenge.title}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{challengeData.challenge.description}</p>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-lg">{data.dailyChallenge.challenge.title}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{data.dailyChallenge.challenge.description}</p>
+                      
+                      <div className="w-full bg-[#334155] rounded-full h-3">
+                        <div 
+                          className="bg-[#3B82F6] h-3 rounded-full shadow-sm" 
+                          style={{ width: `${challengeData.progressPercentage}%` }}
+                        ></div>
                       </div>
+                      
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600 dark:text-gray-400">{challengeData.progressPercentage}% completed</span>
+                        <span className="font-medium text-[#F59E0B]">+{challengeData.challenge.xpReward} XP</span>
+                      </div>
+                      
                     </div>
-                  </div>
-                  
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                    <div 
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full shadow-sm" 
-                      style={{ width: `${data.dailyChallenge.progress}%` }}
-                    ></div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">{data.dailyChallenge.progress}% completed</span>
-                    <span className="font-medium text-yellow-600">+{data.dailyChallenge.challenge.xpReward} XP</span>
-                  </div>
-                  
-                  <Button className="w-full bg-blue-800 hover:bg-blue-900 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">Start Challenge</Button>
+                  ))}
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                  <Trophy className="h-16 w-16 mx-auto mb-6 text-gray-300" />
-                  <p className="text-lg font-medium mb-2">No challenge available today</p>
-                  <p className="text-sm text-gray-400">Check back tomorrow for new challenges!</p>
+                  <Trophy className="h-16 w-16 mx-auto mb-6 text-[#64748B]" />
+                  <p className="text-lg font-medium mb-2">No challenges available today</p>
+                  <p className="text-sm text-[#94A3B8]">Check back tomorrow for new challenges!</p>
                 </div>
               )}
             </CollapsibleCard>
@@ -403,9 +482,9 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
               {data.recentJobs.length > 0 ? (
                 <div className="space-y-3">
                   {data.recentJobs.slice(0, 3).map((job) => (
-                    <div key={job.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-750 rounded-xl border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200">
+                    <div key={job.id} className="flex items-center justify-between p-4 bg-[#1E293B] rounded-xl border border-[#334155] hover:shadow-professional transition-all duration-200">
                       <div className="flex items-center space-x-3">
-                        <Building className="h-5 w-5 text-gray-600" />
+                        <Building className="h-5 w-5 text-[#6366F1]" />
                         <div>
                           <p className="font-semibold text-base">{job.role}</p>
                           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{job.company}</p>
@@ -422,7 +501,7 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
                 </div>
               ) : (
                 <div className="text-center py-10 text-gray-500 dark:text-gray-400">
-                  <BriefcaseIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <BriefcaseIcon className="h-12 w-12 mx-auto mb-4 text-[#64748B]" />
                   <p className="text-lg font-medium mb-2">No recent applications</p>
                   <Button size="sm" className="mt-2" onClick={() => navigate('jobs')}>
                     <Plus className="h-4 w-4 mr-1" />
@@ -449,11 +528,11 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
               {data.recentLearning.length > 0 ? (
                 <div className="space-y-3">
                   {data.recentLearning.slice(0, 3).map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-750 rounded-xl border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200">
+                    <div key={item.id} className="flex items-center justify-between p-4 bg-[#1E293B] rounded-xl border border-[#334155] hover:shadow-professional transition-all duration-200">
                       <div className="flex items-center space-x-3">
                         {(() => {
                           const IconComponent = getIconComponent(item.type === 'VIDEO' ? 'video' : 'file')
-                          return <IconComponent className="h-5 w-5 text-gray-600" />
+                          return <IconComponent className="h-5 w-5 text-[#10B981]" />
                         })()}
                         <div>
                           <p className="font-semibold text-base">{item.title}</p>
@@ -471,7 +550,7 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
                 </div>
               ) : (
                 <div className="text-center py-10 text-gray-500 dark:text-gray-400">
-                  <BookOpen className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <BookOpen className="h-12 w-12 mx-auto mb-4 text-[#64748B]" />
                   <p className="text-lg font-medium mb-2">No learning activities</p>
                   <Button size="sm" className="mt-2" onClick={() => navigate('learning')}>
                     <Plus className="h-4 w-4 mr-1" />
@@ -496,7 +575,7 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
                 activeDates={data.activeDates.map(dateStr => new Date(dateStr))}
                 activities={data.allActivities}
                 className="h-fit"
-                userTimezone={user?.timezone}
+                userTimezone={(user as any)?.timezone || 'UTC'}
               />
             </CollapsibleCard>
             
@@ -513,9 +592,9 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
                   {data.recentActivity.slice(0, 8).map((activity, index) => {
                     const IconComponent = getIconComponent(activity.icon)
                     return (
-                      <div key={index} className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 dark:hover:from-gray-800 dark:hover:to-gray-750 transition-all duration-200">
-                        <div className="w-10 h-10 bg-gradient-to-r from-yellow-100 to-yellow-200 dark:from-yellow-900 dark:to-yellow-800 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
-                          <IconComponent className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                      <div key={index} className="flex items-center space-x-3 p-3 rounded-xl hover:bg-[#1E293B] transition-all duration-200">
+                        <div className="w-10 h-10 bg-[#1E293B] rounded-full flex items-center justify-center flex-shrink-0 shadow-professional border border-[#334155]">
+                          <IconComponent className="h-5 w-5 text-[#F59E0B]" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold truncate">{activity.title}</p>
@@ -549,9 +628,9 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
                 </div>
               ) : (
                 <div className="text-center py-10 text-gray-500 dark:text-gray-400">
-                  <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <Clock className="h-12 w-12 mx-auto mb-4 text-[#64748B]" />
                   <p className="text-lg font-medium mb-2">No recent activity</p>
-                  <p className="text-sm text-gray-400">Start using the app to see your progress here!</p>
+                  <p className="text-sm text-[#94A3B8]">Start using the app to see your progress here!</p>
                 </div>
               )}
             </CollapsibleCard>
@@ -567,19 +646,19 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
               <div className="space-y-4">
                 <div className="flex items-center justify-between py-2">
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Missions Completed</span>
-                  <span className="font-bold text-lg text-blue-600">{data.weeklyProgress.missionsCompleted}</span>
+                  <span className="font-bold text-lg text-[#3B82F6]">{data.weeklyProgress.missionsCompleted}</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Applications Submitted</span>
-                  <span className="font-bold text-lg text-green-600">{data.weeklyProgress.applicationsSubmitted}</span>
+                  <span className="font-bold text-lg text-[#6366F1]">{data.weeklyProgress.applicationsSubmitted}</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Learning Hours</span>
-                  <span className="font-bold text-lg text-purple-600">{data.weeklyProgress.learningHours}h</span>
+                  <span className="font-bold text-lg text-[#10B981]">{data.weeklyProgress.learningHours}h</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Journal Entries</span>
-                  <span className="font-bold text-lg text-orange-600">{data.weeklyProgress.notebookEntries}</span>
+                  <span className="font-bold text-lg text-[#F59E0B]">{data.weeklyProgress.notebookEntries}</span>
                 </div>
               </div>
             </CollapsibleCard>
@@ -595,7 +674,7 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
               >
                 <div className="space-y-3">
                   {data.upcomingInterviews.slice(0, 2).map((interview) => (
-                    <div key={interview.id} className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl border border-blue-200 dark:border-blue-800 shadow-sm">
+                    <div key={interview.id} className="p-4 bg-[#1E293B] rounded-xl border border-[#334155] shadow-professional">
                       <div className="flex items-center justify-between mb-3">
                         <p className="font-semibold text-base">{interview.role}</p>
                         <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
@@ -603,7 +682,7 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
                         </Badge>
                       </div>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{interview.company}</p>
-                      <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                      <p className="text-sm text-[#6366F1] font-medium">
                         {new Date(interview.date).toLocaleDateString()} at {interview.time}
                       </p>
                     </div>
@@ -622,15 +701,15 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
             >
               <div className="space-y-4">
                 <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                  <CheckCircle className="h-5 w-5 text-[#10B981] mt-0.5 flex-shrink-0" />
                   <p className="text-sm font-medium">Complete daily missions to maintain your streak and earn bonus XP</p>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                  <CheckCircle className="h-5 w-5 text-[#10B981] mt-0.5 flex-shrink-0" />
                   <p className="text-sm font-medium">Track all your applications to identify patterns and improve your approach</p>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                  <CheckCircle className="h-5 w-5 text-[#10B981] mt-0.5 flex-shrink-0" />
                   <p className="text-sm font-medium">Use the daily notebook to reflect on your progress and learnings</p>
                 </div>
               </div>

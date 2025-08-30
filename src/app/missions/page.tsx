@@ -530,14 +530,18 @@ export default function MissionsPage() {
         onStart={handleBreakStart}
         autoStart={settings.focus.autoStartBreaks}
       />
-      <div className="space-y-6 max-w-6xl mx-auto">
-        {/* Header Section */}
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Focus Missions
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            Stay focused and productive with timed work sessions
+      <div className="space-y-8 max-w-7xl mx-auto px-4">
+        {/* Enhanced Header Section */}
+        <div className="text-center space-y-6">
+          <div className="relative inline-block">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-600 to-cyan-600 dark:from-white dark:via-blue-400 dark:to-cyan-400 bg-clip-text text-transparent">
+              Focus Missions
+            </h1>
+            <div className="absolute -top-3 -right-3 w-6 h-6 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full shadow-lg"></div>
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"></div>
+          </div>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            Stay focused and productive with timed work sessions and distraction blocking
           </p>
         </div>
 

@@ -27,6 +27,8 @@ import {
   Sparkles,
   Trash2
 } from 'lucide-react'
+import { StarRating } from '@/components/ui/star-rating'
+import { useToast } from '@/hooks/use-toast'
 
 type ResourceType = 'ARTICLE' | 'VIDEO' | 'TUTORIAL' | 'COURSE' | 'BOOK' | 'PROJECT' | 'PODCAST'
 type DifficultyLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT'
@@ -53,6 +55,7 @@ interface LearningResource {
 
 export default function LearningPage() {
   const { user } = useAuth()
+  const { toast } = useToast()
   const [resources, setResources] = useState<LearningResource[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -73,6 +76,7 @@ export default function LearningPage() {
   const [typeFilter, setTypeFilter] = useState<ResourceType | 'ALL'>('ALL')
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyLevel | 'ALL'>('ALL')
   const [statusFilter, setStatusFilter] = useState<ProgressStatus | 'ALL'>('ALL')
+  const [ratingFilter, setRatingFilter] = useState<number | 'ALL'>('ALL')
 
   // Fetch learning resources
   useEffect(() => {
@@ -87,7 +91,8 @@ export default function LearningPage() {
           ...(searchTerm && { search: searchTerm }),
           ...(typeFilter !== 'ALL' && { type: typeFilter }),
           ...(difficultyFilter !== 'ALL' && { difficulty: difficultyFilter }),
-          ...(statusFilter !== 'ALL' && { status: statusFilter })
+          ...(statusFilter !== 'ALL' && { status: statusFilter }),
+          ...(ratingFilter !== 'ALL' && { rating: ratingFilter.toString() })
         })
 
         const response = await fetch(`/api/learning/resources?${params}`)
@@ -106,7 +111,7 @@ export default function LearningPage() {
     }
 
     fetchResources()
-  }, [user?.id, searchTerm, typeFilter, difficultyFilter, statusFilter])
+  }, [user?.id, searchTerm, typeFilter, difficultyFilter, statusFilter, ratingFilter])
 
   // Handle learning actions
   const handleLearningAction = async (resourceId: string, action: string, additionalData?: any) => {
@@ -132,13 +137,27 @@ export default function LearningPage() {
       const data = await response.json()
       
       if (data.success) {
+        // Show completion toast if resource was completed
+        if (action === 'complete') {
+          const completedResource = resources.find(r => r.id === resourceId)
+          if (completedResource) {
+            toast({
+              title: "🎉 Learning Resource Completed!",
+              description: `Great job! You completed "${completedResource.title}"!`,
+              variant: "default",
+              actionUrl: "/learning"
+            })
+          }
+        }
+
         // Refresh the resources to show updated progress
         const params = new URLSearchParams({
           userId: user.id,
           ...(searchTerm && { search: searchTerm }),
           ...(typeFilter !== 'ALL' && { type: typeFilter }),
           ...(difficultyFilter !== 'ALL' && { difficulty: difficultyFilter }),
-          ...(statusFilter !== 'ALL' && { status: statusFilter })
+          ...(statusFilter !== 'ALL' && { status: statusFilter }),
+          ...(ratingFilter !== 'ALL' && { rating: ratingFilter.toString() })
         })
 
         const refreshResponse = await fetch(`/api/learning/resources?${params}`)
@@ -150,6 +169,44 @@ export default function LearningPage() {
       }
     } catch (err) {
       // Error updating learning progress
+    }
+  }
+
+  // Handle rating changes
+  const handleRatingChange = async (resourceId: string, rating: number) => {
+    if (!user?.id) {
+      alert('Please log in to rate learning resources')
+      return
+    }
+
+    try {
+      const response = await fetch('/api/learning/resources', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          resourceId,
+          action: 'rate',
+          rating
+        })
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        // Update the local state to reflect the rating change
+        setResources(prevResources => 
+          prevResources.map(resource => 
+            resource.id === resourceId 
+              ? { ...resource, rating }
+              : resource
+          )
+        )
+      }
+    } catch (err) {
+      console.error('Error updating rating:', err)
     }
   }
 
@@ -249,7 +306,8 @@ export default function LearningPage() {
           ...(searchTerm && { search: searchTerm }),
           ...(typeFilter !== 'ALL' && { type: typeFilter }),
           ...(difficultyFilter !== 'ALL' && { difficulty: difficultyFilter }),
-          ...(statusFilter !== 'ALL' && { status: statusFilter })
+          ...(statusFilter !== 'ALL' && { status: statusFilter }),
+          ...(ratingFilter !== 'ALL' && { rating: ratingFilter.toString() })
         })
 
         const response = await fetch(`/api/learning/resources?${params}`)
@@ -305,6 +363,17 @@ export default function LearningPage() {
     return resources.filter(r => r.status === status).length
   }
 
+  const getRatedResourcesCount = () => {
+    return resources.filter(r => r.rating && r.rating > 0).length
+  }
+
+  const getAverageRating = () => {
+    const ratedResources = resources.filter(r => r.rating && r.rating > 0)
+    if (ratedResources.length === 0) return 0
+    const totalRating = ratedResources.reduce((sum, r) => sum + (r.rating || 0), 0)
+    return Math.round((totalRating / ratedResources.length) * 10) / 10
+  }
+
   const totalTimeSpent = resources
     .filter(r => r.status === 'COMPLETED')
     .reduce((total, r) => total + (r.timeSpent || 0), 0)
@@ -349,60 +418,124 @@ export default function LearningPage() {
         </div>
       }
     >
-      <div className="space-y-6 max-w-6xl mx-auto">
-        {/* Header Section */}
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Learning Hub
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            Discover, track, and master new skills for your career growth
+      <div className="space-y-8 max-w-7xl mx-auto px-4">
+        {/* Enhanced Header Section */}
+        <div className="text-center space-y-6">
+          <div className="relative inline-block">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-purple-600 to-pink-600 dark:from-white dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+              Learning Hub
+            </h1>
+            <div className="absolute -top-3 -right-3 w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full shadow-lg"></div>
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
+          </div>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            Discover, track, and master new skills for your career growth with personalized learning paths
           </p>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          <Card className="w-full">
-            <CardContent className="p-6 h-24 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-foreground">{getStatusCount('TOTAL')}</div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">Total Resources</div>
+        {/* Enhanced Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          <Card className="border-0 bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-blue-900/20 dark:via-cyan-900/20 dark:to-blue-800/20 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10"></div>
+            <CardContent className="p-4 relative">
+              <div className="text-center space-y-2">
+                <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">{getStatusCount('TOTAL')}</div>
+                <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Total Resources</div>
               </div>
             </CardContent>
           </Card>
-          <Card className="w-full">
-            <CardContent className="p-6 h-24 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{getStatusCount('COMPLETED')}</div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">Completed</div>
+          <Card className="border-0 bg-gradient-to-br from-emerald-50 via-green-50 to-emerald-100 dark:from-emerald-900/20 dark:via-green-900/20 dark:to-emerald-800/20 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10"></div>
+            <CardContent className="p-4 relative">
+              <div className="text-center space-y-2">
+                <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">{getStatusCount('COMPLETED')}</div>
+                <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">Completed</div>
               </div>
             </CardContent>
           </Card>
-          <Card className="w-full">
-            <CardContent className="p-6 h-24 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{getStatusCount('IN_PROGRESS')}</div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">In Progress</div>
+          <Card className="border-0 bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-100 dark:from-yellow-900/20 dark:via-amber-900/20 dark:to-yellow-800/20 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-amber-500/10"></div>
+            <CardContent className="p-4 relative">
+              <div className="text-center space-y-2">
+                <div className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">{getStatusCount('IN_PROGRESS')}</div>
+                <div className="text-xs font-semibold text-yellow-600 dark:text-yellow-400 uppercase tracking-wide">In Progress</div>
               </div>
             </CardContent>
           </Card>
-          <Card className="w-full">
-            <CardContent className="p-6 h-24 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{getStatusCount('NOT_STARTED')}</div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">Not Started</div>
+          <Card className="border-0 bg-gradient-to-br from-orange-50 via-red-50 to-orange-100 dark:from-orange-900/20 dark:via-red-900/20 dark:to-orange-800/20 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10"></div>
+            <CardContent className="p-4 relative">
+              <div className="text-center space-y-2">
+                <div className="text-2xl font-bold text-orange-900 dark:text-orange-100">{getRatedResourcesCount()}</div>
+                <div className="text-xs font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wide">Rated Resources</div>
               </div>
             </CardContent>
           </Card>
-          <Card className="w-full">
-            <CardContent className="p-6 h-24 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{Math.floor(totalTimeSpent / 60)}h</div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">Time Learned</div>
+          <Card className="border-0 bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 dark:from-pink-900/20 dark:via-rose-900/20 dark:to-pink-800/20 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-rose-500/10"></div>
+            <CardContent className="p-4 relative">
+              <div className="text-center space-y-2">
+                <div className="text-2xl font-bold text-pink-900 dark:text-pink-100">{getAverageRating()}</div>
+                <div className="text-xs font-semibold text-pink-600 dark:text-pink-400 uppercase tracking-wide">Avg Rating</div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-100 dark:from-purple-900/20 dark:via-indigo-900/20 dark:to-purple-800/20 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-indigo-500/10"></div>
+            <CardContent className="p-4 relative">
+              <div className="text-center space-y-2">
+                <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">{Math.floor(totalTimeSpent / 60)}h</div>
+                <div className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide">Time Learned</div>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Top Rated Resources */}
+        {getRatedResourcesCount() > 0 && (
+          <Card className="border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-yellow-900 dark:text-yellow-200">
+                <Star className="h-5 w-5" />
+                <span>Your Top Rated Resources</span>
+              </CardTitle>
+              <CardDescription className="text-yellow-700 dark:text-yellow-300">
+                Your highest-rated learning resources
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {resources
+                  .filter(r => r.rating && r.rating >= 4)
+                  .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+                  .slice(0, 3)
+                  .map((resource) => (
+                    <div key={resource.id} className="flex items-center space-x-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                      <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center">
+                        {getTypeIcon(resource.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm text-yellow-900 dark:text-yellow-200 truncate">
+                          {resource.title}
+                        </h4>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <StarRating
+                            rating={resource.rating || 0}
+                            readonly={true}
+                            size="sm"
+                            showValue={false}
+                          />
+                          <span className="text-xs text-yellow-700 dark:text-yellow-300">
+                            {resource.rating}/5
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Surprise Me Section */}
         <Card className="border-purple-300 bg-purple-50 dark:bg-purple-900/20">
@@ -559,6 +692,20 @@ export default function LearningPage() {
                 <option value="IN_PROGRESS">In Progress</option>
                 <option value="COMPLETED">Completed</option>
               </select>
+
+              <select
+                value={ratingFilter}
+                onChange={(e) => setRatingFilter(e.target.value === 'ALL' ? 'ALL' : parseInt(e.target.value))}
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-black dark:text-white"
+              >
+                <option value="ALL">All Ratings</option>
+                <option value="5">5 Stars</option>
+                <option value="4">4+ Stars</option>
+                <option value="3">3+ Stars</option>
+                <option value="2">2+ Stars</option>
+                <option value="1">1+ Stars</option>
+                <option value="0">Unrated</option>
+              </select>
             </div>
           </CardContent>
         </Card>
@@ -663,19 +810,24 @@ export default function LearningPage() {
                     </div>
                   )}
 
-                  {resource.rating && (
-                    <div className="flex items-center space-x-1">
-                      {[1, 2, 3, 4, 5].map(star => (
-                        <Star
-                          key={star}
-                          className={`h-3 w-3 ${
-                            star <= resource.rating! ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
-                      <span className="text-xs text-gray-600 dark:text-gray-400 ml-1">({resource.rating}/5)</span>
+                  {/* Star Rating */}
+                  <div className="border-t border-gray-100 dark:border-gray-700 pt-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Star className="h-4 w-4 text-yellow-500" />
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          {resource.rating ? `Your Rating: ${resource.rating}/5` : 'Rate this resource'}
+                        </span>
+                      </div>
+                      <StarRating
+                        rating={resource.rating || 0}
+                        onRatingChange={(rating) => handleRatingChange(resource.id, rating)}
+                        readonly={false}
+                        size="md"
+                        showValue={false}
+                      />
                     </div>
-                  )}
+                  </div>
 
                   <div className="flex space-x-2">
                     {resource.status === 'NOT_STARTED' && (

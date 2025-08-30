@@ -1,5 +1,6 @@
 import { prisma } from './db'
 import { ActivityType } from '@prisma/client'
+import { updateDailyChallengeProgress } from './daily-challenges'
 
 interface ActivityData {
   userId: string
@@ -41,7 +42,7 @@ export async function logMissionStarted(userId: string, missionTitle: string, mi
 }
 
 export async function logMissionCompleted(userId: string, missionTitle: string, missionId: string, xpEarned: number) {
-  return logActivity({
+  const activity = await logActivity({
     userId,
     type: 'MISSION_COMPLETED',
     title: `Completed mission: ${missionTitle}`,
@@ -49,16 +50,58 @@ export async function logMissionCompleted(userId: string, missionTitle: string, 
     metadata: { missionId, xpEarned },
     xpEarned: xpEarned >= 0 ? xpEarned : undefined
   })
+  
+  // Update daily challenge progress
+  try {
+    const challengeResult = await updateDailyChallengeProgress(userId)
+    if (challengeResult?.newlyCompleted) {
+      // Store completion info in activity metadata for client retrieval
+      activity.metadata = JSON.stringify({
+        ...(activity.metadata ? JSON.parse(activity.metadata as string) : {}),
+        challengeCompleted: challengeResult.newlyCompleted
+      })
+      
+      await prisma.activity.update({
+        where: { id: activity.id },
+        data: { metadata: activity.metadata }
+      })
+    }
+  } catch (error) {
+    console.error('Error updating daily challenge progress after mission completion:', error)
+  }
+  
+  return activity
 }
 
 export async function logJobApplied(userId: string, role: string, company: string, jobId: string) {
-  return logActivity({
+  const activity = await logActivity({
     userId,
     type: 'JOB_APPLIED',
     title: `Applied to ${role} at ${company}`,
     description: 'You submitted a job application',
     metadata: { jobId, role, company }
   })
+  
+  // Update daily challenge progress
+  try {
+    const challengeResult = await updateDailyChallengeProgress(userId)
+    if (challengeResult?.newlyCompleted) {
+      // Store completion info in activity metadata for client retrieval
+      activity.metadata = JSON.stringify({
+        ...(activity.metadata ? JSON.parse(activity.metadata as string) : {}),
+        challengeCompleted: challengeResult.newlyCompleted
+      })
+      
+      await prisma.activity.update({
+        where: { id: activity.id },
+        data: { metadata: activity.metadata }
+      })
+    }
+  } catch (error) {
+    console.error('Error updating daily challenge progress after job application:', error)
+  }
+  
+  return activity
 }
 
 export async function logJobStatusUpdated(userId: string, role: string, company: string, oldStatus: string, newStatus: string, jobId: string) {
@@ -72,13 +115,34 @@ export async function logJobStatusUpdated(userId: string, role: string, company:
 }
 
 export async function logNotebookEntryCreated(userId: string, entryTitle: string, entryId: string) {
-  return logActivity({
+  const activity = await logActivity({
     userId,
     type: 'NOTEBOOK_ENTRY_CREATED',
     title: `Created journal entry: ${entryTitle}`,
     description: 'You added a new journal entry',
     metadata: { entryId, title: entryTitle }
   })
+  
+  // Update daily challenge progress
+  try {
+    const challengeResult = await updateDailyChallengeProgress(userId)
+    if (challengeResult?.newlyCompleted) {
+      // Store completion info in activity metadata for client retrieval
+      activity.metadata = JSON.stringify({
+        ...(activity.metadata ? JSON.parse(activity.metadata as string) : {}),
+        challengeCompleted: challengeResult.newlyCompleted
+      })
+      
+      await prisma.activity.update({
+        where: { id: activity.id },
+        data: { metadata: activity.metadata }
+      })
+    }
+  } catch (error) {
+    console.error('Error updating daily challenge progress after notebook entry creation:', error)
+  }
+  
+  return activity
 }
 
 export async function logNotebookEntryUpdated(userId: string, entryTitle: string, entryId: string) {
@@ -102,7 +166,7 @@ export async function logLearningStarted(userId: string, resourceTitle: string, 
 }
 
 export async function logLearningCompleted(userId: string, resourceTitle: string, resourceId: string, timeSpent: number, xpEarned?: number) {
-  return logActivity({
+  const activity = await logActivity({
     userId,
     type: 'LEARNING_COMPLETED',
     title: `Completed learning: ${resourceTitle}`,
@@ -110,6 +174,27 @@ export async function logLearningCompleted(userId: string, resourceTitle: string
     metadata: { resourceId, title: resourceTitle, timeSpent },
     xpEarned: xpEarned !== undefined ? xpEarned : undefined
   })
+  
+  // Update daily challenge progress
+  try {
+    const challengeResult = await updateDailyChallengeProgress(userId)
+    if (challengeResult?.newlyCompleted) {
+      // Store completion info in activity metadata for client retrieval
+      activity.metadata = JSON.stringify({
+        ...(activity.metadata ? JSON.parse(activity.metadata as string) : {}),
+        challengeCompleted: challengeResult.newlyCompleted
+      })
+      
+      await prisma.activity.update({
+        where: { id: activity.id },
+        data: { metadata: activity.metadata }
+      })
+    }
+  } catch (error) {
+    console.error('Error updating daily challenge progress after learning completion:', error)
+  }
+  
+  return activity
 }
 
 export async function logLearningProgressUpdated(userId: string, resourceTitle: string, resourceId: string, progress: number) {

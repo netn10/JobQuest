@@ -52,25 +52,24 @@ export function DashboardLayout({ children, title, headerChildren }: DashboardLa
     }
   }
 
-
   // Show loading state until sidebar state is loaded
   if (!isLoaded) {
     return (
       <HydrationSafe
         fallback={
-          <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+          <div className="flex h-screen bg-[#0A0A0F]">
             <div className="flex-1 flex flex-col overflow-hidden">
               <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3B82F6]"></div>
               </div>
             </div>
           </div>
         }
       >
-        <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="flex h-screen bg-[#0A0A0F]">
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3B82F6]"></div>
             </div>
           </div>
         </div>
@@ -81,20 +80,20 @@ export function DashboardLayout({ children, title, headerChildren }: DashboardLa
   return (
     <HydrationSafe
       fallback={
-        <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="flex h-screen bg-[#0A0A0F]">
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3B82F6]"></div>
             </div>
           </div>
         </div>
       }
     >
-      <div className="flex h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20 w-full">
+      <div className="flex h-screen bg-gradient-to-br from-[#0A0A0F] via-[#0F172A] to-[#1E293B]/20 w-full">
         {/* Mobile sidebar overlay */}
         {sidebarOpen && (
           <div 
-            className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
             onClick={() => setSidebarOpen(false)}
             style={{ touchAction: 'none' }}
           />
@@ -119,9 +118,9 @@ export function DashboardLayout({ children, title, headerChildren }: DashboardLa
           
           <div
             ref={dragHandleRef}
-            className="hidden lg:block absolute top-0 -right-1 w-2 h-full bg-transparent hover:bg-blue-500/20 transition-colors group-hover:bg-blue-500/10"
+            className="hidden lg:block absolute top-0 -right-1 w-2 h-full bg-transparent hover:bg-[#3B82F6]/20 transition-colors group-hover:bg-[#3B82F6]/10"
           >
-            <div className="w-0.5 h-full bg-gray-300 dark:bg-gray-600 ml-0.75 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="w-0.5 h-full bg-[#475569] ml-0.75 opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         </div>
         

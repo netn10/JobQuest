@@ -337,10 +337,10 @@ export default function ActivitiesPage() {
         {/* Enhanced Header Section with animated elements */}
         <div className="text-center space-y-6">
           <div className="relative inline-block">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-600 to-purple-600 dark:from-white dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent animate-pulse">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-600 to-purple-600 dark:from-white dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
               Activity History
             </h1>
-            <div className="absolute -top-3 -right-3 w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-bounce shadow-lg"></div>
+            <div className="absolute -top-3 -right-3 w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full shadow-lg"></div>
             <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
           </div>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
@@ -350,60 +350,60 @@ export default function ActivitiesPage() {
 
         {/* Enhanced Stats Overview with better animations */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 border-0 bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-blue-900/20 dark:via-cyan-900/20 dark:to-blue-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <Card className="border-0 bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-blue-900/20 dark:via-cyan-900/20 dark:to-blue-800/20 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10"></div>
             <CardContent className="p-6 relative">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Total Activities</p>
                   <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">{stats.total}</p>
                 </div>
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 shadow-lg">
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
                   <Activity className="h-7 w-7 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 border-0 bg-gradient-to-br from-emerald-50 via-green-50 to-emerald-100 dark:from-emerald-900/20 dark:via-green-900/20 dark:to-emerald-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <Card className="border-0 bg-gradient-to-br from-emerald-50 via-green-50 to-emerald-100 dark:from-emerald-900/20 dark:via-green-900/20 dark:to-emerald-800/20 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10"></div>
             <CardContent className="p-6 relative">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">Today</p>
                   <p className="text-3xl font-bold text-emerald-900 dark:text-emerald-100">{stats.today}</p>
                 </div>
-                <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-green-500 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 shadow-lg">
+                <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-green-500 rounded-2xl flex items-center justify-center shadow-lg">
                   <Calendar className="h-7 w-7 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 border-0 bg-gradient-to-br from-purple-50 via-pink-50 to-purple-100 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-purple-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <Card className="border-0 bg-gradient-to-br from-purple-50 via-pink-50 to-purple-100 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-purple-800/20 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10"></div>
             <CardContent className="p-6 relative">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide">This Week</p>
                   <p className="text-3xl font-bold text-purple-900 dark:text-purple-100">{stats.thisWeek}</p>
                 </div>
-                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 shadow-lg">
+                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
                   <TrendingUp className="h-7 w-7 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 border-0 bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-100 dark:from-yellow-900/20 dark:via-amber-900/20 dark:to-yellow-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <Card className="border-0 bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-100 dark:from-yellow-900/20 dark:via-amber-900/20 dark:to-yellow-800/20 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-amber-500/10"></div>
             <CardContent className="p-6 relative">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 uppercase tracking-wide">Total XP</p>
                   <p className="text-3xl font-bold text-yellow-900 dark:text-yellow-100">{stats.totalXP}</p>
                 </div>
-                <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 shadow-lg">
+                <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg">
                   <Zap className="h-7 w-7 text-white" />
                 </div>
               </div>
@@ -493,7 +493,7 @@ export default function ActivitiesPage() {
                 </span>
                 {filteredActivities.length > 0 && (
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs font-semibold">
                       {Math.round((filteredActivities.length / activities.length) * 100)}% match
                     </span>
@@ -538,19 +538,13 @@ export default function ActivitiesPage() {
               return (
                 <Card 
                   key={activity.id || index} 
-                  className="group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 border-0 bg-white dark:bg-gray-800 overflow-hidden relative"
-                  style={{
-                    animationDelay: `${index * 100}ms`
-                  }}
+                  className="border-0 bg-white dark:bg-gray-800 overflow-hidden relative shadow-lg"
                 >
-                  {/* Enhanced animated border gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
-                  <div className="absolute inset-[2px] bg-white dark:bg-gray-800 rounded-2xl"></div>
                   
                   <CardContent className="p-8 relative">
                     <div className="flex items-start space-x-8">
                       {/* Enhanced Icon with better styling */}
-                      <div className={`w-20 h-20 ${getIconBgColor(activity.type)} rounded-3xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-xl`}>
+                      <div className={`w-20 h-20 ${getIconBgColor(activity.type)} rounded-3xl flex items-center justify-center flex-shrink-0 shadow-xl`}>
                         <IconComponent className={`h-10 w-10 ${getIconColor(activity.type)}`} />
                       </div>
                       
@@ -558,7 +552,7 @@ export default function ActivitiesPage() {
                       <div className="flex-1 min-w-0 space-y-4">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 leading-tight">
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
                               {activity.title}
                             </h3>
                             {activity.description && (
@@ -578,7 +572,7 @@ export default function ActivitiesPage() {
                               }`}>
                                 <Sparkles className={`h-5 w-5 ${
                                   activity.xpEarned > 0 
-                                    ? 'text-green-600 dark:text-green-400 animate-pulse'
+                                    ? 'text-green-600 dark:text-green-400'
                                     : 'text-gray-500 dark:text-gray-400'
                                 }`} />
                                 <span className={`text-sm font-bold ${
@@ -609,8 +603,8 @@ export default function ActivitiesPage() {
                             <span className="text-sm text-gray-400 dark:text-gray-500 font-medium">
                               {formatDate(activity.timestamp)}
                             </span>
-                            <div className="w-8 h-8 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-full flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-blue-100 group-hover:to-purple-100 dark:group-hover:from-blue-900/30 dark:group-hover:to-purple-900/30 transition-all duration-300">
-                              <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors duration-300" />
+                            <div className="w-8 h-8 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-full flex items-center justify-center">
+                              <ArrowRight className="h-4 w-4 text-gray-400" />
                             </div>
                           </div>
                         </div>
@@ -628,7 +622,7 @@ export default function ActivitiesPage() {
                     <div className="w-24 h-24 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-3xl flex items-center justify-center">
                       <Activity className="h-12 w-12 text-gray-400" />
                     </div>
-                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full animate-pulse"></div>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full"></div>
                   </div>
                   <div className="space-y-4">
                     <h3 className="text-2xl font-bold text-gray-700 dark:text-gray-300">

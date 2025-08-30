@@ -61,13 +61,13 @@ export function CollapsibleCard({
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-              <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              <div className="h-6 w-6 bg-[#334155] rounded animate-pulse" />
+              <div className="h-5 w-32 bg-[#334155] rounded animate-pulse" />
             </div>
             {headerChildren}
           </div>
           {description && (
-            <div className="h-4 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse ml-8" />
+            <div className="h-4 w-48 bg-[#334155] rounded animate-pulse ml-8" />
           )}
         </CardHeader>
       </Card>
@@ -83,15 +83,15 @@ export function CollapsibleCard({
               variant="ghost"
               size="sm"
               onClick={handleToggle}
-              className="h-7 w-7 p-0 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-all duration-200"
+              className="h-7 w-7 p-0 hover:bg-[#3B82F6]/10 rounded-full transition-all duration-200"
             >
               <ChevronDown className={cn(
-                "h-4 w-4 transition-transform duration-300 ease-in-out",
+                "h-4 w-4 transition-transform duration-300 ease-in-out text-[#3B82F6]",
                 isExpanded ? "rotate-0" : "-rotate-90"
               )} />
             </Button>
             <CardTitle className="flex items-center gap-3 text-xl font-bold">
-              {Icon && <Icon className="h-6 w-6 text-blue-600" />}
+              {Icon && <Icon className="h-6 w-6 text-[#3B82F6]" />}
               {title}
             </CardTitle>
           </div>

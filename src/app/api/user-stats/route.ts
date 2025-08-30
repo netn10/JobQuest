@@ -23,6 +23,17 @@ export async function GET(request: NextRequest) {
           where: {
             status: { in: ['APPLIED', 'SCREENING'] }
           }
+        },
+        notebookEntries: true,
+        learningProgress: {
+          where: {
+            status: 'COMPLETED'
+          }
+        },
+        achievements: {
+          include: {
+            achievement: true
+          }
         }
       }
     })
@@ -50,6 +61,12 @@ export async function GET(request: NextRequest) {
     const xpForNextLevel = user.level * 100
     const xpProgress = user.totalXp % 100
 
+    // Calculate additional stats
+    const notebookEntries = user.notebookEntries.length
+    const completedLearning = user.learningProgress.length
+    const unlockedAchievements = user.achievements.length
+    const totalLearningHours = user.learningProgress.reduce((total, progress) => total + (progress.timeSpent || 0), 0) / 60
+
     return NextResponse.json({
       totalXp: user.totalXp,
       level: user.level,
@@ -58,7 +75,11 @@ export async function GET(request: NextRequest) {
       applications: user.jobApplications.length,
       pendingResponses: user.jobApplications.filter(app => app.status === 'APPLIED' || app.status === 'SCREENING').length,
       xpForNextLevel,
-      xpProgress
+      xpProgress,
+      notebookEntries,
+      completedLearning,
+      unlockedAchievements,
+      totalLearningHours: Math.round(totalLearningHours * 10) / 10
     })
 
   } catch (error) {

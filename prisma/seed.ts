@@ -4,6 +4,32 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
+  // Create a test user for development
+  const testUserEmail = 'test@example.com'
+  const existingUser = await prisma.user.findUnique({
+    where: { email: testUserEmail }
+  })
+
+  if (!existingUser) {
+    const hashedPassword = await bcrypt.hash('password123', 10)
+    const testUser = await prisma.user.create({
+      data: {
+        email: testUserEmail,
+        password: hashedPassword,
+        name: 'Test User',
+        xp: 0,
+        level: 1,
+        totalXp: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        theme: 'light',
+        notifications: true,
+        timezone: 'UTC'
+      }
+    })
+    console.log('Created test user:', testUser.id)
+  }
+
   // Mock user removed - users should register normally
 
   // Sample missions removed - will be created when users register

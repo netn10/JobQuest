@@ -160,14 +160,18 @@ export default function NotebookPage() {
 
   return (
     <DashboardLayout title="Daily Notebook">
-      <div className="space-y-6 max-w-6xl mx-auto">
-        {/* Header Section */}
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Daily Notebook
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            Capture your thoughts, reflections, and daily insights
+      <div className="space-y-8 max-w-7xl mx-auto px-4">
+        {/* Enhanced Header Section */}
+        <div className="text-center space-y-6">
+          <div className="relative inline-block">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-orange-600 to-red-600 dark:from-white dark:via-orange-400 dark:to-red-400 bg-clip-text text-transparent">
+              Daily Notebook
+            </h1>
+            <div className="absolute -top-3 -right-3 w-6 h-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-full shadow-lg"></div>
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-full"></div>
+          </div>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            Capture your thoughts, reflections, and daily insights in your personal journal
           </p>
         </div>
 
@@ -194,14 +198,23 @@ export default function NotebookPage() {
           <div className="lg:col-span-2 flex flex-col">
 
             {/* Main Writing Area */}
-            <Card className="flex-1 flex flex-col">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Journal Entry</span>
+            <Card className="flex-1 flex flex-col border-0 shadow-xl bg-gradient-to-br from-orange-50 via-white to-red-50 dark:from-orange-900/20 dark:via-gray-800 dark:to-red-900/20 overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-red-500/5 to-pink-500/5"></div>
+              <CardHeader className="relative">
+                <CardTitle className="flex items-center justify-between text-gray-900 dark:text-gray-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                      <BookOpen className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <span className="text-xl font-bold">Journal Entry</span>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 font-normal">for {selectedDate}</p>
+                    </div>
+                  </div>
                   <Button
                     onClick={handleSave}
                     disabled={isSaving}
-                    size="sm"
+                    className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                   >
                     {isSaving ? (
                       <>Saving...</>
@@ -214,12 +227,12 @@ export default function NotebookPage() {
                   </Button>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="flex-1 flex flex-col">
+              <CardContent className="flex-1 flex flex-col relative">
                 <Textarea
                   placeholder="What's on your mind today? Reflect on your job search progress, learnings, challenges, or any thoughts you'd like to capture..."
                   value={currentEntry}
                   onChange={(e) => setCurrentEntry(e.target.value)}
-                  className="flex-1 resize-none"
+                  className="flex-1 resize-none border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 p-4 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-500"
                 />
                 <div className="mt-2 text-sm text-gray-500 flex justify-between">
                   <span>{currentEntry.length} characters</span>

@@ -24,7 +24,8 @@ import {
   Bot,
   CheckCircle,
   AlertCircle,
-  XCircle
+  XCircle,
+  Target
 } from 'lucide-react'
 
 interface UserSettings {
@@ -47,6 +48,16 @@ interface UserSettings {
     difficultyPreference: 'EASY' | 'NORMAL' | 'HARD'
     showLevelProgress: boolean
     showStreakCounter: boolean
+  }
+  dailyChallenges: {
+    notebookEntriesTarget: number
+    learningMaterialsTarget: number
+    jobApplicationsTarget: number
+    focusSessionsTarget: number
+    enableNotebookChallenge: boolean
+    enableLearningChallenge: boolean
+    enableJobApplicationChallenge: boolean
+    enableFocusChallenge: boolean
   }
   focus: {
     defaultMissionDuration: number
@@ -83,18 +94,37 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [isTestingApiKey, setIsTestingApiKey] = useState(false)
   const [isRequestingPermission, setIsRequestingPermission] = useState(false)
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
   const [settings, setSettings] = useState<UserSettings>({
     profile: {
       name: user?.name || '',
       email: user?.email || '',
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
     },
-    notifications: notificationPreferences,
+    notifications: notificationPreferences || {
+      missionReminders: true,
+      achievementUnlocks: true,
+      dailyChallenges: true,
+      jobApplicationFollowups: true,
+      learningsuggestions: true,
+      streakWarnings: true,
+      emailNotifications: false
+    },
     gamification: {
       xpMultiplier: 1.0,
       difficultyPreference: 'NORMAL',
       showLevelProgress: true,
       showStreakCounter: true
+    },
+    dailyChallenges: {
+      notebookEntriesTarget: 1,
+      learningMaterialsTarget: 2,
+      jobApplicationsTarget: 1,
+      focusSessionsTarget: 2,
+      enableNotebookChallenge: true,
+      enableLearningChallenge: true,
+      enableJobApplicationChallenge: true,
+      enableFocusChallenge: true
     },
     focus: {
       defaultMissionDuration: 25,
@@ -122,10 +152,12 @@ export default function SettingsPage() {
 
   // Sync notification preferences from context
   useEffect(() => {
-    setSettings(prev => ({
-      ...prev,
-      notifications: notificationPreferences
-    }))
+    if (notificationPreferences) {
+      setSettings(prev => ({
+        ...prev,
+        notifications: notificationPreferences
+      }))
+    }
   }, [notificationPreferences])
 
   // Update settings when user data is available
@@ -148,11 +180,34 @@ export default function SettingsPage() {
       if (!user) return
       
       try {
+        // Load general settings
         const response = await fetch(`/api/settings?userId=${user.id}`)
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.settings) {
-            setSettings(data.settings)
+            setSettings(prev => ({
+              ...prev,
+              ...data.settings
+            }))
+          }
+        }
+
+        // Load daily challenge settings
+        const dailyChallengeResponse = await fetch('/api/daily-challenges/settings', {
+          headers: {
+            'Authorization': `Bearer ${user.id}`
+          }
+        })
+        if (dailyChallengeResponse.ok) {
+          const dailyChallengeData = await dailyChallengeResponse.json()
+          if (dailyChallengeData.success && dailyChallengeData.settings) {
+            setSettings(prev => ({
+              ...prev,
+              dailyChallenges: {
+                ...prev.dailyChallenges,
+                ...dailyChallengeData.settings
+              }
+            }))
           }
         }
       } catch (error) {
@@ -190,6 +245,7 @@ export default function SettingsPage() {
 
     setIsSaving(true)
     try {
+      // Save general settings
       const response = await fetch('/api/settings', {
         method: 'PUT',
         headers: {
@@ -201,20 +257,37 @@ export default function SettingsPage() {
         })
       })
 
-      if (response.ok) {
-        toast({
-          title: "Settings Saved",
-          description: "Your settings have been saved successfully.",
-        })
-        // Update the user context with new profile data
-        updateUser({
-          name: settings.profile.name,
-          email: settings.profile.email
-        })
-      } else {
+      if (!response.ok) {
         const error = await response.json()
         throw new Error(error.error || 'Failed to save settings')
       }
+
+      // Save daily challenge settings separately
+      const dailyChallengeResponse = await fetch('/api/daily-challenges/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.id}`
+        },
+        body: JSON.stringify({
+          settings: settings.dailyChallenges
+        })
+      })
+
+      if (!dailyChallengeResponse.ok) {
+        const error = await dailyChallengeResponse.json()
+        throw new Error(error.error || 'Failed to save daily challenge settings')
+      }
+
+      toast({
+        title: "Settings Saved",
+        description: "Your settings have been saved successfully.",
+      })
+      // Update the user context with new profile data
+      updateUser({
+        name: settings.profile.name,
+        email: settings.profile.email
+      })
     } catch (error) {
       toast({
         title: "Error",
@@ -332,12 +405,101 @@ export default function SettingsPage() {
       body: "This is a test notification. Notifications are working! 🚀",
       tag: 'test-notification'
     })
+
+    toast({
+      title: "Test Notification Sent",
+      description: "Check your notifications to see if it worked!",
+    })
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to delete your account",
+        variant: "destructive"
+      })
+      return
+    }
+
+    const confirmed = window.confirm(
+      "⚠️ WARNING: This action is PERMANENT and cannot be undone!\n\n" +
+      "Deleting your account will permanently remove:\n\n" +
+      "• Your user profile and account\n" +
+      "• All XP, levels, and achievements\n" +
+      "• All missions and focus sessions\n" +
+      "• All job applications and notes\n" +
+      "• All notebook entries\n" +
+      "• All learning progress\n" +
+      "• All daily challenge progress\n" +
+      "• All activity history\n" +
+      "• All settings and preferences\n\n" +
+      "Are you absolutely sure you want to delete your account?"
+    )
+
+    if (!confirmed) return
+
+    const finalConfirmation = window.confirm(
+      "FINAL WARNING: This is your last chance to cancel.\n\n" +
+      "Type 'DELETE' in the next prompt to confirm account deletion."
+    )
+
+    if (!finalConfirmation) return
+
+    const deleteConfirmation = window.prompt(
+      "To confirm account deletion, please type 'DELETE' (case sensitive):"
+    )
+
+    if (deleteConfirmation !== 'DELETE') {
+      toast({
+        title: "Deletion Cancelled",
+        description: "Account deletion was cancelled.",
+      })
+      return
+    }
+
+    setIsDeletingAccount(true)
+    try {
+      const response = await fetch('/api/auth/delete-account', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id
+        })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Account Deleted",
+          description: "Your account has been permanently deleted. You will be redirected to the login page.",
+        })
+        
+        // Redirect to login page after a short delay
+        setTimeout(() => {
+          window.location.href = '/login'
+        }, 2000)
+      } else {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to delete account')
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete account",
+        variant: "destructive"
+      })
+    } finally {
+      setIsDeletingAccount(false)
+    }
   }
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'gamification', label: 'Gamification', icon: Zap },
+    { id: 'dailyChallenges', label: 'Daily Challenges', icon: Target },
     { id: 'focus', label: 'Focus', icon: Clock },
     { id: 'ai', label: 'AI Features', icon: Bot },
     { id: 'privacy', label: 'Privacy', icon: Shield }
@@ -412,21 +574,60 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Timezone</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Timezone
+                      {settings.profile.timezone === Intl.DateTimeFormat().resolvedOptions().timeZone && (
+                        <span className="ml-2 text-xs text-green-600 dark:text-green-400 font-medium">
+                          (Auto-detected)
+                        </span>
+                      )}
+                    </label>
                     <select
                       value={settings.profile.timezone}
                       onChange={(e) => updateSettings('profile', 'timezone', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-black dark:text-white"
                     >
-                      {Intl.supportedValuesOf('timeZone').map(timezone => (
-                        <option key={timezone} value={timezone}>
-                          {timezone.replace(/_/g, ' ')} ({new Date().toLocaleString('en-US', { timeZone: timezone, timeZoneName: 'short' })})
-                        </option>
-                      ))}
+                      {Intl.supportedValuesOf('timeZone')
+                        .sort((a, b) => {
+                          // Put user's detected timezone first
+                          const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+                          if (a === userTimezone) return -1
+                          if (b === userTimezone) return 1
+                          return a.localeCompare(b)
+                        })
+                        .map(timezone => {
+                          const now = new Date()
+                          const timeString = now.toLocaleTimeString('en-US', { 
+                            timeZone: timezone, 
+                            hour: '2-digit', 
+                            minute: '2-digit',
+                            timeZoneName: 'short' 
+                          })
+                          const isUserTimezone = timezone === Intl.DateTimeFormat().resolvedOptions().timeZone
+                          
+                          return (
+                            <option key={timezone} value={timezone}>
+                              {isUserTimezone && '★ '}{timezone.replace(/_/g, ' ')} ({timeString})
+                            </option>
+                          )
+                        })}
                     </select>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      This affects how dates and times are displayed throughout the application
-                    </p>
+                    <div className="flex items-center justify-between mt-2">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        This affects how dates and times are displayed throughout the application. Your detected timezone is marked with ★.
+                      </p>
+                      {settings.profile.timezone !== Intl.DateTimeFormat().resolvedOptions().timeZone && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => updateSettings('profile', 'timezone', Intl.DateTimeFormat().resolvedOptions().timeZone)}
+                          className="text-xs"
+                        >
+                          Use Detected Timezone
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <div className="text-sm text-gray-500 dark:text-gray-400">
                     <p>Your profile information is used to personalize your JobQuest experience.</p>
@@ -587,6 +788,131 @@ export default function SettingsPage() {
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                     </label>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Daily Challenges Settings */}
+            {activeTab === 'dailyChallenges' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-black dark:text-white">Daily Challenge Settings</CardTitle>
+                  <CardDescription className="text-gray-600 dark:text-gray-400">Customize your daily challenge targets and preferences</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Notebook Entries Challenge */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Daily Reflection</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Write notebook entries daily</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.dailyChallenges?.enableNotebookChallenge || false}
+                          onChange={(e) => updateSettings('dailyChallenges', 'enableNotebookChallenge', e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                    {settings.dailyChallenges?.enableNotebookChallenge && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Target: Notebook Entries per Day
+                        </label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={settings.dailyChallenges?.notebookEntriesTarget || 1}
+                          onChange={(e) => updateSettings('dailyChallenges', 'notebookEntriesTarget', parseInt(e.target.value))}
+                          className="w-32"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Learning Materials Challenge */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Knowledge Seeker</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Complete learning materials daily</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.dailyChallenges?.enableLearningChallenge || false}
+                          onChange={(e) => updateSettings('dailyChallenges', 'enableLearningChallenge', e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                    {settings.dailyChallenges?.enableLearningChallenge && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Target: Learning Materials per Day
+                        </label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={settings.dailyChallenges?.learningMaterialsTarget || 2}
+                          onChange={(e) => updateSettings('dailyChallenges', 'learningMaterialsTarget', parseInt(e.target.value))}
+                          className="w-32"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Job Applications Challenge */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Job Hunter</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Submit job applications daily</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.dailyChallenges?.enableJobApplicationChallenge || false}
+                          onChange={(e) => updateSettings('dailyChallenges', 'enableJobApplicationChallenge', e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                    {settings.dailyChallenges?.enableJobApplicationChallenge && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Target: Job Applications per Day
+                        </label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={settings.dailyChallenges?.jobApplicationsTarget || 1}
+                          onChange={(e) => updateSettings('dailyChallenges', 'jobApplicationsTarget', parseInt(e.target.value))}
+                          className="w-32"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">Daily Challenge Info</h4>
+                    <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                      <li>• Daily challenges are consistent and based on your preferences</li>
+                      <li>• You can enable/disable specific challenge types</li>
+                      <li>• Adjust targets to match your daily capacity</li>
+                      <li>• XP rewards scale with your target difficulty</li>
+                      <li>• Changes take effect for new daily challenges</li>
+                    </ul>
                   </div>
                 </CardContent>
               </Card>
@@ -868,9 +1194,15 @@ export default function SettingsPage() {
                         <RotateCcw className={`h-4 w-4 mr-2 ${isResetting ? 'animate-spin' : ''}`} />
                         {isResetting ? 'Resetting...' : 'Reset Progress'}
                       </Button>
-                      <Button variant="outline" size="sm">
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Account
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleDeleteAccount}
+                        disabled={isDeletingAccount}
+                        className="text-red-600 border-red-600 hover:bg-red-50 dark:text-red-400 dark:border-red-400 dark:hover:bg-red-900/20"
+                      >
+                        <Trash2 className={`h-4 w-4 mr-2 ${isDeletingAccount ? 'animate-spin' : ''}`} />
+                        {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
                       </Button>
                     </div>
                   </div>
