@@ -59,10 +59,22 @@ export async function POST(request: NextRequest) {
         where: { userId }
       })
 
+      // First, get the challenge IDs that belong to this user
+      const userChallenges = await tx.dailyChallengeProgress.findMany({
+        where: { userId },
+        select: { challengeId: true }
+      })
+      
+      const challengeIds = userChallenges.map(uc => uc.challengeId)
+
       // Delete all daily challenge progress
       await tx.dailyChallengeProgress.deleteMany({
         where: { userId }
       })
+
+      // Delete ALL daily challenges to clear recent challenges history
+      // This ensures a completely clean slate including recent challenges
+      await tx.dailyChallenge.deleteMany({})
 
       // Delete all activities
       await tx.activity.deleteMany({

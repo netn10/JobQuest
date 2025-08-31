@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { useDailyChallengeNotifications } from '@/components/daily-challenge-notification'
 
@@ -14,6 +14,12 @@ export function useDailyChallengeCompletionHandler() {
   const { toast } = useToast()
   const { addNotification } = useDailyChallengeNotifications()
   const [lastProcessedActivityId, setLastProcessedActivityId] = useState<string | null>(null)
+  const lastProcessedActivityIdRef = useRef<string | null>(null)
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    lastProcessedActivityIdRef.current = lastProcessedActivityId
+  }, [lastProcessedActivityId])
 
   const checkForChallengeCompletions = async () => {
     try {
@@ -29,7 +35,7 @@ export function useDailyChallengeCompletionHandler() {
       
       // Find activities with challenge completion info that haven't been processed yet
       const completionActivities = activities.filter((activity: any) => {
-        if (activity.id === lastProcessedActivityId) return false
+        if (activity.id === lastProcessedActivityIdRef.current) return false
         
         try {
           const metadata = typeof activity.metadata === 'string' 
@@ -73,7 +79,9 @@ export function useDailyChallengeCompletionHandler() {
 
       // Update the last processed activity ID to avoid duplicates
       if (completionActivities.length > 0) {
-        setLastProcessedActivityId(completionActivities[completionActivities.length - 1].id)
+        const newLastProcessedId = completionActivities[completionActivities.length - 1].id
+        setLastProcessedActivityId(newLastProcessedId)
+        lastProcessedActivityIdRef.current = newLastProcessedId
       }
       
     } catch (error) {
@@ -81,11 +89,48 @@ export function useDailyChallengeCompletionHandler() {
     }
   }
 
-  // Check for completions when activities are logged
+  // Check for completions on mount and when external events occur
   useEffect(() => {
-    const intervalId = setInterval(checkForChallengeCompletions, 2000) // Check every 2 seconds
-    return () => clearInterval(intervalId)
-  }, [lastProcessedActivityId])
+    // Check immediately on mount only
+    checkForChallengeCompletions()
+
+    // Listen for custom activity logged events
+    const handleActivityLogged = () => {
+      setTimeout(checkForChallengeCompletions, 100) // Small delay to ensure DB is updated
+    }
+
+    // Listen for direct daily challenge completion events
+    const handleDailyChallengeCompleted = (event: CustomEvent) => {
+      const challengeData = event.detail
+      
+      // Show notification popup
+      addNotification({
+        title: challengeData.challengeTitle,
+        description: challengeData.challengeDescription,
+        xpReward: challengeData.xpAwarded
+      })
+
+      // Show toast
+      toast({
+        title: "🎉 Daily Challenge Completed!",
+        description: `${challengeData.challengeTitle} - Earned ${challengeData.xpAwarded} XP`,
+        variant: "success",
+        duration: 5000
+      })
+    }
+
+    window.addEventListener('activity-logged', handleActivityLogged)
+    window.addEventListener('daily-challenge-completed', handleDailyChallengeCompleted as EventListener)
+    
+    // Fallback: check every 60 seconds as a backup in case events are missed
+    const fallbackIntervalId = setInterval(checkForChallengeCompletions, 60000)
+    
+    return () => {
+      window.removeEventListener('activity-logged', handleActivityLogged)
+      window.removeEventListener('daily-challenge-completed', handleDailyChallengeCompleted as EventListener)
+      clearInterval(fallbackIntervalId)
+    }
+  }, []) // Remove dependency on lastProcessedActivityId to prevent re-running
 
   return {
     checkForChallengeCompletions

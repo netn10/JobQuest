@@ -113,27 +113,27 @@ export default function ActivitiesPage() {
       case 'mission_started':
       case 'mission_completed':
       case 'mission_failed':
-        return 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/25'
+        return 'bg-primary text-white shadow-lg'
       case 'job_applied':
       case 'job_status_updated':
-        return 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25'
+        return 'bg-green-600 text-white shadow-lg'
       case 'notebook_entry_created':
       case 'notebook_entry_updated':
-        return 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25'
+        return 'bg-purple-600 text-white shadow-lg'
       case 'learning_started':
       case 'learning_completed':
       case 'learning_progress_updated':
-        return 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/25'
+        return 'bg-orange-600 text-white shadow-lg'
       case 'achievement_unlocked':
-        return 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white shadow-lg shadow-yellow-500/25'
+        return 'bg-yellow-600 text-white shadow-lg'
       case 'daily_challenge_completed':
-        return 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/25'
+        return 'bg-pink-600 text-white shadow-lg'
       case 'streak_milestone':
       case 'xp_earned':
       case 'level_up':
-        return 'bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow-lg shadow-indigo-500/25'
+        return 'bg-indigo-600 text-white shadow-lg'
       default:
-        return 'bg-gradient-to-r from-gray-500 to-gray-600 text-white shadow-lg'
+        return 'bg-gray-600 text-white shadow-lg'
     }
   }
 
@@ -142,27 +142,27 @@ export default function ActivitiesPage() {
       case 'mission_started':
       case 'mission_completed':
       case 'mission_failed':
-        return 'bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-800'
+        return 'bg-primary/10 border border-primary/20'
       case 'job_applied':
       case 'job_status_updated':
-        return 'bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border border-emerald-200 dark:border-emerald-800'
+        return 'bg-green-600/10 border border-green-600/20'
       case 'notebook_entry_created':
       case 'notebook_entry_updated':
-        return 'bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800'
+        return 'bg-purple-600/10 border border-purple-600/20'
       case 'learning_started':
       case 'learning_completed':
       case 'learning_progress_updated':
-        return 'bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border border-orange-200 dark:border-orange-800'
+        return 'bg-orange-600/10 border border-orange-600/20'
       case 'achievement_unlocked':
-        return 'bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border border-yellow-200 dark:border-yellow-800'
+        return 'bg-yellow-600/10 border border-yellow-600/20'
       case 'daily_challenge_completed':
-        return 'bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 border border-pink-200 dark:border-pink-800'
+        return 'bg-pink-600/10 border border-pink-600/20'
       case 'streak_milestone':
       case 'xp_earned':
       case 'level_up':
-        return 'bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 border border-indigo-200 dark:border-indigo-800'
+        return 'bg-indigo-600/10 border border-indigo-600/20'
       default:
-        return 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border border-gray-200 dark:border-gray-600'
+        return 'bg-gray-600/10 border border-gray-600/20'
     }
   }
 
@@ -334,16 +334,12 @@ export default function ActivitiesPage() {
   return (
     <DashboardLayout title="Activity History">
       <div className="space-y-8 max-w-7xl mx-auto px-4">
-        {/* Enhanced Header Section with animated elements */}
+        {/* Header Section */}
         <div className="text-center space-y-6">
-          <div className="relative inline-block">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-600 to-purple-600 dark:from-white dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
-              Activity History
-            </h1>
-            <div className="absolute -top-3 -right-3 w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full shadow-lg"></div>
-            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
-          </div>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Activity History
+          </h1>
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
             Track your journey through detailed insights and celebrate every milestone in your career quest
           </p>
         </div>
@@ -351,7 +347,7 @@ export default function ActivitiesPage() {
         {/* Enhanced Stats Overview with better animations */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="border-0 bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-blue-900/20 dark:via-cyan-900/20 dark:to-blue-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 pointer-events-none"></div>
             <CardContent className="p-6 relative">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
@@ -366,7 +362,7 @@ export default function ActivitiesPage() {
           </Card>
 
           <Card className="border-0 bg-gradient-to-br from-emerald-50 via-green-50 to-emerald-100 dark:from-emerald-900/20 dark:via-green-900/20 dark:to-emerald-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10 pointer-events-none"></div>
             <CardContent className="p-6 relative">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
@@ -381,7 +377,7 @@ export default function ActivitiesPage() {
           </Card>
 
           <Card className="border-0 bg-gradient-to-br from-purple-50 via-pink-50 to-purple-100 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-purple-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 pointer-events-none"></div>
             <CardContent className="p-6 relative">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
@@ -396,7 +392,7 @@ export default function ActivitiesPage() {
           </Card>
 
           <Card className="border-0 bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-100 dark:from-yellow-900/20 dark:via-amber-900/20 dark:to-yellow-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-amber-500/10"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 pointer-events-none"></div>
             <CardContent className="p-6 relative">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
@@ -413,7 +409,7 @@ export default function ActivitiesPage() {
 
         {/* Enhanced Filters Section with better visual design */}
         <Card className="border-0 shadow-xl bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 pointer-events-none"></div>
           <CardHeader className="pb-6 relative">
             <CardTitle className="flex items-center space-x-3 text-gray-900 dark:text-gray-100">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">

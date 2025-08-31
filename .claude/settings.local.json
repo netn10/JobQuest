@@ -21,7 +21,9 @@
       "Bash(taskkill:*)",
       "Bash(git log:*)",
       "Bash(if exist .next rmdir /s /q .next)",
-      "Read(c:\\Users\\netn1\\Pictures\\Screenshots/**)"
+      "Read(c:\\Users\\netn1\\Pictures\\Screenshots/**)",
+      "mcp__ide__getDiagnostics",
+      "Bash(cmd //c:*)"
     ],
     "deny": [],
     "ask": [],

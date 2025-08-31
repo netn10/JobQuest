@@ -3,6 +3,22 @@ import { prisma } from '@/lib/db'
 import { logAchievementUnlocked } from '@/lib/activity-logger'
 import { createConsistentDailyChallenges, getUserDailyChallengeSettings } from '@/lib/daily-challenges'
 
+// Helper function to serialize BigInt and Date values
+function serializeBigInt(obj: any): any {
+  if (obj === null || obj === undefined) return obj
+  if (typeof obj === 'bigint') return Number(obj)
+  if (obj instanceof Date) return obj.toISOString()
+  if (Array.isArray(obj)) return obj.map(serializeBigInt)
+  if (typeof obj === 'object') {
+    const serialized: any = {}
+    for (const [key, value] of Object.entries(obj)) {
+      serialized[key] = serializeBigInt(value)
+    }
+    return serialized
+  }
+  return obj
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Get user ID from authorization header
@@ -123,7 +139,7 @@ export async function GET(request: NextRequest) {
       }
     })
     
-    return NextResponse.json({
+    return NextResponse.json(serializeBigInt({
       currentChallenges: challengesWithProgress,
       recentChallenges: recentChallenges.map(challenge => {
         const userProgress = challenge.progress[0]
@@ -137,10 +153,10 @@ export async function GET(request: NextRequest) {
       stats: {
         totalCompleted,
         totalXpEarned: totalXpEarned,
-        currentStreak: userData?.currentStreak || 0,
+        currentStreak: Number(userData?.currentStreak || 0),
         longestStreak: Number(userData?.longestStreak || 0)
       }
-    })
+    }))
     
   } catch (error) {
     console.error('Error fetching daily challenge:', error)

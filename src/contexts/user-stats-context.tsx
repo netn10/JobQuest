@@ -25,6 +25,7 @@ interface UserStatsContextType {
   error: string | null
   refreshStats: () => Promise<void>
   updateStats: (newStats: Partial<UserStats>) => void
+  addXp: (amount: number) => void
 }
 
 const UserStatsContext = createContext<UserStatsContextType | undefined>(undefined)
@@ -70,6 +71,27 @@ export function UserStatsProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const addXp = (amount: number) => {
+    if (stats) {
+      const newTotalXp = stats.totalXp + amount
+      let newXpProgress = stats.xpProgress + amount
+      let newLevel = stats.level
+
+      // Check for level up
+      while (newXpProgress >= stats.xpForNextLevel) {
+        newXpProgress -= stats.xpForNextLevel
+        newLevel += 1
+      }
+      
+      setStats({
+        ...stats,
+        totalXp: newTotalXp,
+        xpProgress: newXpProgress,
+        level: newLevel
+      })
+    }
+  }
+
   // Fetch stats when user changes
   useEffect(() => {
     if (user && !stats) {
@@ -85,13 +107,28 @@ export function UserStatsProvider({ children }: { children: ReactNode }) {
     }
   }, [user])
 
+  // Listen for daily challenge completions and update XP immediately
+  useEffect(() => {
+    const handleDailyChallengeCompleted = (event: CustomEvent) => {
+      const challengeData = event.detail
+      addXp(challengeData.xpAwarded)
+    }
+
+    window.addEventListener('daily-challenge-completed', handleDailyChallengeCompleted as EventListener)
+
+    return () => {
+      window.removeEventListener('daily-challenge-completed', handleDailyChallengeCompleted as EventListener)
+    }
+  }, [stats])
+
   return (
     <UserStatsContext.Provider value={{ 
       stats, 
       loading, 
       error, 
       refreshStats, 
-      updateStats 
+      updateStats,
+      addXp
     }}>
       {children}
     </UserStatsContext.Provider>

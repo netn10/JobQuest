@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import { StarRating } from '@/components/ui/star-rating'
 import { useToast } from '@/hooks/use-toast'
+import { useUserStats } from '@/contexts/user-stats-context'
 
 type ResourceType = 'ARTICLE' | 'VIDEO' | 'TUTORIAL' | 'COURSE' | 'BOOK' | 'PROJECT' | 'PODCAST'
 type DifficultyLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT'
@@ -56,6 +57,7 @@ interface LearningResource {
 export default function LearningPage() {
   const { user } = useAuth()
   const { toast } = useToast()
+  const { addXp } = useUserStats()
   const [resources, setResources] = useState<LearningResource[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -147,6 +149,47 @@ export default function LearningPage() {
               variant: "default",
               actionUrl: "/learning"
             })
+          }
+          
+          // Check if a daily challenge was completed (returned directly from the API)
+          if (data.challengeCompleted) {
+            // Update XP immediately in the UI
+            addXp(data.challengeCompleted.xpReward)
+            
+            toast({
+              title: "🎉 Daily Challenge Completed!",
+              description: `You completed "${data.challengeCompleted.title}" and earned ${data.challengeCompleted.xpReward} XP!`,
+              variant: "default",
+            })
+          } else {
+            // Fallback: Check for daily challenge completion using refresh endpoint
+            try {
+              const challengeResponse = await fetch('/api/daily-challenges/refresh', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${user.id}`
+                }
+              })
+              
+              if (challengeResponse.ok) {
+                const challengeResult = await challengeResponse.json()
+                
+                // Show toast notification if a challenge was completed
+                if (challengeResult.newlyCompleted) {
+                  // Update XP immediately in the UI
+                  addXp(challengeResult.xpAwarded)
+                  
+                  toast({
+                    title: "🎉 Daily Challenge Completed!",
+                    description: `You completed "${challengeResult.newlyCompleted.title}" and earned ${challengeResult.xpAwarded} XP!`,
+                    variant: "default",
+                  })
+                }
+              }
+            } catch (challengeError) {
+              console.error('Error checking daily challenges:', challengeError)
+            }
           }
         }
 
@@ -419,33 +462,29 @@ export default function LearningPage() {
       }
     >
       <div className="space-y-8 max-w-7xl mx-auto px-4">
-        {/* Enhanced Header Section */}
+        {/* Header Section */}
         <div className="text-center space-y-6">
-          <div className="relative inline-block">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-purple-600 to-pink-600 dark:from-white dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-              Learning Hub
-            </h1>
-            <div className="absolute -top-3 -right-3 w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full shadow-lg"></div>
-            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
-          </div>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Learning Hub
+          </h1>
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
             Discover, track, and master new skills for your career growth with personalized learning paths
           </p>
         </div>
 
         {/* Enhanced Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
-          <Card className="border-0 bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-blue-900/20 dark:via-cyan-900/20 dark:to-blue-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10"></div>
+          <Card className="border-0 bg-indigo-600/10 overflow-hidden relative">
+            <div className="absolute inset-0 bg-indigo-600/5"></div>
             <CardContent className="p-4 relative">
               <div className="text-center space-y-2">
-                <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">{getStatusCount('TOTAL')}</div>
-                <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Total Resources</div>
+                <div className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">{getStatusCount('TOTAL')}</div>
+                <div className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">Total Resources</div>
               </div>
             </CardContent>
           </Card>
-          <Card className="border-0 bg-gradient-to-br from-emerald-50 via-green-50 to-emerald-100 dark:from-emerald-900/20 dark:via-green-900/20 dark:to-emerald-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10"></div>
+          <Card className="border-0 bg-green-600/10 overflow-hidden relative">
+            <div className="absolute inset-0 bg-green-600/5"></div>
             <CardContent className="p-4 relative">
               <div className="text-center space-y-2">
                 <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">{getStatusCount('COMPLETED')}</div>
@@ -453,8 +492,8 @@ export default function LearningPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-0 bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-100 dark:from-yellow-900/20 dark:via-amber-900/20 dark:to-yellow-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-amber-500/10"></div>
+          <Card className="border-0 bg-yellow-600/10 overflow-hidden relative">
+            <div className="absolute inset-0 bg-yellow-600/5"></div>
             <CardContent className="p-4 relative">
               <div className="text-center space-y-2">
                 <div className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">{getStatusCount('IN_PROGRESS')}</div>
@@ -462,8 +501,8 @@ export default function LearningPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-0 bg-gradient-to-br from-orange-50 via-red-50 to-orange-100 dark:from-orange-900/20 dark:via-red-900/20 dark:to-orange-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10"></div>
+          <Card className="border-0 bg-orange-600/10 overflow-hidden relative">
+            <div className="absolute inset-0 bg-orange-600/5"></div>
             <CardContent className="p-4 relative">
               <div className="text-center space-y-2">
                 <div className="text-2xl font-bold text-orange-900 dark:text-orange-100">{getRatedResourcesCount()}</div>
@@ -471,8 +510,8 @@ export default function LearningPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-0 bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 dark:from-pink-900/20 dark:via-rose-900/20 dark:to-pink-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-rose-500/10"></div>
+          <Card className="border-0 bg-pink-600/10 overflow-hidden relative">
+            <div className="absolute inset-0 bg-pink-600/5"></div>
             <CardContent className="p-4 relative">
               <div className="text-center space-y-2">
                 <div className="text-2xl font-bold text-pink-900 dark:text-pink-100">{getAverageRating()}</div>
@@ -480,8 +519,8 @@ export default function LearningPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-0 bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-100 dark:from-purple-900/20 dark:via-indigo-900/20 dark:to-purple-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-indigo-500/10"></div>
+          <Card className="border-0 bg-purple-600/10 overflow-hidden relative">
+            <div className="absolute inset-0 bg-purple-600/5"></div>
             <CardContent className="p-4 relative">
               <div className="text-center space-y-2">
                 <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">{Math.floor(totalTimeSpent / 60)}h</div>
@@ -493,7 +532,7 @@ export default function LearningPage() {
 
         {/* Top Rated Resources */}
         {getRatedResourcesCount() > 0 && (
-          <Card className="border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20">
+          <Card className="border-yellow-300 bg-yellow-600/10">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 text-yellow-900 dark:text-yellow-200">
                 <Star className="h-5 w-5" />
@@ -538,7 +577,7 @@ export default function LearningPage() {
         )}
 
         {/* Surprise Me Section */}
-        <Card className="border-purple-300 bg-purple-50 dark:bg-purple-900/20">
+        <Card className="border-purple-300 bg-purple-600/10">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 text-purple-900 dark:text-purple-200">
               <Sparkles className="h-5 w-5" />
@@ -580,7 +619,7 @@ export default function LearningPage() {
 
         {/* Today's Suggestion */}
         {!loading && resources.length > 0 && (
-          <Card className="border-blue-300 bg-blue-50 dark:bg-blue-900/20">
+          <Card className="border-blue-300 bg-primary/10">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 text-blue-900 dark:text-blue-200">
                 <TrendingUp className="h-5 w-5" />

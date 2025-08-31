@@ -204,10 +204,10 @@ export default function AchievementsPage() {
 
   const getRarityBg = (achievement: Achievement) => {
     // Background color for rarity labels
-    if (achievement.xpReward >= 1000) return 'bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30' // LEGENDARY
-    if (achievement.xpReward >= 500) return 'bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30' // Epic
-    if (achievement.xpReward >= 200) return 'bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30' // Rare
-    return 'bg-gray-100 dark:bg-gray-800' // Common
+    if (achievement.xpReward >= 1000) return 'bg-yellow-600/10' // LEGENDARY
+    if (achievement.xpReward >= 500) return 'bg-purple-600/10' // Epic
+    if (achievement.xpReward >= 200) return 'bg-primary/10' // Rare
+    return 'bg-gray-600/10' // Common
   }
 
   const getRarityLabel = (achievement: Achievement): AchievementRarity => {
@@ -409,7 +409,7 @@ export default function AchievementsPage() {
 
         {/* New Achievements Celebration */}
         {newlyUnlockedAchievements.length > 0 && (
-          <Card className="border-yellow-200 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 dark:border-yellow-700 animate-pulse">
+          <Card className="border-yellow-200 bg-yellow-600/10 dark:border-yellow-700 animate-pulse">
             <CardContent className="p-4">
               <div className="flex items-center justify-center space-x-3">
                 <Trophy className="h-6 w-6 text-yellow-600 dark:text-yellow-400 animate-bounce" />
@@ -429,7 +429,7 @@ export default function AchievementsPage() {
 
         {/* Recent Achievement */}
         {latestAchievement && (
-          <Card className="border-yellow-200 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 dark:border-yellow-700">
+          <Card className="border-yellow-200 bg-yellow-600/10 dark:border-yellow-700">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center space-x-2 text-yellow-800 dark:text-yellow-200 text-lg">
                 <Trophy className="h-5 w-5" />
@@ -439,7 +439,7 @@ export default function AchievementsPage() {
             <CardContent>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className={`w-12 h-12 bg-gradient-to-r ${getRarityColor(latestAchievement)} rounded-full flex items-center justify-center`}>
+                  <div className={`w-12 h-12 ${getRarityColor(latestAchievement).replace('text-', 'bg-').replace('-600', '-600')} rounded-full flex items-center justify-center`}>
                     {(() => {
                       const IconComponent = getCategoryIcon(latestAchievement.category)
                       return <IconComponent className="h-6 w-6 text-white" />
@@ -623,8 +623,8 @@ export default function AchievementsPage() {
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br ${
-                          achievement.isUnlocked ? getRarityColor(achievement) : 'from-gray-300 to-gray-400'
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          achievement.isUnlocked ? getRarityColor(achievement).replace('text-', 'bg-').replace('-600', '-600') : 'bg-gray-600'
                         } shadow-lg`}>
                           {achievement.isUnlocked ? (
                             <CategoryIcon className="h-5 w-5 text-white drop-shadow-sm" />
@@ -662,8 +662,8 @@ export default function AchievementsPage() {
                           <div 
                             className={`h-full rounded-full transition-all duration-1000 ease-out ${
                               achievement.isUnlocked ? 
-                                'bg-gradient-to-r from-green-400 to-green-600' : 
-                                'bg-gradient-to-r from-blue-400 to-blue-600'
+                                'bg-green-600' : 
+                                'bg-primary'
                             }`}
                             style={{ width: `${Math.min((achievement.progress / achievement.maxProgress) * 100, 100)}%` }}
                           ></div>

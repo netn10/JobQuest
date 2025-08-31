@@ -188,21 +188,37 @@ export function JobApplicationModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('Form submitted:', formData)
+    
+    // Validate required fields
+    if (!formData.company.trim() || !formData.role.trim()) {
+      console.error('Missing required fields: company or role')
+      toast({
+        title: "Validation Error",
+        description: "Company and Role are required fields",
+        variant: "destructive"
+      })
+      return
+    }
     
     const applicationData = {
       ...formData
     }
     
     if (application?.id && onUpdate) {
+      console.log('Updating application:', { ...applicationData, id: application.id })
       onUpdate({ ...applicationData, id: application.id })
     } else {
+      console.log('Saving new application:', applicationData)
       onSave(applicationData)
     }
     
-    onClose()
+    // Don't call onClose here - let the parent component handle it after successful save/update
   }
 
   if (!isOpen) return null
+
+  console.log('Modal rendering, isOpen:', isOpen, 'application:', application)
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -211,7 +227,10 @@ export function JobApplicationModal({
           <CardTitle>
             {application ? 'Edit Application' : 'Add New Application'}
           </CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={() => {
+            console.log('Modal close button clicked')
+            onClose()
+          }}>
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
@@ -316,7 +335,6 @@ export function JobApplicationModal({
                   value={formData.company}
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                   placeholder="Company name"
-                  required
                   className={importedFields.has('company') ? "border-green-300 focus:border-green-500 focus:ring-green-500" : ""}
                 />
               </div>
@@ -333,7 +351,6 @@ export function JobApplicationModal({
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   placeholder="Job title"
-                  required
                   className={importedFields.has('role') ? "border-green-300 focus:border-green-500 focus:ring-green-500" : ""}
                 />
               </div>
@@ -453,10 +470,16 @@ export function JobApplicationModal({
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={() => {
+                console.log('Cancel button clicked')
+                onClose()
+              }}>
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button 
+                type="submit"
+                onClick={() => console.log('Submit button clicked')}
+              >
                 {application ? 'Update' : 'Add'} Application
               </Button>
             </div>

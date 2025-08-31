@@ -40,7 +40,7 @@ interface DashboardPageProps {
 
 export default function DashboardPage({ navigate }: DashboardPageProps) {
   const { user, loading: authLoading, checkAuth } = useAuth()
-  const { stats, loading: statsLoading, error: statsError } = useUserStats()
+  const { stats, loading: statsLoading, error: statsError, addXp } = useUserStats()
   const { toast } = useToast()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -159,13 +159,29 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
         // Update daily challenge progress to ensure it's current
         if (dashboardData.dailyChallenges && dashboardData.dailyChallenges.length > 0) {
           try {
-            await fetch('/api/daily-challenges/update-progress', {
+            const challengeResponse = await fetch('/api/daily-challenges/refresh', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
                 ...getAuthHeaders()
               }
             })
+            
+            if (challengeResponse.ok) {
+              const challengeResult = await challengeResponse.json()
+              
+              // Show toast notification if a challenge was completed
+              if (challengeResult.newlyCompleted) {
+                // Update XP immediately in the UI
+                addXp(challengeResult.xpAwarded)
+                
+                toast({
+                  title: "🎉 Daily Challenge Completed!",
+                  description: `You completed "${challengeResult.newlyCompleted.title}" and earned ${challengeResult.xpAwarded} XP!`,
+                  variant: "default",
+                })
+              }
+            }
           } catch (error) {
             console.error('Error updating daily challenge progress:', error)
           }

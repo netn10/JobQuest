@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { JobApplicationModal } from '@/components/job-application-modal'
 import { useToast } from '@/hooks/use-toast'
+import { useUserStats } from '@/contexts/user-stats-context'
 import { 
   BriefcaseIcon, 
   Plus, 
@@ -35,6 +36,7 @@ export default function JobsPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const { toast } = useToast()
+  const { addXp } = useUserStats()
 
   useEffect(() => {
     if (!user) {
@@ -59,7 +61,7 @@ export default function JobsPage() {
       
       if (response.ok) {
         const data = await response.json()
-        setApplications(data)
+        setApplications(Array.isArray(data) ? data : [])
       } else {
         toast({
           title: "Error",
@@ -68,6 +70,7 @@ export default function JobsPage() {
         })
       }
     } catch (error) {
+      setApplications([])
       toast({
         title: "Error",
         description: "Failed to load job applications",
@@ -97,6 +100,19 @@ export default function JobsPage() {
           description: "Job application added successfully",
           variant: "default"
         })
+        
+        // Check if a daily challenge was completed (returned directly from the API)
+        if (result.challengeCompleted) {
+          // Update XP immediately in the UI
+          addXp(result.challengeCompleted.xpReward)
+          
+          toast({
+            title: "🎉 Daily Challenge Completed!",
+            description: `You completed "${result.challengeCompleted.title}" and earned ${result.challengeCompleted.xpReward} XP!`,
+            variant: "default",
+          })
+        }
+        
         setIsModalOpen(false)
       } else {
         const error = await response.json()
@@ -225,18 +241,19 @@ export default function JobsPage() {
     }
   }
 
-  const filteredApplications = applications.filter(app =>
+  const filteredApplications = (Array.isArray(applications) ? applications : []).filter(app =>
     app.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
     app.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
     app.location?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  const applicationsArray = Array.isArray(applications) ? applications : []
   const stats = {
-    total: applications.length,
-    inProgress: applications.filter(app => ['APPLIED', 'SCREENING', 'INTERVIEW'].includes(app.status)).length,
-    interviews: applications.filter(app => app.status === 'INTERVIEW').length,
-    responseRate: applications.length > 0 
-      ? Math.round((applications.filter(app => app.status !== 'APPLIED').length / applications.length) * 100)
+    total: applicationsArray.length,
+    inProgress: applicationsArray.filter(app => ['APPLIED', 'SCREENING', 'INTERVIEW'].includes(app.status)).length,
+    interviews: applicationsArray.filter(app => app.status === 'INTERVIEW').length,
+    responseRate: applicationsArray.length > 0 
+      ? Math.round((applicationsArray.filter(app => app.status !== 'APPLIED').length / applicationsArray.length) * 100)
       : 0
   }
 
@@ -281,76 +298,72 @@ export default function JobsPage() {
   return (
     <DashboardLayout title="Job Applications">
       <div className="space-y-8 max-w-7xl mx-auto px-4">
-        {/* Enhanced Header Section */}
+        {/* Header Section */}
         <div className="text-center space-y-6">
-          <div className="relative inline-block">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-green-600 to-blue-600 dark:from-white dark:via-green-400 dark:to-blue-400 bg-clip-text text-transparent">
-              Job Applications
-            </h1>
-            <div className="absolute -top-3 -right-3 w-6 h-6 bg-gradient-to-r from-green-500 to-blue-500 rounded-full shadow-lg"></div>
-            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-green-500 to-blue-500 rounded-full"></div>
-          </div>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Job Applications
+          </h1>
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
             Track and manage your job search progress with detailed insights and analytics
           </p>
         </div>
 
         {/* Enhanced Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="border-0 bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-blue-900/20 dark:via-cyan-900/20 dark:to-blue-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10"></div>
+          <Card className="border-0 bg-teal-600/10 overflow-hidden relative">
+            <div className="absolute inset-0 bg-teal-600/5 pointer-events-none"></div>
             <CardContent className="p-6 relative">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
-                  <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Total Applications</p>
-                  <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">{stats.total}</p>
+                  <p className="text-sm font-semibold text-teal-600 dark:text-teal-400 uppercase tracking-wide">Total Applications</p>
+                  <p className="text-3xl font-bold text-teal-900 dark:text-teal-100">{stats.total}</p>
                 </div>
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="w-14 h-14 bg-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <BriefcaseIcon className="h-7 w-7 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-100 dark:from-yellow-900/20 dark:via-amber-900/20 dark:to-yellow-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-amber-500/10"></div>
+          <Card className="border-0 bg-yellow-600/10 overflow-hidden relative">
+            <div className="absolute inset-0 bg-yellow-600/5 pointer-events-none"></div>
             <CardContent className="p-6 relative">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 uppercase tracking-wide">In Progress</p>
                   <p className="text-3xl font-bold text-yellow-900 dark:text-yellow-100">{stats.inProgress}</p>
                 </div>
-                <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="w-14 h-14 bg-yellow-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <TrendingUp className="h-7 w-7 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 bg-gradient-to-br from-emerald-50 via-green-50 to-emerald-100 dark:from-emerald-900/20 dark:via-green-900/20 dark:to-emerald-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10"></div>
+          <Card className="border-0 bg-green-600/10 overflow-hidden relative">
+            <div className="absolute inset-0 bg-green-600/5 pointer-events-none"></div>
             <CardContent className="p-6 relative">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">Interviews</p>
                   <p className="text-3xl font-bold text-emerald-900 dark:text-emerald-100">{stats.interviews}</p>
                 </div>
-                <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-green-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="w-14 h-14 bg-green-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <Calendar className="h-7 w-7 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 bg-gradient-to-br from-purple-50 via-pink-50 to-purple-100 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-purple-800/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10"></div>
+          <Card className="border-0 bg-purple-600/10 overflow-hidden relative">
+            <div className="absolute inset-0 bg-purple-600/5 pointer-events-none"></div>
             <CardContent className="p-6 relative">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide">Response Rate</p>
                   <p className="text-3xl font-bold text-purple-900 dark:text-purple-100">{stats.responseRate}%</p>
                 </div>
-                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="w-14 h-14 bg-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <TrendingUp className="h-7 w-7 text-white" />
                 </div>
               </div>
@@ -361,7 +374,7 @@ export default function JobsPage() {
         {/* Enhanced Action Button */}
         <div className="flex justify-center">
           <Button 
-            className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white px-8 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+            className="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
             onClick={() => {
               setEditingApplication(null)
               setIsModalOpen(true)
@@ -373,11 +386,11 @@ export default function JobsPage() {
         </div>
 
         {/* Enhanced Search and Filter */}
-        <Card className="border-0 shadow-xl bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5"></div>
+        <Card className="border-0 shadow-xl overflow-hidden">
+          <div className="absolute inset-0 bg-primary/5 pointer-events-none"></div>
           <CardHeader className="pb-6 relative">
             <CardTitle className="flex items-center space-x-3 text-gray-900 dark:text-gray-100">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
                 <Search className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -412,15 +425,15 @@ export default function JobsPage() {
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                 <BriefcaseIcon className="h-12 w-12 text-gray-400 mb-4 mx-auto" />
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                  {applications.length === 0 ? 'No job applications yet' : 'No applications found'}
+                  {applicationsArray.length === 0 ? 'No job applications yet' : 'No applications found'}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 text-center mb-4">
-                  {applications.length === 0 
+                  {applicationsArray.length === 0 
                     ? 'Start tracking your job applications to see your progress here.'
                     : 'Try adjusting your search terms.'
                   }
                 </p>
-                {applications.length === 0 && (
+                {applicationsArray.length === 0 && (
                   <Button 
                     className="flex items-center gap-2 mx-auto"
                     onClick={() => {

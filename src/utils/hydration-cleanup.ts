@@ -1,4 +1,4 @@
-// Utility to clean up browser extension modifications
+// Safer utility to handle browser extension modifications after React hydration
 export function cleanupBrowserExtensions() {
   if (typeof window === 'undefined') return
 
@@ -14,28 +14,18 @@ export function cleanupBrowserExtensions() {
     })
   }
 
-  // Run cleanup after DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', removeExtensionAttributes)
-  } else {
+  // Only run cleanup after React has hydrated (safer timing)
+  // Use a longer delay to ensure React hydration is complete
+  setTimeout(() => {
     removeExtensionAttributes()
-  }
-
-  // Also run cleanup periodically to catch dynamic additions
-  setInterval(removeExtensionAttributes, 1000)
+    // Run cleanup less frequently to avoid interfering with React updates
+    setInterval(removeExtensionAttributes, 5000)
+  }, 2000)
 }
 
-// Prevent hydration mismatches from browser extensions
+// Prevent hydration mismatches from browser extensions - DISABLED for safety
 export function preventHydrationMismatch() {
-  if (typeof window === 'undefined') return
-
-  // Override common browser extension modifications
-  const originalSetAttribute = Element.prototype.setAttribute
-  Element.prototype.setAttribute = function(name: string, value: string) {
-    // Block common browser extension attributes
-    if (name.includes('bis_skin_checked') || name.includes('adblock')) {
-      return
-    }
-    return originalSetAttribute.call(this, name, value)
-  }
+  // Temporarily disabled as it was interfering with React event handling
+  // The setAttribute override was preventing proper event binding
+  return
 }

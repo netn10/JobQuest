@@ -81,6 +81,8 @@ export async function POST(request: NextRequest) {
     }
 
     let isNewEntry = false
+    let challengeCompleted = null
+    
     if (entry) {
       // Update existing entry
       entry = await prisma.notebookEntry.update({
@@ -114,7 +116,8 @@ export async function POST(request: NextRequest) {
       
       // Log the creation activity
       try {
-        await logNotebookEntryCreated(userId, title || 'Untitled Entry', entry.id)
+        const result = await logNotebookEntryCreated(userId, title || 'Untitled Entry', entry.id)
+        challengeCompleted = result.challengeCompleted
       } catch (error) {
         console.error('Error logging notebook creation activity:', error)
       }
@@ -139,7 +142,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       entry,
-      newlyUnlockedAchievements
+      newlyUnlockedAchievements,
+      challengeCompleted
     }, { status: entry ? 200 : 201 })
   } catch (error) {
     console.error('Error creating/updating notebook entry:', error)

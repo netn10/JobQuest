@@ -11,6 +11,8 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const rating = searchParams.get('rating')
     const search = searchParams.get('search')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '12')
 
     // Build where clause for filtering
     const whereClause: any = {}
@@ -88,9 +90,24 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Apply pagination
+    const totalItems = filteredResources.length
+    const totalPages = Math.ceil(totalItems / limit)
+    const startIndex = (page - 1) * limit
+    const endIndex = startIndex + limit
+    const paginatedResources = filteredResources.slice(startIndex, endIndex)
+
     return NextResponse.json({
       success: true,
-      resources: filteredResources
+      resources: paginatedResources,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        itemsPerPage: limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
     })
   } catch (error) {
     console.error('Error fetching learning resources:', error)
@@ -267,7 +284,15 @@ export async function POST(request: NextRequest) {
             await logLearningStarted(userId, resource.title, resourceId)
             break
           case 'complete':
-            await logLearningCompleted(userId, resource.title, resourceId, timeSpent || 0)
+            const result = await logLearningCompleted(userId, resource.title, resourceId, timeSpent || 0)
+            // Return challenge completion info in the response
+            if (result.challengeCompleted) {
+              return NextResponse.json({
+                success: true,
+                progress,
+                challengeCompleted: result.challengeCompleted
+              })
+            }
             break
           case 'update':
             if (timeSpent) {

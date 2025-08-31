@@ -13,12 +13,49 @@ export async function GET(request: NextRequest) {
 
     const userId = authHeader.replace('Bearer ', '')
     
+    // Get pagination parameters
+    const searchParams = request.nextUrl.searchParams
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const search = searchParams.get('search') || ''
+    
+    // Calculate skip value for pagination
+    const skip = (page - 1) * limit
+    
+    // Build where clause for search
+    const whereClause: any = { userId }
+    if (search) {
+      whereClause.OR = [
+        { company: { contains: search, mode: 'insensitive' } },
+        { role: { contains: search, mode: 'insensitive' } },
+        { location: { contains: search, mode: 'insensitive' } }
+      ]
+    }
+    
+    // Get total count for pagination
+    const totalCount = await prisma.jobApplication.count({
+      where: whereClause
+    })
+    
+    // Get paginated applications
     const applications = await prisma.jobApplication.findMany({
-      where: { userId },
-      orderBy: { appliedDate: 'desc' }
+      where: whereClause,
+      orderBy: { appliedDate: 'desc' },
+      skip,
+      take: limit
     })
 
-    return NextResponse.json(applications)
+    return NextResponse.json({
+      applications,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit),
+        totalItems: totalCount,
+        itemsPerPage: limit,
+        hasNextPage: page * limit < totalCount,
+        hasPrevPage: page > 1
+      }
+    })
   } catch (error) {
     console.error('Error fetching job applications:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -57,8 +94,13 @@ export async function POST(request: NextRequest) {
     })
 
     // Log the job application activity
+    let challengeCompleted = null
     try {
-      await logJobApplied(userId, role, company, application.id)
+      console.log('Logging job application activity for user:', userId)
+      const result = await logJobApplied(userId, role, company, application.id)
+      console.log('Job application activity logged, challenge result:', result)
+      challengeCompleted = result.challengeCompleted
+      console.log('Challenge completed:', challengeCompleted)
     } catch (error) {
       console.error('Error logging job application activity:', error)
     }
@@ -82,7 +124,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       application,
-      newlyUnlockedAchievements
+      newlyUnlockedAchievements,
+      challengeCompleted
     }, { status: 201 })
   } catch (error) {
     console.error('Error creating job application:', error)

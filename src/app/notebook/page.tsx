@@ -10,6 +10,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { CalendarDays, Plus, Save, BookOpen } from 'lucide-react'
 import { NotebookCalendar } from '@/components/notebook-calendar'
 import { getTodayInTimezone } from '@/lib/utils'
+import { useToast } from '@/hooks/use-toast'
+import { useUserStats } from '@/contexts/user-stats-context'
 
 interface NotebookEntry {
   id: string
@@ -34,6 +36,8 @@ export default function NotebookPage() {
   const [activeDates, setActiveDates] = useState<Date[]>([])
   const [userTimezone, setUserTimezone] = useState<string>('UTC')
   const router = useRouter()
+  const { toast } = useToast()
+  const { addXp } = useUserStats()
 
   useEffect(() => {
     const currentUser = getCurrentUser()
@@ -118,6 +122,45 @@ export default function NotebookPage() {
         const result = await response.json()
         // Reload entries to get updated data
         await loadEntries()
+        
+        // Check if a daily challenge was completed (returned directly from the API)
+        if (result.challengeCompleted) {
+          // Update XP immediately in the UI
+          addXp(result.challengeCompleted.xpReward)
+          
+          toast({
+            title: "🎉 Daily Challenge Completed!",
+            description: `You completed "${result.challengeCompleted.title}" and earned ${result.challengeCompleted.xpReward} XP!`,
+            variant: "default",
+          })
+        } else {
+          // Fallback: Check for daily challenge completion using refresh endpoint
+          try {
+            const challengeResponse = await fetch('/api/daily-challenges/refresh', {
+              method: 'POST',
+              headers: getAuthHeaders()
+            })
+            
+            if (challengeResponse.ok) {
+              const challengeResult = await challengeResponse.json()
+              
+              // Show toast notification if a challenge was completed
+              if (challengeResult.newlyCompleted) {
+                // Update XP immediately in the UI
+                addXp(challengeResult.xpAwarded)
+                
+                toast({
+                  title: "🎉 Daily Challenge Completed!",
+                  description: `You completed "${challengeResult.newlyCompleted.title}" and earned ${challengeResult.xpAwarded} XP!`,
+                  variant: "default",
+                })
+              }
+            }
+          } catch (challengeError) {
+            console.error('Error checking daily challenges:', challengeError)
+          }
+        }
+        
         // Show success feedback
         setTimeout(() => setIsSaving(false), 500)
       } else {
@@ -127,8 +170,6 @@ export default function NotebookPage() {
       setIsSaving(false)
     }
   }
-
-
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString + 'T00:00:00')
@@ -161,16 +202,12 @@ export default function NotebookPage() {
   return (
     <DashboardLayout title="Daily Notebook">
       <div className="space-y-8 max-w-7xl mx-auto px-4">
-        {/* Enhanced Header Section */}
+        {/* Header Section */}
         <div className="text-center space-y-6">
-          <div className="relative inline-block">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-orange-600 to-red-600 dark:from-white dark:via-orange-400 dark:to-red-400 bg-clip-text text-transparent">
-              Daily Notebook
-            </h1>
-            <div className="absolute -top-3 -right-3 w-6 h-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-full shadow-lg"></div>
-            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-full"></div>
-          </div>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Daily Notebook
+          </h1>
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
             Capture your thoughts, reflections, and daily insights in your personal journal
           </p>
         </div>
@@ -196,14 +233,12 @@ export default function NotebookPage() {
 
           {/* Right Column - Writing Area */}
           <div className="lg:col-span-2 flex flex-col">
-
             {/* Main Writing Area */}
-            <Card className="flex-1 flex flex-col border-0 shadow-xl bg-gradient-to-br from-orange-50 via-white to-red-50 dark:from-orange-900/20 dark:via-gray-800 dark:to-red-900/20 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-red-500/5 to-pink-500/5"></div>
-              <CardHeader className="relative">
+            <Card className="flex-1 flex flex-col">
+              <CardHeader>
                 <CardTitle className="flex items-center justify-between text-gray-900 dark:text-gray-100">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                    <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
                       <BookOpen className="h-5 w-5 text-white" />
                     </div>
                     <div>
@@ -214,7 +249,7 @@ export default function NotebookPage() {
                   <Button
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                   >
                     {isSaving ? (
                       <>Saving...</>
@@ -227,12 +262,12 @@ export default function NotebookPage() {
                   </Button>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="flex-1 flex flex-col relative">
+              <CardContent className="flex-1 flex flex-col">
                 <Textarea
                   placeholder="What's on your mind today? Reflect on your job search progress, learnings, challenges, or any thoughts you'd like to capture..."
                   value={currentEntry}
                   onChange={(e) => setCurrentEntry(e.target.value)}
-                  className="flex-1 resize-none border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 p-4 focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-500"
+                  className="flex-1 resize-none border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 p-4 focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-500"
                 />
                 <div className="mt-2 text-sm text-gray-500 flex justify-between">
                   <span>{currentEntry.length} characters</span>

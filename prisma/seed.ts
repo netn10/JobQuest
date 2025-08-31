@@ -874,7 +874,12 @@ async function main() {
   today.setHours(0, 0, 0, 0)
   
   const dailyChallenge = await prisma.dailyChallenge.upsert({
-    where: { date: today },
+    where: { 
+      date_title: {
+        date: today,
+        title: 'Focus Master'
+      }
+    },
     update: {},
     create: {
       title: 'Focus Master',

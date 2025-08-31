@@ -151,6 +151,7 @@ export async function PATCH(request: NextRequest) {
     })
 
     let achievementResult = null
+    let challengeCompleted = null
 
     // Award XP and update streak if mission completed
     if (status === 'COMPLETED') {
@@ -158,7 +159,8 @@ export async function PATCH(request: NextRequest) {
       
       // Log mission completion
       try {
-        await logMissionCompleted(mission.userId, mission.title, mission.id, xpToAward)
+        const result = await logMissionCompleted(mission.userId, mission.title, mission.id, xpToAward)
+        challengeCompleted = result.challengeCompleted
       } catch (error) {
         console.error('Error logging mission completion activity:', error)
       }
@@ -196,7 +198,8 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({
       success: true,
       mission,
-      newlyUnlockedAchievements: achievementResult?.newlyUnlockedAchievements || []
+      newlyUnlockedAchievements: achievementResult?.newlyUnlockedAchievements || [],
+      challengeCompleted
     })
   } catch (error) {
     console.error('Error updating mission:', error)

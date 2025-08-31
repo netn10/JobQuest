@@ -40,10 +40,12 @@ export async function getUserDailyChallengeSettings(userId: string): Promise<Dai
       return DEFAULT_DAILY_CHALLENGE_SETTINGS
     }
 
-    const settings = user.dailyChallengeSettings as DailyChallengeSettings
+    const settings = typeof user.dailyChallengeSettings === 'string' 
+      ? JSON.parse(user.dailyChallengeSettings) 
+      : user.dailyChallengeSettings
     return {
       ...DEFAULT_DAILY_CHALLENGE_SETTINGS,
-      ...settings
+      ...(settings as Partial<DailyChallengeSettings>)
     }
   } catch (error) {
     console.error('Error getting user daily challenge settings:', error)
@@ -148,11 +150,14 @@ export async function createConsistentDailyChallenges(date: Date, userId: string
 
 export async function updateDailyChallengeProgress(userId: string) {
   try {
+    console.log('=== updateDailyChallengeProgress called for user:', userId)
     // Get today's date
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
+    
+    console.log('Date range for challenges:', { today, tomorrow })
     
     // Get today's challenges
     const dailyChallenges = await prisma.dailyChallenge.findMany({
@@ -164,7 +169,10 @@ export async function updateDailyChallengeProgress(userId: string) {
       }
     })
     
+    console.log('Found', dailyChallenges.length, 'daily challenges for today')
+    
     if (dailyChallenges.length === 0) {
+      console.log('No challenges found, creating new ones...')
       // Create challenges if none exist
       await createConsistentDailyChallenges(today, userId)
       return null
@@ -173,7 +181,10 @@ export async function updateDailyChallengeProgress(userId: string) {
     const updatedChallenges = []
     let completionInfo = null
     
+    console.log('Processing', dailyChallenges.length, 'daily challenges...')
+    
     for (const dailyChallenge of dailyChallenges) {
+      console.log('Processing challenge:', dailyChallenge.title, 'type:', dailyChallenge.type)
       // Get user's progress for this challenge
       let userProgress = await prisma.dailyChallengeProgress.findUnique({
         where: {
@@ -228,10 +239,13 @@ export async function updateDailyChallengeProgress(userId: string) {
       
       // Calculate current progress based on requirement type
       const currentProgress = await calculateCurrentProgress(userId, requirement)
+      console.log('Current progress for challenge', dailyChallenge.title + ':', currentProgress, 'vs existing:', userProgress.progress)
       
       // Update progress if it has changed
       if (currentProgress !== userProgress.progress) {
         const isCompleted = currentProgress >= (requirement.count || requirement.days || 1)
+        const wasNotCompleted = (userProgress.status as string) !== 'COMPLETED'
+        console.log('Progress changed! New progress:', currentProgress, 'Is completed:', isCompleted, 'Was not completed:', wasNotCompleted)
         
         userProgress = await prisma.dailyChallengeProgress.update({
           where: {
@@ -248,7 +262,7 @@ export async function updateDailyChallengeProgress(userId: string) {
         })
         
         // If challenge was just completed, award XP and store completion info
-        if (isCompleted && userProgress.status === 'COMPLETED') {
+        if (isCompleted && wasNotCompleted) {
           await prisma.user.update({
             where: { id: userId },
             data: {
@@ -303,7 +317,7 @@ async function calculateCurrentProgress(userId: string, requirement: ChallengeRe
               gte: today,
               lt: tomorrow
             },
-            ...(requirement.missionType && { type: requirement.missionType })
+            ...(requirement.missionType && { type: requirement.missionType as any })
           }
         })
         return completedMissions
@@ -322,6 +336,8 @@ async function calculateCurrentProgress(userId: string, requirement: ChallengeRe
         return completedLearning
         
       case 'JOB_APPLICATIONS':
+        console.log('Calculating job application progress for user:', userId)
+        console.log('Date range:', { today, tomorrow })
         const jobApplications = await prisma.jobApplication.count({
           where: {
             userId,
@@ -331,6 +347,7 @@ async function calculateCurrentProgress(userId: string, requirement: ChallengeRe
             }
           }
         })
+        console.log('Job applications count for today:', jobApplications)
         return jobApplications
         
       case 'STREAK_DAYS':

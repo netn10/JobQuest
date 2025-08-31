@@ -11,6 +11,7 @@ import { BreakTimer } from '@/components/break-timer'
 import { useFocusBlocker } from '@/hooks/use-focus-blocker'
 import { useAuth } from '@/contexts/auth-context'
 import { useSettings } from '@/contexts/settings-context'
+import { useUserStats } from '@/contexts/user-stats-context'
 import { showAchievementNotifications } from '@/components/achievement-notification'
 import { useToast } from '@/hooks/use-toast'
 
@@ -39,6 +40,7 @@ interface Mission {
 export default function MissionsPage() {
   const { user } = useAuth()
   const { settings } = useSettings()
+  const { addXp } = useUserStats()
   const { toast } = useToast()
   const [missions, setMissions] = useState<Mission[]>([])
   const [loading, setLoading] = useState(true)
@@ -124,7 +126,9 @@ export default function MissionsPage() {
                     status: 'COMPLETED',
                     elapsedTime: totalElapsedSeconds
                   })
-                }).then(() => {
+                }).then(async (response) => {
+                  const data = await response.json()
+                  
                   fetchMissions() // Refresh missions
                   stopFocusSession() // Stop focus blocking
                   
@@ -135,6 +139,18 @@ export default function MissionsPage() {
                     variant: "success",
                     actionUrl: "/achievements"
                   })
+                  
+                  // Check if a daily challenge was completed
+                  if (data.challengeCompleted) {
+                    // Update XP immediately in the UI
+                    addXp(data.challengeCompleted.xpReward)
+                    
+                    toast({
+                      title: "🎉 Daily Challenge Completed!",
+                      description: `You completed "${data.challengeCompleted.title}" and earned ${data.challengeCompleted.xpReward} XP!`,
+                      variant: "default",
+                    })
+                  }
                   
                   // Auto-start breaks functionality removed - now controls auto-start of timers
                 })
@@ -350,6 +366,18 @@ export default function MissionsPage() {
           showAchievementNotifications(data.newlyUnlockedAchievements)
         }
         
+        // Check if a daily challenge was completed
+        if (data.challengeCompleted) {
+          // Update XP immediately in the UI
+          addXp(data.challengeCompleted.xpReward)
+          
+          toast({
+            title: "🎉 Daily Challenge Completed!",
+            description: `You completed "${data.challengeCompleted.title}" and earned ${data.challengeCompleted.xpReward} XP!`,
+            variant: "default",
+          })
+        }
+        
         // Handle focus blocking
         if (action === 'start') {
           startFocusSession()
@@ -531,16 +559,12 @@ export default function MissionsPage() {
         autoStart={settings.focus.autoStartBreaks}
       />
       <div className="space-y-8 max-w-7xl mx-auto px-4">
-        {/* Enhanced Header Section */}
+        {/* Header Section */}
         <div className="text-center space-y-6">
-          <div className="relative inline-block">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-600 to-cyan-600 dark:from-white dark:via-blue-400 dark:to-cyan-400 bg-clip-text text-transparent">
-              Focus Missions
-            </h1>
-            <div className="absolute -top-3 -right-3 w-6 h-6 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full shadow-lg"></div>
-            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"></div>
-          </div>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Focus Missions
+          </h1>
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
             Stay focused and productive with timed work sessions and distraction blocking
           </p>
         </div>

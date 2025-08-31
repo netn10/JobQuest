@@ -95,6 +95,7 @@ export default function SettingsPage() {
   const [isTestingApiKey, setIsTestingApiKey] = useState(false)
   const [isRequestingPermission, setIsRequestingPermission] = useState(false)
   const [isDeletingAccount, setIsDeletingAccount] = useState(false)
+  const [isExportingData, setIsExportingData] = useState(false)
   const [settings, setSettings] = useState<UserSettings>({
     profile: {
       name: user?.name || '',
@@ -412,6 +413,85 @@ export default function SettingsPage() {
     })
   }
 
+  const handleExportData = async () => {
+    console.log('Export data button clicked')
+    
+    if (!user) {
+      console.log('No user found')
+      toast({
+        title: "Error",
+        description: "You must be logged in to export your data",
+        variant: "destructive"
+      })
+      return
+    }
+
+    console.log('Starting export for user:', user.id)
+    setIsExportingData(true)
+    
+    // Simple test first
+    toast({
+      title: "Export Started",
+      description: "Export functionality is working! Testing API call...",
+    })
+    
+    try {
+      console.log('Making API request to /api/export-data')
+      const response = await fetch('/api/export-data', {
+        headers: {
+          'Authorization': `Bearer ${user.id}`
+        }
+      })
+
+      console.log('Response status:', response.status)
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+
+      if (!response.ok) {
+        const error = await response.json()
+        console.error('API error:', error)
+        throw new Error(error.error || 'Failed to export data')
+      }
+
+      // Get the filename from the response headers
+      const contentDisposition = response.headers.get('content-disposition')
+      let filename = 'jobquest-export.json'
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/)
+        if (filenameMatch) {
+          filename = filenameMatch[1]
+        }
+      }
+
+      console.log('Downloading file:', filename)
+
+      // Create a blob and download the file
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      console.log('File download completed')
+      toast({
+        title: "Data Exported",
+        description: "Your data has been exported successfully. Check your downloads folder.",
+      })
+    } catch (error) {
+      console.error('Export error:', error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to export data",
+        variant: "destructive"
+      })
+    } finally {
+      setIsExportingData(false)
+    }
+  }
+
   const handleDeleteAccount = async () => {
     if (!user) {
       toast({
@@ -576,11 +656,6 @@ export default function SettingsPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Timezone
-                      {settings.profile.timezone === Intl.DateTimeFormat().resolvedOptions().timeZone && (
-                        <span className="ml-2 text-xs text-green-600 dark:text-green-400 font-medium">
-                          (Auto-detected)
-                        </span>
-                      )}
                     </label>
                     <select
                       value={settings.profile.timezone}
@@ -715,7 +790,7 @@ export default function SettingsPage() {
                           onChange={async (e) => await updateSettings('notifications', key, e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                       </label>
                     </div>
                   ))}
@@ -770,7 +845,7 @@ export default function SettingsPage() {
                         onChange={(e) => updateSettings('gamification', 'showLevelProgress', e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                     </label>
                   </div>
                   
@@ -786,7 +861,7 @@ export default function SettingsPage() {
                         onChange={(e) => updateSettings('gamification', 'showStreakCounter', e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                     </label>
                   </div>
                 </CardContent>
@@ -815,7 +890,7 @@ export default function SettingsPage() {
                           onChange={(e) => updateSettings('dailyChallenges', 'enableNotebookChallenge', e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                       </label>
                     </div>
                     {settings.dailyChallenges?.enableNotebookChallenge && (
@@ -849,7 +924,7 @@ export default function SettingsPage() {
                           onChange={(e) => updateSettings('dailyChallenges', 'enableLearningChallenge', e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                       </label>
                     </div>
                     {settings.dailyChallenges?.enableLearningChallenge && (
@@ -883,7 +958,7 @@ export default function SettingsPage() {
                           onChange={(e) => updateSettings('dailyChallenges', 'enableJobApplicationChallenge', e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                       </label>
                     </div>
                     {settings.dailyChallenges?.enableJobApplicationChallenge && (
@@ -977,7 +1052,7 @@ export default function SettingsPage() {
                         onChange={(e) => updateSettings('focus', 'autoStartBreaks', e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                     </label>
                   </div>
                   
@@ -993,7 +1068,7 @@ export default function SettingsPage() {
                         onChange={(e) => updateSettings('focus', 'strictMode', e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                     </label>
                   </div>
                 </CardContent>
@@ -1020,7 +1095,7 @@ export default function SettingsPage() {
                         onChange={(e) => updateSettings('ai', 'enableAiFeatures', e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                     </label>
                   </div>
                   
@@ -1157,7 +1232,7 @@ export default function SettingsPage() {
                         onChange={(e) => updateSettings('privacy', 'shareProgress', e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                     </label>
                   </div>
                   
@@ -1173,37 +1248,61 @@ export default function SettingsPage() {
                         onChange={(e) => updateSettings('privacy', 'analyticsOptOut', e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                     </label>
                   </div>
                   
                   <div className="border-t pt-4 space-y-3">
                     <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Data Management</h4>
-                    <div className="flex space-x-3">
-                      <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-2" />
-                        Export Data
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={handleResetProgress}
-                        disabled={isResetting}
-                        className="text-red-600 border-red-600 hover:bg-red-50 dark:text-red-400 dark:border-red-400 dark:hover:bg-red-900/20"
-                      >
-                        <RotateCcw className={`h-4 w-4 mr-2 ${isResetting ? 'animate-spin' : ''}`} />
-                        {isResetting ? 'Resetting...' : 'Reset Progress'}
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={handleDeleteAccount}
-                        disabled={isDeletingAccount}
-                        className="text-red-600 border-red-600 hover:bg-red-50 dark:text-red-400 dark:border-red-400 dark:hover:bg-red-900/20"
-                      >
-                        <Trash2 className={`h-4 w-4 mr-2 ${isDeletingAccount ? 'animate-spin' : ''}`} />
-                        {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
-                      </Button>
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-3">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={handleExportData}
+                          disabled={isExportingData}
+                        >
+                          <Download className={`h-4 w-4 mr-2 ${isExportingData ? 'animate-spin' : ''}`} />
+                          {isExportingData ? 'Exporting...' : 'Export Data'}
+                        </Button>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          Download all your data as a JSON file
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-3 rounded">
+                        <p className="font-medium mb-1">Exported data includes:</p>
+                        <ul className="space-y-1">
+                          <li>• Profile information and settings</li>
+                          <li>• All missions and focus sessions</li>
+                          <li>• Job applications and notes</li>
+                          <li>• Notebook entries</li>
+                          <li>• Learning progress and achievements</li>
+                          <li>• Daily challenge history</li>
+                          <li>• Activity logs and statistics</li>
+                        </ul>
+                      </div>
+                      <div className="flex space-x-3">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={handleResetProgress}
+                          disabled={isResetting}
+                          className="text-red-600 border-red-600 hover:bg-red-50 dark:text-red-400 dark:border-red-400 dark:hover:bg-red-900/20"
+                        >
+                          <RotateCcw className={`h-4 w-4 mr-2 ${isResetting ? 'animate-spin' : ''}`} />
+                          {isResetting ? 'Resetting...' : 'Reset Progress'}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={handleDeleteAccount}
+                          disabled={isDeletingAccount}
+                          className="text-red-600 border-red-600 hover:bg-red-50 dark:text-red-400 dark:border-red-400 dark:hover:bg-red-900/20"
+                        >
+                          <Trash2 className={`h-4 w-4 mr-2 ${isDeletingAccount ? 'animate-spin' : ''}`} />
+                          {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

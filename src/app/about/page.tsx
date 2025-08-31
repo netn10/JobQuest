@@ -93,11 +93,11 @@ export default function AboutPage() {
         <div className="text-center space-y-6">
           <div className="flex items-center justify-center space-x-4 mb-6">
             <Zap className="h-12 w-12 text-yellow-400" />
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
               JobQuest
             </h1>
           </div>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Your AI-powered companion for focused job searching with gamified productivity and continuous learning.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
@@ -108,7 +108,7 @@ export default function AboutPage() {
         </div>
 
         {/* Mission Statement */}
-        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-700 border-0">
+        <Card>
           <CardContent className="p-6 text-center">
             <p className="text-lg text-gray-700 dark:text-gray-300">
               To transform the chaotic job search experience into a focused journey of growth and discovery, 
@@ -144,10 +144,10 @@ export default function AboutPage() {
         {/* Leveling System */}
         <div className="space-y-6">
           <h2 className="text-3xl font-bold text-center">Leveling Up System</h2>
-          <Card className="border-0 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20">
+          <Card>
             <CardContent className="p-6">
               <div className="text-center mb-6">
-                <Award className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
+                <Award className="h-8 w-8 text-primary mx-auto mb-2" />
                 <h3 className="text-xl font-semibold mb-2">How XP & Levels Work</h3>
                 <p className="text-gray-600 dark:text-gray-300">
                   Earn Experience Points (XP) through various activities and level up to unlock new features and achievements.
@@ -227,13 +227,13 @@ export default function AboutPage() {
         </div>
 
         {/* Call to Action */}
-        <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0">
+        <Card className="bg-primary text-white border-0">
           <CardContent className="text-center py-8">
             <h2 className="text-2xl font-bold mb-4">Ready to Start Your Journey?</h2>
             <p className="text-blue-100 mb-6">
               Join thousands of job seekers who have transformed their careers with JobQuest.
             </p>
-            <Button className="bg-white text-blue-600 hover:bg-gray-100 px-6 py-3">
+            <Button className="bg-white text-primary hover:bg-gray-100 px-6 py-3">
                 <Rocket className="mr-2 h-5 w-5" />
                 Get Started Free
               </Button>

@@ -9,6 +9,7 @@ import { FocusSessionProvider } from '@/contexts/focus-session-context'
 import { cleanupBrowserExtensions, preventHydrationMismatch } from '@/utils/hydration-cleanup'
 import { Toaster } from '@/components/ui/toaster'
 import { DailyChallengeProvider } from '@/components/daily-challenge-provider'
+import '@/lib/activity-events'
 import './globals.css'
 
 const geistSans = Geist({
@@ -31,7 +32,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Initialize browser extension cleanup
+  // Initialize safer browser extension cleanup
   if (typeof window !== 'undefined') {
     cleanupBrowserExtensions()
     preventHydrationMismatch()

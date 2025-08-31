@@ -52,9 +52,12 @@ export async function logMissionCompleted(userId: string, missionTitle: string, 
   })
   
   // Update daily challenge progress
+  let challengeCompleted = null
   try {
     const challengeResult = await updateDailyChallengeProgress(userId)
-    if (challengeResult?.newlyCompleted) {
+    if (challengeResult && !Array.isArray(challengeResult) && challengeResult.newlyCompleted) {
+      challengeCompleted = challengeResult.newlyCompleted
+      
       // Store completion info in activity metadata for client retrieval
       activity.metadata = JSON.stringify({
         ...(activity.metadata ? JSON.parse(activity.metadata as string) : {}),
@@ -70,7 +73,7 @@ export async function logMissionCompleted(userId: string, missionTitle: string, 
     console.error('Error updating daily challenge progress after mission completion:', error)
   }
   
-  return activity
+  return { activity, challengeCompleted }
 }
 
 export async function logJobApplied(userId: string, role: string, company: string, jobId: string) {
@@ -83,9 +86,15 @@ export async function logJobApplied(userId: string, role: string, company: strin
   })
   
   // Update daily challenge progress
+  let challengeCompleted = null
   try {
+    console.log('Updating daily challenge progress for job application by user:', userId)
     const challengeResult = await updateDailyChallengeProgress(userId)
-    if (challengeResult?.newlyCompleted) {
+    console.log('Daily challenge update result:', challengeResult)
+    if (challengeResult && !Array.isArray(challengeResult) && challengeResult.newlyCompleted) {
+      challengeCompleted = challengeResult.newlyCompleted
+      console.log('Challenge newly completed:', challengeCompleted)
+      
       // Store completion info in activity metadata for client retrieval
       activity.metadata = JSON.stringify({
         ...(activity.metadata ? JSON.parse(activity.metadata as string) : {}),
@@ -101,7 +110,7 @@ export async function logJobApplied(userId: string, role: string, company: strin
     console.error('Error updating daily challenge progress after job application:', error)
   }
   
-  return activity
+  return { activity, challengeCompleted }
 }
 
 export async function logJobStatusUpdated(userId: string, role: string, company: string, oldStatus: string, newStatus: string, jobId: string) {
@@ -124,9 +133,12 @@ export async function logNotebookEntryCreated(userId: string, entryTitle: string
   })
   
   // Update daily challenge progress
+  let challengeCompleted = null
   try {
     const challengeResult = await updateDailyChallengeProgress(userId)
-    if (challengeResult?.newlyCompleted) {
+    if (challengeResult && !Array.isArray(challengeResult) && challengeResult.newlyCompleted) {
+      challengeCompleted = challengeResult.newlyCompleted
+      
       // Store completion info in activity metadata for client retrieval
       activity.metadata = JSON.stringify({
         ...(activity.metadata ? JSON.parse(activity.metadata as string) : {}),
@@ -142,7 +154,7 @@ export async function logNotebookEntryCreated(userId: string, entryTitle: string
     console.error('Error updating daily challenge progress after notebook entry creation:', error)
   }
   
-  return activity
+  return { activity, challengeCompleted }
 }
 
 export async function logNotebookEntryUpdated(userId: string, entryTitle: string, entryId: string) {
@@ -176,9 +188,12 @@ export async function logLearningCompleted(userId: string, resourceTitle: string
   })
   
   // Update daily challenge progress
+  let challengeCompleted = null
   try {
     const challengeResult = await updateDailyChallengeProgress(userId)
-    if (challengeResult?.newlyCompleted) {
+    if (challengeResult && !Array.isArray(challengeResult) && challengeResult.newlyCompleted) {
+      challengeCompleted = challengeResult.newlyCompleted
+      
       // Store completion info in activity metadata for client retrieval
       activity.metadata = JSON.stringify({
         ...(activity.metadata ? JSON.parse(activity.metadata as string) : {}),
@@ -194,7 +209,7 @@ export async function logLearningCompleted(userId: string, resourceTitle: string
     console.error('Error updating daily challenge progress after learning completion:', error)
   }
   
-  return activity
+  return { activity, challengeCompleted }
 }
 
 export async function logLearningProgressUpdated(userId: string, resourceTitle: string, resourceId: string, progress: number) {

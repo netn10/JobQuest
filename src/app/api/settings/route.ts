@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
         timezone: true,
         focusSettings: true,
         notifications: true,
+        notificationPreferences: true,
         longestStreak: true,
         openaiApiKey: true
       }
