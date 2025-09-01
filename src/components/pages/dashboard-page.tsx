@@ -383,15 +383,15 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-          {/* Left Column - Active Missions & Daily Challenge */}
+          {/* Left Column - Focus Missions & Daily Challenge */}
           <div className="lg:col-span-2 space-y-6 lg:space-y-8">
-            {/* Active Missions */}
+            {/* Focus Missions */}
             <CollapsibleCard
-              title="Active Missions"
+              title="Focus Missions"
               description="Complete missions to earn XP and achievements"
               icon={Target}
               defaultExpanded={true}
-              storageKey="dashboard-active-missions"
+              storageKey="dashboard-focus-missions"
               headerChildren={
                 <Button variant="outline" size="sm" onClick={() => navigate('missions')}>
                   View All
@@ -416,7 +416,7 @@ export default function DashboardPage({ navigate }: DashboardPageProps) {
                 ) : (
                   <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                     <Target className="h-16 w-16 mx-auto mb-6 text-[#64748B]" />
-                    <p className="text-lg font-medium mb-2">No active missions</p>
+                    <p className="text-lg font-medium mb-2">No focus missions</p>
                     <p className="text-sm text-[#94A3B8]">Start a new mission to begin earning XP!</p>
                     <Button size="sm" className="mt-2" onClick={() => navigate('missions')}>
                       <Plus className="h-4 w-4 mr-1" />
