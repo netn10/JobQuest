@@ -1,106 +1,165 @@
-# Development Scripts
+# Job Quest Development Scripts
 
-This directory contains scripts to run both the backend (database) and frontend (Next.js development server) together.
+This directory contains various scripts to help with development and deployment of the Job Quest application.
 
-## Available Scripts
+> **🎯 Quick Start**: Just run `start-all.bat` from the project root to start everything!
 
-### 1. PowerShell Script (Windows - Recommended)
-```powershell
-.\scripts\dev.ps1
-```
+## Quick Start Scripts
 
-### 2. Batch Script (Windows Command Prompt)
-```cmd
-scripts\dev.bat
-```
+### 🚀 `start-all.bat` (Windows)
+**The main script you want!** This single command starts everything:
+- Database setup and seeding
+- Next.js development server (frontend + backend)
+- All supporting services
+- Automatic dependency installation
+- Environment setup
 
-### 3. Shell Script (Linux/macOS)
 ```bash
-./scripts/dev.sh
+# Just double-click or run:
+start-all.bat
 ```
 
-### 4. NPM Scripts (Cross-platform)
+### 🛑 `stop-all.bat` (Windows)
+Stops all running services and cleans up processes:
+- Kills all Node.js processes
+- Frees up ports (3000, 3001)
+- Cleans temporary files
+
 ```bash
-# Development with database setup
-npm run dev:full
-
-# Production with database setup
-npm run start:full
-
-# Individual database commands
-npm run db:generate    # Generate Prisma client
-npm run db:push        # Push schema to database
-npm run db:studio      # Open Prisma Studio
-npm run db:reset       # Reset database (force)
+stop-all.bat
 ```
 
-## What These Scripts Do
+### 🔄 `reset-all.bat` (Windows)
+Complete environment reset:
+- Stops all services
+- Resets database
+- Reinstalls dependencies
+- Cleans all caches
 
-1. **Check Prerequisites**: Verify Node.js and npm are installed
-2. **Stop Existing Processes**: Kill any running Node.js processes
-3. **Setup Database**: 
-   - Generate Prisma client
-   - Push database schema to SQLite
-4. **Start Development Server**: Run Next.js with Turbopack
-
-## Prerequisites
-
-- Node.js (v18 or higher)
-- npm (comes with Node.js)
-- Git (for version control)
-
-## Environment Setup
-
-Make sure you have a `.env` file in the root directory with:
-
-```env
-DATABASE_URL="file:./dev.db"
-# Add other environment variables as needed
+```bash
+reset-all.bat
 ```
+
+## Existing Scripts
+
+### `dev.bat` / `dev.ps1` / `dev.sh`
+Basic development scripts that:
+- Set up database
+- Start development server
+- Available for Windows (.bat/.ps1) and Unix (.sh)
+
+### `setup-env.ps1`
+PowerShell script for environment setup.
+
+## Usage Examples
+
+### Starting Development
+```bash
+# Windows - Complete stack (recommended)
+start-all.bat
+
+# Windows - Basic development
+dev.bat
+
+# PowerShell
+.\dev.ps1
+
+# Unix/Linux/Mac
+./dev.sh
+```
+
+### Stopping Development
+```bash
+# Windows
+stop-all.bat
+
+# Or use Ctrl+C in the terminal
+```
+
+### Resetting Environment
+```bash
+# Windows - Complete reset
+reset-all.bat
+```
+
+## What Each Script Does
+
+### start-all.bat (Complete Stack)
+1. ✅ Pre-flight checks (Node.js, npm, project structure)
+2. 🧹 Cleanup previous sessions
+3. 📦 Install dependencies (if needed)
+4. 🗄️ Database setup (generate, push, seed)
+5. ⚙️ Environment configuration
+6. 🌐 Start development server
+7. 📝 Logging to dev.log
+
+### stop-all.bat (Clean Shutdown)
+1. 🛑 Stop all Node.js processes
+2. 🔌 Free up ports (3000, 3001)
+3. 🧹 Clean temporary files
+4. ✅ Confirmation
+
+### reset-all.bat (Complete Reset)
+1. ⚠️ Confirmation prompt
+2. 🛑 Stop all services
+3. 🧹 Remove node_modules, .next, logs
+4. 📦 Reinstall dependencies
+5. 🗄️ Reset and reseed database
+6. ✅ Ready for fresh start
 
 ## Troubleshooting
 
-### Permission Issues (Linux/macOS)
-If you get permission errors on the shell script:
+### Port Already in Use
 ```bash
-chmod +x scripts/dev.sh
-```
+# Use stop-all.bat to free up ports
+stop-all.bat
 
-### PowerShell Execution Policy (Windows)
-If PowerShell blocks script execution:
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+# Or manually kill processes on port 3000
+netstat -aon | findstr :3000
+taskkill /f /pid <PID>
 ```
 
 ### Database Issues
-If you encounter database problems:
 ```bash
+# Reset everything
+reset-all.bat
+
+# Or just reset database
 npm run db:reset
+npm run db:seed
 ```
 
-### Port Already in Use
-The scripts automatically kill existing Node.js processes, but if you still have issues:
+### Dependencies Issues
 ```bash
-# Windows
-netstat -ano | findstr :3000
-taskkill /PID <PID> /F
+# Clean reinstall
+reset-all.bat
 
-# Linux/macOS
-lsof -ti:3000 | xargs kill -9
+# Or manual cleanup
+rmdir /s /q node_modules
+del package-lock.json
+npm install
 ```
 
-## Development Workflow
+## Environment Variables
 
-1. Run the development script: `.\scripts\dev.ps1` (Windows) or `./scripts/dev.sh` (Linux/macOS)
-2. The application will be available at `http://localhost:3000`
-3. Database will be automatically set up and ready to use
-4. Prisma Studio can be accessed at `http://localhost:5555` (run `npm run db:studio` separately)
+The scripts automatically create `.env.local` with:
+- `DATABASE_URL="file:./dev.db"`
+- `NEXTAUTH_URL="http://localhost:3000"`
+- `NEXTAUTH_SECRET="your-secret-key-change-this-in-production"`
+- `OPENAI_API_KEY=""` (optional)
 
-## Features
+## Logs
 
-- ✅ Automatic process management
-- ✅ Database setup and migration
-- ✅ Cross-platform compatibility
-- ✅ Error handling and validation
-- ✅ Colored output for better UX
-- ✅ Prerequisites checking
+- Development server logs: `dev.log`
+- Database operations: Console output
+- Error messages: Console output with ❌ indicators
+
+## Browser Extension
+
+The project includes browser extension files in the `public/` directory:
+- `manifest.json` - Extension configuration
+- `focus-blocker.js` - Background service worker
+- `content-script.js` - Content script
+- `popup.html` / `popup.js` - Extension popup
+
+These are automatically served by the Next.js development server.
