@@ -1,6 +1,7 @@
 import { prisma } from './db'
 import { ActivityType } from '@prisma/client'
 import { updateDailyChallengeProgress } from './daily-challenges'
+import { serverKafka } from './kafka-server'
 
 interface ActivityData {
   userId: string
@@ -13,7 +14,7 @@ interface ActivityData {
 
 export async function logActivity(data: ActivityData) {
   try {
-    const activity = await prisma.activity.create({
+    return await prisma.activity.create({
       data: {
         userId: data.userId,
         type: data.type,
@@ -23,8 +24,6 @@ export async function logActivity(data: ActivityData) {
         xpEarned: data.xpEarned !== undefined ? data.xpEarned : undefined
       }
     })
-    
-    return activity
   } catch (error) {
     throw error
   }
@@ -32,13 +31,22 @@ export async function logActivity(data: ActivityData) {
 
 // Convenience functions for common activities
 export async function logMissionStarted(userId: string, missionTitle: string, missionId: string) {
-  return logActivity({
+  const activity = await logActivity({
     userId,
     type: 'MISSION_STARTED',
     title: `Started mission: ${missionTitle}`,
     description: 'You began a new mission',
     metadata: { missionId }
   })
+
+  // Publish to Kafka
+  try {
+    await serverKafka.publishMissionStarted(userId, missionId, missionTitle, 'FOCUS')
+  } catch (error) {
+    console.error('Failed to publish mission started event to Kafka:', error)
+  }
+
+  return activity
 }
 
 export async function logMissionCompleted(userId: string, missionTitle: string, missionId: string, xpEarned: number) {
@@ -51,6 +59,13 @@ export async function logMissionCompleted(userId: string, missionTitle: string, 
     xpEarned: xpEarned >= 0 ? xpEarned : undefined
   })
   
+  // Publish to Kafka
+  try {
+    await serverKafka.publishMissionCompleted(userId, missionId, missionTitle, 'FOCUS', 0, xpEarned)
+  } catch (error) {
+    console.error('Failed to publish mission completed event to Kafka:', error)
+  }
+
   // Update daily challenge progress
   let challengeCompleted = null
   try {
@@ -68,6 +83,19 @@ export async function logMissionCompleted(userId: string, missionTitle: string, 
         where: { id: activity.id },
         data: { metadata: activity.metadata }
       })
+
+      // Publish daily challenge completion to Kafka
+      try {
+        await serverKafka.publishDailyChallengeCompleted(
+          userId, 
+          challengeResult.newlyCompleted.id, 
+          challengeResult.newlyCompleted.title, 
+          challengeResult.newlyCompleted.description, 
+          challengeResult.newlyCompleted.xpReward
+        )
+      } catch (error) {
+        console.error('Failed to publish daily challenge completed event to Kafka:', error)
+      }
     }
   } catch (error) {
     console.error('Error updating daily challenge progress after mission completion:', error)
@@ -84,6 +112,13 @@ export async function logJobApplied(userId: string, role: string, company: strin
     description: 'You submitted a job application',
     metadata: { jobId, role, company }
   })
+
+  // Publish to Kafka
+  try {
+    await serverKafka.publishJobApplied(userId, jobId, company, role)
+  } catch (error) {
+    console.error('Failed to publish job applied event to Kafka:', error)
+  }
   
   // Update daily challenge progress
   let challengeCompleted = null
@@ -105,6 +140,19 @@ export async function logJobApplied(userId: string, role: string, company: strin
         where: { id: activity.id },
         data: { metadata: activity.metadata }
       })
+
+      // Publish daily challenge completion to Kafka
+      try {
+        await serverKafka.publishDailyChallengeCompleted(
+          userId, 
+          challengeResult.newlyCompleted.id, 
+          challengeResult.newlyCompleted.title, 
+          challengeResult.newlyCompleted.description, 
+          challengeResult.newlyCompleted.xpReward
+        )
+      } catch (error) {
+        console.error('Failed to publish daily challenge completed event to Kafka:', error)
+      }
     }
   } catch (error) {
     console.error('Error updating daily challenge progress after job application:', error)
@@ -114,13 +162,22 @@ export async function logJobApplied(userId: string, role: string, company: strin
 }
 
 export async function logJobStatusUpdated(userId: string, role: string, company: string, oldStatus: string, newStatus: string, jobId: string) {
-  return logActivity({
+  const activity = await logActivity({
     userId,
     type: 'JOB_STATUS_UPDATED',
     title: `Updated ${role} at ${company}`,
     description: `Status changed from ${oldStatus} to ${newStatus}`,
     metadata: { jobId, role, company, oldStatus, newStatus }
   })
+
+  // Publish to Kafka
+  try {
+    await serverKafka.publishJobStatusUpdated(userId, jobId, company, role, newStatus, oldStatus)
+  } catch (error) {
+    console.error('Failed to publish job status updated event to Kafka:', error)
+  }
+
+  return activity
 }
 
 export async function logNotebookEntryCreated(userId: string, entryTitle: string, entryId: string) {
@@ -223,7 +280,7 @@ export async function logLearningProgressUpdated(userId: string, resourceTitle: 
 }
 
 export async function logAchievementUnlocked(userId: string, achievementName: string, achievementId: string, xpEarned: number) {
-  return logActivity({
+  const activity = await logActivity({
     userId,
     type: 'ACHIEVEMENT_UNLOCKED',
     title: `Unlocked achievement: ${achievementName}`,
@@ -231,6 +288,15 @@ export async function logAchievementUnlocked(userId: string, achievementName: st
     metadata: { achievementId, name: achievementName },
     xpEarned: xpEarned >= 0 ? xpEarned : undefined
   })
+
+  // Publish to Kafka
+  try {
+    await serverKafka.publishAchievementUnlocked(userId, achievementId, achievementName, xpEarned)
+  } catch (error) {
+    console.error('Failed to publish achievement unlocked event to Kafka:', error)
+  }
+
+  return activity
 }
 
 export async function logDailyChallengeCompleted(userId: string, challengeTitle: string, challengeId: string, xpEarned: number) {
@@ -266,11 +332,20 @@ export async function logXpEarned(userId: string, amount: number, source: string
 }
 
 export async function logLevelUp(userId: string, newLevel: number) {
-  return logActivity({
+  const activity = await logActivity({
     userId,
     type: 'LEVEL_UP',
     title: `Level up! You're now level ${newLevel}`,
     description: 'Congratulations on reaching a new level!',
     metadata: { newLevel }
   })
+
+  // Publish to Kafka
+  try {
+    await serverKafka.publishLevelUp(userId, newLevel, 0) // totalXp would need to be passed in
+  } catch (error) {
+    console.error('Failed to publish level up event to Kafka:', error)
+  }
+
+  return activity
 }

@@ -44,7 +44,7 @@ class NotificationService {
     }
   }
 
-  async show(options: NotificationOptions): Promise<boolean> {
+  async show(options: NotificationOptions, userId?: string): Promise<boolean> {
     if (!this.enabled) {
       return false
     }
@@ -61,6 +61,28 @@ class NotificationService {
         requireInteraction: options.requireInteraction,
         badge: '/favicon.ico'
       })
+
+      // Publish notification sent event to Kafka if userId is provided
+      if (userId) {
+        try {
+          // Call server-side API to publish Kafka event
+          await fetch('/api/kafka/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              eventType: 'notification.sent',
+              data: {
+                notificationId: `notif_${Date.now()}`,
+                notificationType: options.tag || 'general',
+                title: options.title,
+                message: options.body
+              }
+            })
+          })
+        } catch (error) {
+          console.error('Failed to publish notification sent event to Kafka:', error)
+        }
+      }
 
       // Auto-close after 5 seconds unless requireInteraction is true
       if (!options.requireInteraction) {

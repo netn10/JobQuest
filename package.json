@@ -15,7 +15,12 @@
     "db:cleanup": "tsx prisma/cleanup.ts",
     "db:cleanup:learning": "tsx prisma/cleanup-learning-only.ts",
     "dev:full": "npm run db:generate && npm run db:push && npm run db:seed && npm run dev",
-    "start:full": "npm run db:generate && npm run start"
+    "start:full": "npm run db:generate && npm run start",
+    "kafka:up": "docker-compose -f docker-compose.kafka.yml up -d",
+    "kafka:down": "docker-compose -f docker-compose.kafka.yml down",
+    "kafka:logs": "docker-compose -f docker-compose.kafka.yml logs -f",
+    "kafka:ui": "echo 'Kafka UI available at http://localhost:8080'",
+    "kafka:demo": "tsx scripts/kafka-example.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
@@ -33,6 +38,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "kafkajs": "^2.2.4",
     "lucide-react": "^0.541.0",
     "next": "15.5.0",
     "next-auth": "^4.24.11",

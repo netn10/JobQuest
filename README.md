@@ -57,6 +57,7 @@ JobQuest is a comprehensive gamified platform designed to help job seekers stay 
 - **Frontend**: Next.js 14, TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes, Prisma ORM
 - **Database**: SQLite (development), PostgreSQL (production)
+- **Event Streaming**: Apache Kafka with kafkajs
 - **AI**: OpenAI GPT-3.5-turbo API
 - **Authentication**: NextAuth.js
 - **UI Components**: Radix UI, Lucide React
@@ -67,6 +68,7 @@ JobQuest is a comprehensive gamified platform designed to help job seekers stay 
 ### Prerequisites
 
 - Node.js 18+ and npm
+- Docker and Docker Compose (for Kafka)
 - OpenAI API key (for AI features)
 
 ### Installation
@@ -94,12 +96,19 @@ JobQuest is a comprehensive gamified platform designed to help job seekers stay 
    npx prisma generate
    ```
 
-5. Start the development server:
+5. Start Kafka infrastructure:
+   ```bash
+   npm run kafka:up
+   ```
+
+6. Start the development server:
    ```bash
    npm run dev
    ```
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser.
+7. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+8. (Optional) Access Kafka UI at [http://localhost:8080](http://localhost:8080) to monitor events.
 
 ### Environment Variables
 
@@ -109,6 +118,7 @@ Required environment variables:
 - `OPENAI_API_KEY`: OpenAI API key for AI features
 - `NEXTAUTH_SECRET`: Secret for NextAuth.js session encryption
 - `NEXTAUTH_URL`: Base URL for authentication callbacks
+- `KAFKA_BROKER`: Kafka broker address (default: localhost:9092)
 
 ## Project Structure
 
@@ -150,6 +160,12 @@ src/
 ### Motivation
 - `GET /api/motivation` - Get motivational message
 - `POST /api/motivation` - Generate personalized motivation
+
+### Kafka Events
+- `GET /api/kafka/status` - Check Kafka consumer status
+- `POST /api/kafka/status` - Start/stop Kafka consumer
+- `POST /api/kafka/events` - Publish custom events
+- `GET /api/kafka/events` - Get available event types
 
 ## Development
 
